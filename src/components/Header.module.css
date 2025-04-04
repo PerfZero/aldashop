@@ -1,0 +1,44 @@
+.header__container {
+  display: flex;
+  max-width: 1280px;
+  padding: 15px 20px;
+  margin: 0 auto;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header__navLink {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 150%;
+  color: #323433;
+}
+
+.header__nav {
+  display: flex;
+  gap: 30px;
+}
+
+.header__icons {
+  display: flex;
+  gap: 20px;
+}
+
+.header__icon svg{
+    transition: 0.2s;
+}
+
+.header__icon:hover path {
+  fill: #a45b38;
+}
+
+.header__icon:first-child:hover path {
+  stroke: #a45b38;
+  fill: transparent;
+}
+
+.header__icon:last-child:hover path {
+  stroke: #a45b38;
+  fill: transparent;
+}
