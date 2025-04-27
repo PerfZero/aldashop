@@ -83,6 +83,10 @@ color: #323433;
     font-size: 14px;
     line-height: 140%;
     margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: center;
     color: #323433;
     width: 100%;
     border: 1px solid #c8c8c8;
@@ -184,10 +188,17 @@ color: rgba(193, 175, 134, 0.5);
     font-weight: 400;
     font-size: 12px;
     line-height: 140%;
-   
     color: #323433;
     display: flex;
     gap: 10px;
+    align-items: center;
+}
+
+.checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #A45B38;
+    cursor: pointer;
 }
 
 .checkbox  a{
@@ -234,10 +245,51 @@ color: #fff;
   display: none;
 }
 
+
+.input{
+
+  color: #323433;
+  font-size: 16px;
+}
+
+
+.input::placeholder{
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 140%;
+  color: rgba(193, 175, 134, 0.5);
+}
+
+
+
+.divider span {
+  font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+}
 @media (max-width: 768px) {
   .modal {
-    padding: 24px;
-    margin: 16px;
+    height: 100%;
+    padding: 60px 16px;
+    max-height: 100%;
+
+  }
+
+  .input{
+    font-size: 14px;
+    padding: 10px 16px;height: 50px;
+
+
+  }
+
+  .submitButton{
+    font-size: 14px;
+    text-align: left;
+  }
+
+  .closeButton{
+    top: 20px;
+    right: 20px;
   }
 
   .content {
@@ -245,9 +297,40 @@ color: #fff;
     gap: 32px;
   }
 
+  .socialAuth{
+    margin-right: 0;
+  }
+
+  .checkbox {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 140%;
+    color: #323433;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.checkbox input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #A45B38;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
   .socialAuth {
     padding-right: 0;
     border-right: none;
+  }
+
+  .title{
+    font-size: 24px;
+  }
+
+  .subtitle{
+    font-size: 14px;
   }
 
   .divider {
@@ -266,5 +349,9 @@ color: #fff;
 
   .divider span {
     padding: 0 16px;
+  }
+
+  .modal::after{
+    display: none;
   }
 } 

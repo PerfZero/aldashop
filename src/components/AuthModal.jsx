@@ -188,12 +188,15 @@ export default function AuthModal({ isOpen, onClose }) {
               <div className={styles.socialAuth}>
                 <h3>{isLogin ? "Быстрый вход" : "Быстрая регистрация"}</h3>
                 <button className={`${styles.socialButton} ${styles.vkButton}`}>
+                  <img src="/vk.svg" alt="Вконтакте" />
                   Вход через Вконтакте
                 </button>
                 <button className={`${styles.socialButton} ${styles.yandexButton}`}>
+                  <img src="/ya.svg" alt="Яндекс" />
                   Вход через Яндекс
                 </button>
                 <button className={`${styles.socialButton} ${styles.googleButton}`}>
+                  <img src="/google.svg" alt="Google" />
                   Вход через Google
                 </button>
               </div>
