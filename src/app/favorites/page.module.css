@@ -109,3 +109,35 @@ color: #c1a286;
   line-height: 1.5;
   color: #c1a286;   
 } 
+
+
+@media (max-width: 768px) {
+
+.titleSection{
+  align-items: flex-start;
+}
+
+.description p{
+  text-align: left;
+}
+
+.content{
+  margin: 30px 0;
+  gap: 60px;
+  
+}
+
+.catalogButton{
+  width: 100%;
+}
+
+.title{
+  font-size: 24px;
+}
+
+.description p{
+  font-size: 14px;
+}
+
+
+}

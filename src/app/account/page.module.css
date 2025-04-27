@@ -191,3 +191,47 @@ text-align: left;
 color: #323433;
 margin-bottom: 30px;
 }
+
+
+@media (max-width: 768px) {
+  .account__container {
+    flex-direction: column;
+  }
+
+  .account__menu{
+    width: 100%;
+    overflow: scroll;
+    flex-direction: row;
+    margin-bottom: 20px;
+    gap: 0;
+    justify-content: space-between;
+  }
+
+  .account__title{
+    font-size: 24px;
+  }
+
+  .account__menu_item{
+    flex-shrink: 0;
+    min-width: 153px;
+    border-bottom: 2px solid #BBBBBB;
+
+    text-align: center;
+    justify-content: center;
+    padding-bottom: 8px;
+
+  }
+
+  .account__menu_item_active .account__menu_label{
+    border-bottom: none;
+  }
+
+
+
+  .account__menu_item_active{
+    border-bottom: 2px solid #a45b38;
+
+  }
+}
+
+

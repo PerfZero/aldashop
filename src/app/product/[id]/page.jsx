@@ -77,7 +77,7 @@ export default function ProductPage({ params }) {
       <Breadcrumbs items={breadcrumbs} />
       
       <div className={styles.product}>
-      <div className={styles.product__header}>
+
         <div className={styles.product__infos}>
             <h1 className={styles.product__title}>{mockProduct.name} {mockProduct.isBestseller && (
               <div className={styles.product__bestseller}>Бестселлер</div>
@@ -107,7 +107,7 @@ export default function ProductPage({ params }) {
           <p className={styles.product__article}>Артикул: {mockProduct.article}</p>
           
           <div className={styles.product__price}>{mockProduct.price} ₽</div>
-          </div>
+       
           </div>
         <div className={styles.product__gallery}>
           <div className={styles.product__thumbnails}>
@@ -255,7 +255,7 @@ export default function ProductPage({ params }) {
         </div>
       </div>
 
-      <Reviews hasReviews={true } />
+      <Reviews hasReviews={false } />
     </main>
   );
 } 

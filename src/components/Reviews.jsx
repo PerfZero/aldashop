@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import styles from './Reviews.module.css';
 import SortSelect from './SortSelect';
 
@@ -17,6 +17,9 @@ const mockReviews = [
 export default function Reviews({ hasReviews = true }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState('recommended');
+  const [modalRating, setModalRating] = useState(0);
+  const [modalImages, setModalImages] = useState([]);
+  const fileInputRef = useRef(null);
 
   const handleOpenModal = () => {
     setIsModalOpen(true);
@@ -24,21 +27,34 @@ export default function Reviews({ hasReviews = true }) {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setModalRating(0);
   };
 
-  const renderStars = (rating) => {
+  const handleStarClick = (index) => {
+    setModalRating(index + 1);
+  };
+
+  const handleFilesChange = (e) => {
+    const files = Array.from(e.target.files).slice(0, 10);
+    setModalImages(files);
+  };
+
+  const renderStars = (rating, isInteractive = false) => {
     return [...Array(5)].map((_, index) => (
       <svg 
         key={index}
-        width="15" 
-        height="14" 
-        viewBox="0 0 15 14" 
+        width="40" 
+        height="37" 
+        viewBox="0 0 40 37" 
         fill="none" 
         xmlns="http://www.w3.org/2000/svg"
+        onClick={isInteractive ? () => handleStarClick(index) : undefined}
+        style={{ cursor: isInteractive ? 'pointer' : 'default' }}
       >
         <path 
-          d="M7.5 0L9.18386 5.18237H14.6329L10.2245 8.38525L11.9084 13.5676L7.5 10.3647L3.09161 13.5676L4.77547 8.38525L0.367076 5.18237H5.81614L7.5 0Z" 
-          fill={index < rating ? "#A45B38" : "#E5E5E5"} 
+          d="M24.0146 13.9746L24.127 14.3193H37.4824L26.9717 21.9561L26.6777 22.1699L26.79 22.5156L30.8037 34.8701L20.2939 27.2344L20 27.0215L19.7061 27.2344L9.19531 34.8701L13.21 22.5156L13.3223 22.1699L13.0283 21.9561L2.51758 14.3193H15.873L15.9854 13.9746L20 1.61719L24.0146 13.9746Z" 
+          fill={index < rating ? "#A45B38" : "#fff"} 
+          stroke={index < rating ? "#A45B38" : "#A45B38"}
         />
       </svg>
     ));
@@ -72,19 +88,48 @@ export default function Reviews({ hasReviews = true }) {
               </p>
               <div className={styles.modal__form}>
                 <div className={styles.modal__stars}>
-                  {renderStars(0)}
+                  {renderStars(modalRating, true)}
                 </div>
                 <textarea 
                   className={styles.modal__textarea}
                   placeholder="Комментарий*"
                 />
-                <div className={styles.modal__upload}>
-                  <button className={styles.modal__upload_button}>
-                    Добавьте фото
-                  </button>
-                  <p className={styles.modal__upload_text}>
+                                  <div className={styles.modal__upload_title}>Добавьте фото</div>
+
+                <div
+                  className={styles.modal__upload_area}
+                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <div className={styles.modal__upload_icon}>
+                    <svg width="50" height="51" viewBox="0 0 50 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M31.25 38L18.75 25.5L3.125 41.125V3.625H46.875V38M25 31.75L34.375 22.375L46.875 34.875V47.375H3.125V38" stroke="#A45B38" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M15.625 19.25C18.2138 19.25 20.3125 17.1513 20.3125 14.5625C20.3125 11.9737 18.2138 9.875 15.625 9.875C13.0362 9.875 10.9375 11.9737 10.9375 14.5625C10.9375 17.1513 13.0362 19.25 15.625 19.25Z" stroke="#A45B38" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div className={styles.modal__upload_hint}>
                     Загрузите не более 10 файлов
-                  </p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    style={{ display: 'none' }}
+                    ref={fileInputRef}
+                    onChange={handleFilesChange}
+                  />
+                  {modalImages.length > 0 && (
+                    <div className={styles.modal__upload_preview}>
+                      {modalImages.map((file, idx) => (
+                        <img
+                          key={idx}
+                          src={URL.createObjectURL(file)}
+                          alt={`preview-${idx}`}
+                          className={styles.modal__upload_preview_img}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <button className={styles.modal__submit}>
                   Отправить отзыв

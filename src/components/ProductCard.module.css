@@ -346,6 +346,24 @@ color: #323433;
       margin-bottom: 0;
     }
 
+    .card__favorite{
+      opacity: 1;
+      background: none;
+      box-shadow: none;
+      top: 8px;
+      right: 8px;
+    }
+
+    .card__favorite svg{
+      width: 20px;
+      height: 20px;
+    }
+
+
+    .card__favorite path{
+      stroke: #A45B38;
+    }
+
     .card__section_title{
       font-size: 12px;
     }

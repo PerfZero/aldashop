@@ -36,6 +36,19 @@
   gap: 3px;
 }
 
+.reviews__stars svg {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.reviews__stars svg:hover {
+  transform: scale(1.1);
+}
+
+.reviews__stars svg path {
+  transition: fill 0.2s ease, stroke 0.2s ease;
+}
+
 .reviews__count {
     font-family: "Montserrat", sans-serif;
     font-weight: 500;
@@ -270,9 +283,9 @@ color: #c1a286;
 font-weight: 500;
 font-size: 16px;
 line-height: 140%;
-color: rgba(193, 175, 134, 0.5);
+color: #323433;
+width: 100%;
 }
-
 
 .modal__textarea::placeholder {
     font-family: "Montserrat", sans-serif;
@@ -347,8 +360,55 @@ height: 15px;
 
 .modal__close:hover {
   color: #323433;
-} 
+}
 
+.modal__upload_area {
+  background: #F9F8F4;
+  padding: 40px 0 30px 0;
+  display: flex;
+  border: 1px solid #c8c8c8;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  min-height: 150px;
+  position: relative;
+}
+
+.modal__upload_icon {
+  margin-bottom: 10px;
+}
+
+.modal__upload_hint {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 150%;
+  color: #999a99;
+}
+
+.modal__upload_title {
+  font-family: "Tenor Sans", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  color: #323433;
+}
+
+.modal__upload_preview {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+  justify-content: center;
+}
+
+.modal__upload_preview_img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #c1a286;
+}
 
 
 @media (max-width: 768px) {
@@ -356,6 +416,30 @@ height: 15px;
     margin-bottom: 20px;
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .modal_wrapper{
+    padding: 16px;
+    border: none;
+    margin: 0;
+  }
+
+  .modal__title{
+  font-size: 24px;
+  }
+
+  .modal__text{
+    font-size: 14px;
+  } 
+
+  .modal__content{
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    display: flex;  
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 
   .reviews__title {
@@ -389,5 +473,9 @@ height: 15px;
 .reviews__sort_label{
   display: none;
 }
+
+
+
+
 
 }
