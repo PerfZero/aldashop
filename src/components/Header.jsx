@@ -262,9 +262,33 @@ export default function Header() {
                 </button>
               ))}
               <div className={styles.mobileMenu__sidebarBottom}>
-                <button className={styles.mobileMenu__sidebarItem}>Избранное</button>
-                <button className={styles.mobileMenu__sidebarItem}>Профиль</button>
-                <button className={styles.mobileMenu__sidebarItem}>Покупки</button>
+                <button 
+                  className={styles.mobileMenu__sidebarItem}
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Избранное
+                </button>
+                <button 
+                  className={styles.mobileMenu__sidebarItem}
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Профиль
+                </button>
+                <button 
+                  className={styles.mobileMenu__sidebarItem}
+                  onClick={() => {
+                    setIsAuthModalOpen(true);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  Покупки
+                </button>
               </div>
             </div>
             {/* Правая колонка — подкатегории и картинки */}
@@ -340,7 +364,10 @@ export default function Header() {
                 />
               </svg>
             </button>
-            <button className={`${styles.header__icon} ${styles["header__icon--favorite"]}`}>
+            <button 
+              className={`${styles.header__icon} ${styles["header__icon--favorite"]}`}
+              onClick={() => setIsAuthModalOpen(true)}
+            >
               <svg width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   fillRule="evenodd"
