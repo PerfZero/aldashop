@@ -1,0 +1,55 @@
+.notFound {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+  text-align: center;
+
+  max-width: 610px;
+  margin: 0 auto;
+}
+
+.title {
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
+    font-size: 64px;
+    text-align: center;
+    color: #323433;
+}
+
+.subtitle {
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
+    font-size: 32px;
+    text-align: center;
+    color: #323433;
+  margin: 20px 0;
+}
+
+.text {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 150%;
+    text-align: center;
+    color: rgba(50, 52, 51, 0.5);
+  margin-bottom: 40px;
+}
+
+.button {
+    border: 1px solid #c1a286;
+    padding: 10px 15px;
+    width: 295px;
+    height: 45px;
+    font-family: "Montserrat", sans-serif;
+font-weight: 600;
+font-size: 16px;
+line-height: 150%;
+text-align: center;
+color: #c1a286;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+

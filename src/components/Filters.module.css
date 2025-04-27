@@ -1,0 +1,189 @@
+.filters {
+  width: 295px;
+
+  overflow: hidden;
+}
+
+
+
+/* Filters.module.css */
+
+.toggleLabel {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  gap: 16px;
+  font-family: "Montserrat", sans-serif;
+}
+
+.toggleInput {
+  display: none;
+}
+
+.toggleSwitch {
+  width: 44px;
+  height: 28px;
+  background: #fff;
+  border: 1px solid rgba(50, 52, 51, 0.5);
+border-radius: 100px;
+  border-radius: 16px;
+  position: relative;
+  transition: background 0.2s;
+  display: inline-block;
+}
+
+.toggleSwitch::before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 6px;
+  width: 16px;
+  height: 16px;
+  background:  rgba(50, 52, 51, 0.5);;
+  border-radius: 50%;
+  transition: left 0.2s;
+}
+
+.toggleInput:checked + .toggleSwitch {
+  background: #a45b38;
+  border: none;
+}
+
+.toggleInput:checked + .toggleSwitch::before {
+  left: 22px;
+  background: #fff;
+}
+
+.toggleText {
+  color: #323433;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 150%;
+  color: #323433;
+  line-height: 150%;
+  font-weight: 400;
+  text-align: left;
+  user-select: none;
+}
+
+.filters__close {
+  display: none;
+}
+
+
+.filter {
+  border-bottom: 1px solid rgba(193, 175, 134, 0.8);
+  padding: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.filter__title {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 150%;
+  color: #323433;
+}
+
+.filters__toggle {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 150%;
+  color: #323433;
+  padding: 20px;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.filters__title{
+  display: none;
+}
+
+/* Мобильные стили */
+@media (max-width: 768px) {
+  .filters {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: #fff;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .filters__header {
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .filters__title {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 150%;
+    color: #323433;
+  }
+
+  .filters__close {
+    display: block;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #323433;
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .filters__content {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .filters__footer {
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .filters__button {
+    flex: 1;
+    padding: 12px;
+
+    font-family: "Montserrat", sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 150%;
+    cursor: pointer;
+  }
+
+  .filters__button_cancel {
+    background: none;
+    border: 1px solid #a45b38;
+    
+    color: #a45b38;
+  }
+
+  .filters__button_apply {
+    background: #a45b38;
+    border: none;
+    color: #fff;
+  }
+
+  .filters__title{
+    font-weight: 400;
+font-size: 24px;
+color: #323433;
+display: block;
+font-family: "Tenor Sans", sans-serif;
+
+  }
+}
+

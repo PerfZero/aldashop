@@ -1,0 +1,111 @@
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 20px;
+  background-color: #FFFFFF;
+}
+
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: rgba(50, 52, 51, 0.5);
+}
+
+.breadcrumbLink {
+  color: rgba(50, 52, 51, 0.5);
+  text-decoration: none;
+}
+
+.breadcrumbArrow {
+  color: rgba(50, 52, 51, 0.5);
+}
+
+.breadcrumbCurrent {
+  color: rgba(50, 52, 51, 0.5);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 100px;
+  max-width: 610px;
+  margin: 100px auto;
+  padding: 40px 0;
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+  width: 100%;
+}
+
+.title {
+  font-family: 'Tenor Sans', sans-serif;
+  font-size: 32px;
+  line-height: 1.17;
+  color: #323433;
+  text-align: center;
+  margin: 0;
+}
+
+.description {
+  position: relative;
+  width: 100%;
+  text-align: center;
+ 
+}
+
+.description p {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  color: rgba(50, 52, 51, 0.5);
+  margin: 0;
+}
+
+.heartIcon {
+color: #c1a286;
+  font-size: 20px;
+}
+
+.catalogButton {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  width: 295px;
+  height: 50px;
+  padding: 10px 15px;
+  border: 1px solid #C1A286;
+
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.catalogButton:hover {
+  background-color: #C1A286;
+}
+
+.catalogButton:hover span {
+  color: #FFFFFF;
+}
+
+.catalogButton:hover svg path {
+  fill: #FFFFFF;
+}
+
+.catalogButton span {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #c1a286;   
+} 

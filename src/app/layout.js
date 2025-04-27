@@ -1,5 +1,7 @@
 import { Montserrat, Tenor_Sans } from 'next/font/google';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
+import { CartProvider } from './components/CartContext';
 import './globals.css';
 
 const montserrat = Montserrat({ subsets: ['latin', 'cyrillic'], variable: '--font-montserrat' });
@@ -9,8 +11,13 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ru">
       <body className={`${montserrat.variable} ${tenorSans.variable}`}>
-        <Header />
-        {children}
+        <CartProvider>
+          <Header />
+          <main>
+            {children}
+          </main>
+          <Footer />
+        </CartProvider>
       </body>
     </html>
   );

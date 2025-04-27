@@ -95,3 +95,12 @@ legend {
 input[type='file'] {
 	max-width: 100%;
 }
+
+.modals{
+    width: 506px;
+    padding: 60px 50px;
+}
+
+.modals div > p{
+	text-align: left;
+}

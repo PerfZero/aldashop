@@ -1,0 +1,19 @@
+<svg width="800" height="400" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="400" fill="#F3F3F3"/>
+  <path d="M400 170C426.51 170 448 191.49 448 218C448 244.51 426.51 266 400 266C373.49 266 352 244.51 352 218C352 191.49 373.49 170 400 170Z" fill="#A45B38"/>
+  <path d="M400 150C338.203 150 288 200.203 288 262C288 308 400 370 400 370C400 370 512 308 512 262C512 200.203 461.797 150 400 150ZM400 290C376.804 290 358 271.196 358 248C358 224.804 376.804 206 400 206C423.196 206 442 224.804 442 248C442 271.196 423.196 290 400 290Z" fill="#A45B38" fill-opacity="0.6"/>
+  
+  <path d="M150 99H650" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  <path d="M150 149H650" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  <path d="M150 199H650" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  <path d="M150 249H650" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  <path d="M150 299H650" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  
+  <path d="M199 50V350" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  <path d="M299 50V350" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  <path d="M399 50V350" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  <path d="M499 50V350" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  <path d="M599 50V350" stroke="#CCCCCC" stroke-width="1" stroke-linecap="round"/>
+  
+  <text x="400" y="380" text-anchor="middle" font-family="Arial" font-size="14" fill="#888888">Яндекс Карта</text>
+</svg> 
