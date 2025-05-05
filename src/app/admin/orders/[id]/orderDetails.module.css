@@ -1,0 +1,290 @@
+.container {
+  font-family: var(--font-montserrat);
+  min-height: 100vh;
+  background-color: #FFFFFF;
+  max-width: 1280px;
+  padding: 0 20px;
+  margin: 0 auto;
+}
+
+
+
+.logo {
+  height: 32px;
+}
+
+.userIcon {
+  color: #333333;
+  cursor: pointer;
+}
+
+.content {
+  padding: 20px 0;
+}
+
+.orderHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  gap: 60px 0;
+  flex-wrap: wrap;
+}
+
+.backButton {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #333333;
+  font-weight: 500;
+  width: 100%;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 150%;
+  color: #323433;
+}
+
+.backButton svg {
+  margin-right: 8px;
+}
+
+.title {
+  font-family: "Tenor Sans", sans-serif;
+  font-weight: 400;
+  font-size: 32px;
+  text-align: center;
+  color: #323433;
+}
+
+.orderTime {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 150%;
+  color: #323433;
+}
+
+.orderDetails {
+  background-color: #FFFFFF;
+  border: 1px solid #c1a286;
+
+  padding: 50px;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+  display: flex;
+  position: relative;
+}
+
+.formGroup > *{
+  flex: 1 1 50%;
+}
+
+.formGroup label {
+  font-family: "Tenor Sans", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  color: #323433;
+}
+
+.inputWithIcon {
+  display: flex;
+  align-items: center;
+}
+
+.editButton{
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  color: #666666;
+}
+
+.formInput {
+  border: 1px solid #c8c8c8;
+  padding: 11px 20px;
+  height: 56px;
+  width: 100%;
+  background: #f9f8f4;
+}
+
+.formInput::placeholder{
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 140%;
+  color: rgba(193, 175, 134, 0.5) !important;
+}
+
+.commentInput {
+  border: 1px solid #c8c8c8;
+  padding: 11px 20px;
+  width: 100%;
+  background: #f9f8f4;
+  resize: vertical;
+}
+
+.editButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 8px;
+  color: #666666;
+}
+
+.saveButton {
+  padding: 0px 15px;
+  width: 244px;
+  height: 50px;
+  background: #a45b38;
+  font-family: "Montserrat", sans-serif;
+font-weight: 600;
+font-size: 16px;
+line-height: 150%;
+color: #fff;
+margin-left: auto;
+}
+
+.sectionTitle {
+  font-family: "Tenor Sans", sans-serif;
+  font-weight: 400;
+  margin: 100px 0 30px 0;
+  font-size: 32px;
+  color: #323433;
+}
+
+.productCard {
+  display: flex;
+
+  padding: 40px 0;
+  border-bottom: 1px solid rgba(193, 175, 134, 0.5);
+
+  gap: 130px;
+  margin-bottom: 16px;
+}
+
+.productImage {
+  width: 286px;
+  height: 151px;
+  margin-right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #F5F5F5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.productImage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: cover;
+}
+
+.productDetails {
+  flex: 1;
+}
+
+.productName {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 135%;
+  color: #323433;
+}
+
+.productInfo {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 140%;
+  color: #323433;
+}
+
+.productSku {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 140%;
+  color: #323433;
+  margin: 15px 0;
+}
+
+.productRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.colorCircle {
+  width: 20px ;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid #bdbdbd;
+  display: inline-block;
+  margin-right: 4px;
+}
+
+.productMaterial {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 140%;
+  color: #a45b38;
+}
+
+.productDivider {
+  color: #b5704d;
+  font-size: 16px;
+
+}
+
+.productSize {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 140%;
+  color: #a45b38;
+}
+
+.productPrice {
+  font-family: "Tenor Sans", sans-serif;
+  font-weight: 400;
+  font-size: 20px;
+  color: #a45b38;
+}
+
+.productCurrency {
+  font-size: 18px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+} 
+
+@media (max-width: 768px) {
+  .orderDetails{
+    padding: 20px;
+  }
+
+  .formGroup{
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .productCard{
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .editButton{
+    top: 70%;
+  }
+}

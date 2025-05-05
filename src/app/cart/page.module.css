@@ -8,6 +8,7 @@
     font-family: 'Tenor Sans', sans-serif;
     font-size: 32px;
     margin-bottom: 30px;
+    margin-top: 60px;
     color: #323433;
   }
   
@@ -24,6 +25,10 @@
     font-size: 18px;
     margin-bottom: 20px;
     color: #323433;
+  }
+
+  .productImage img{
+    object-fit: contain !important;
   }
   
   .continueButton {
@@ -47,6 +52,8 @@
   
   .cartLeft {
     width: 820px;
+border-top: 1px solid rgba(193, 175, 134, 0.5);
+
   }
   
   .cartItems {
@@ -67,6 +74,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    
     width: 190px;
   }
   
@@ -107,18 +115,19 @@
   }
   
   .productName {
-    font-family: 'Montserrat', sans-serif;
+    font-family: "Montserrat", sans-serif;
     font-weight: 500;
     font-size: 18px;
-    margin-bottom: 5px;
+    line-height: 135%;
     color: #323433;
   }
   
   .productArticle {
-    font-family: 'Montserrat', sans-serif;
+      font-weight: 400;
     font-size: 14px;
+    line-height: 140%;
     color: #323433;
-    margin-bottom: 15px;
+    margin: 15px 0;
   }
   
   .productDetails {
@@ -127,6 +136,14 @@
     gap: 15px;
   }
   
+.colorMaterial span{
+  font-family: "Montserrat", sans-serif;
+font-weight: 500;
+font-size: 14px;
+line-height: 140%;
+color: #a45b38;
+}
+
   .colorMaterial {
     display: flex;
     align-items: center;
@@ -143,8 +160,8 @@
   
   .quantityPrice {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 30px;
   }
   
   .quantityControls {
@@ -162,7 +179,6 @@
   .minusButton, .plusButton {
     background: none;
     border: 1px solid rgba(193, 175, 134, 0.5);
-    border-radius: 50%;
     width: 19px;
     height: 19px;
     display: flex;
@@ -184,9 +200,11 @@
   }
   
   .price {
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
     font-size: 20px;
-    color: #A45B38;
+    text-align: center;
+    color: #a45b38;
   }
   
   .currency {
@@ -205,17 +223,17 @@
   }
   
   .checkoutForm {
-    margin-top: 30px;
+    margin-top: 60px;
   }
   
   .formSection {
-    margin-bottom: 30px;
+    margin-bottom: 50px;
   }
   
   .sectionTitle {
     font-family: 'Tenor Sans', sans-serif;
     font-size: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     color: #323433;
   }
   
@@ -288,6 +306,7 @@
     display: flex;
     gap: 20px;
     width: 100%;
+    flex-wrap: wrap;
   }
   
   .inputField {
@@ -299,7 +318,7 @@
     padding: 11px 20px;
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
-    border-radius: 4px;
+    height: 55px;
     font-family: 'Montserrat', sans-serif;
     font-size: 16px;
   }
@@ -311,9 +330,10 @@
   .addressField input {
     width: 100%;
     padding: 11px 20px;
+    height: 55px;
+
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
-    border-radius: 4px;
     font-family: 'Montserrat', sans-serif;
     font-size: 16px;
   }
@@ -385,6 +405,10 @@
   .commentField {
     margin-bottom: 20px;
   }
+
+  .commentField .floatingLabel{
+    top: 20%;
+  }
   
   .commentField textarea {
     width: 100%;
@@ -407,28 +431,35 @@
     color: #999A99;
     text-align: center;
     max-width: 600px;
-    margin: 0 auto;
+    margin: 40px auto 0;
+  }
+
+  .termsText a{
+    text-decoration: underline;
+text-decoration-skip-ink: none;
+color: #a45b38;
   }
   
   .orderSummary {
     width: 400px;
+    flex-shrink: 0;
     padding: 60px 20px;
     border: 1px solid rgba(193, 175, 134, 0.5);
     display: flex;
+    height: max-content;
     flex-direction: column;
-    gap: 30px;
   }
   
   .summaryTitle {
     font-family: 'Tenor Sans', sans-serif;
     font-size: 32px;
     color: #323433;
+    margin-bottom: 60px;
   }
   
   .summaryContent {
     display: flex;
     flex-direction: column;
-    gap: 20px;
   }
   
   .summaryRow {
@@ -441,8 +472,10 @@
     justify-content: space-between;
     align-items: center;
     font-family: 'Tenor Sans', sans-serif;
+    font-weight: 400;
     font-size: 20px;
-    color: #323433;
+    text-align: center;
+    color: rgba(50, 52, 51, 0.8);
   }
   
   .summaryRowPrice {
@@ -464,19 +497,37 @@
   }
   
   .promoCode {
-    padding: 10px 0;
+    padding: 20px 0;
+    border-top: 1px solid #c1af8680;
     font-size: 14px;
     color: #323433;
     cursor: pointer;
     display: flex;
-    align-items: center;
-    margin-bottom: 10px;
+    justify-content: flex-end;
+    align-items: flex-end;
+  }
+
+  .promoCode span{
+    display: flex
+    ;
+        font-family: Montserrat, sans-serif;
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 140%;
+        color: #a45b38;
+        border: 1px solid #c1af8680;
+        padding: 0 ;
+        width: 160px;
+        height: 30px;
+        align-items: center;
+        justify-content: center;
   }
   
   .promoCodeForm {
     display: flex;
     gap: 20px;
-    margin-bottom: 20px;
+    padding: 20px 0;
+    border-top: 1px solid #c1af8680;
   }
   
   .promoCodeInput {
@@ -484,9 +535,10 @@
     padding: 11px 15px;
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
-    border-radius: 4px;
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
+    height: 40px !important;
+
   }
   
   .promoCodeButton {
@@ -494,8 +546,8 @@
     height: 40px;
     background-color: #958F8A;
     color: white;
+    height: 40px;
     border: none;
-    border-radius: 4px;
     font-family: 'Montserrat', sans-serif;
     font-weight: 500;
     font-size: 14px;
@@ -507,11 +559,11 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    margin-top: 30px;
     padding: 15px 30px;
     background-color: #A45B38;
     color: white;
     border: none;
-    border-radius: 4px;
     font-family: 'Montserrat', sans-serif;
     font-weight: 600;
     font-size: 20px;
@@ -519,10 +571,7 @@
     transition: background-color 0.3s;
   }
   
-  .confirmButton:hover {
-    background-color: #8a4b2d;
-  }
-  
+
   @media (max-width: 1280px) {
     .cartContent {
       flex-direction: column;
@@ -536,6 +585,126 @@
   @media (max-width: 768px) {
     .formRow {
       flex-direction: column;
+    }
+    
+    .container{
+      padding: 0 16px;
+    }
+
+    .title{
+      margin: 30px 0 10px;
+      font-size: 24px;
+    }
+
+    .itemLeft{
+      width: 120px;
+    }
+
+    .productName{
+      font-size: 14px;
+    }
+
+    .productArticle{
+      font-size: 12px;
+      margin: 10px 0;
+    }
+
+    .colorMaterial span{
+      font-size: 12px;
+    }
+
+    .quantity{
+      font-size: 16px;
+    }
+
+    .priceBlock{
+      font-size: 16px;
+    }
+
+    .price{
+      font-size: 16px;
+    }
+
+    .productImage{
+      width: 100%;
+      height: 50px;
+    }
+
+    .currency{
+      font-size: 16px;
+    }
+
+    .removeButton{
+      top: -20px;
+    }
+
+    .cartItem{
+      gap: 16px;
+      align-items: flex-start;
+    }
+    
+    .cartItems{
+      gap: 0;
+    }
+    
+    .checkoutForm{
+      margin-top: 30px;
+    }
+
+    .sectionTitle{
+      margin-bottom: 20px;
+    }
+
+    .orderSummary{
+      width: 100%;
+      padding: 20px;
+    }
+
+    .summaryTitle{
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+
+    .summaryRow{
+      padding: 10px 0;
+    }
+
+    .summaryRowTitle{
+      font-size: 16px;
+    }
+
+    .summaryRowPrice{
+      font-size: 16px;
+    }
+
+    .summaryTotal{
+      font-size: 16px;
+    }
+
+    .promoCode{
+      font-size: 12px;
+    }
+
+    .promoCode span{
+      font-size: 12px;
+    }
+
+    .confirmButton{
+      font-size: 16px;
+      padding: 10px 20px;
+    }
+
+    .radioContent{
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .formSection{
+      margin-bottom: 20px;
+    }
+
+    .summaryRowTitle{
+      font-size: 16px;
     }
   }
   
@@ -621,10 +790,8 @@
   }
   
   .mapContainer {
-    margin-top: 20px;
-    border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    height: 300px;
   }
   
   @media (max-width: 768px) {
@@ -632,3 +799,136 @@
       flex-direction: column;
     }
   }
+
+.inputContainer {
+  position: relative;
+  width: 100%;
+}
+
+.inputContainer input {
+  width: 100%;
+  padding: 11px 20px;
+  background-color: #F9F8F4;
+  border: 1px solid #C8C8C8;
+  height: 55px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+}
+
+.floatingLabel {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(193, 175, 134, 0.5);
+  transition: all 0.2s ease;
+  pointer-events: none;
+  padding: 0 5px;
+  background-color: transparent;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+}
+
+.inputContainer input:focus + .floatingLabel,
+.inputContainer input:not(:placeholder-shown) + .floatingLabel {
+  top: 5px;
+  font-size: 10px;
+  color: #c1a286;
+  transform: translateY(0);
+}
+
+.inputContainer input::placeholder {
+  opacity: 0;
+}
+
+.inputContainer textarea {
+  width: 100%;
+  height: 100px;
+  resize: none;
+  padding: 11px 20px;
+  background-color: #F9F8F4;
+  border: 1px solid #C8C8C8;
+  border-radius: 4px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+}
+
+.inputContainer textarea:focus + .floatingLabel,
+.inputContainer textarea:not(:placeholder-shown) + .floatingLabel {
+  top: 5px;
+  font-size: 12px;
+  color: #A45B38;
+  background-color: #F9F8F4;
+  transform: translateY(0);
+}
+
+.requiredStar {
+  color: #ff8f8f;
+}
+
+.customSelect {
+  position: relative;
+  width: 100%;
+}
+
+.selectHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 1px solid #C8C8C8;
+  background-color: #F9F8F4;
+  cursor: pointer;
+  position: relative;
+}
+
+.selectArrow {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: all 0.2s;
+}
+
+.paymentOptions{
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.selectOptions {
+  position: absolute;
+  top: 108%;
+  left: 0;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  background-color: #FFF;
+  border: 1px solid #C8C8C8;
+  z-index: 10;
+}
+
+.selectOption {
+  padding: 15px 20px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.selectOption:hover {
+  background-color: #F9F8F4;
+}
+
+.customSelect .inputContainer {
+  flex: 1;
+  border: none;
+}
+
+.customSelect .inputContainer input {
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.innInput {
+    width: 100%;
+    flex: 1 1 100%;
+}

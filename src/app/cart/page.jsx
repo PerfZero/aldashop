@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { useCart } from '../components/CartContext';
+import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
@@ -27,6 +28,15 @@ export default function CartPage() {
     payment: 'card', // card или sbp
     comment: ''
   });
+  const [isPickupDropdownOpen, setIsPickupDropdownOpen] = useState(false);
+  const pickupAddresses = [
+    'ул. Кипарисовая, 56',
+    'ул. Морская, 24',
+    'ул. Морская, 24',
+    'ул. Морская, 24',
+    'ул. Морская, 24',
+    'ул. Приморская, 118'
+  ];
 
   useEffect(() => {
     calculateTotal();
@@ -100,6 +110,14 @@ export default function CartPage() {
     clearCart();
   };
 
+  const handleSelectPickupAddress = (address) => {
+    setFormData(prev => ({
+      ...prev,
+      pickupAddress: address
+    }));
+    setIsPickupDropdownOpen(false);
+  };
+
   if (cartItems.length === 0) {
     return (
       <div className={styles.empty}>
@@ -114,16 +132,17 @@ export default function CartPage() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>Корзина</h1>
       
       <div className={styles.cartContent}>
         <div className={styles.cartLeft}>
+        <h1 className={styles.title}>Корзина</h1>
+
           <div className={styles.cartItems}>
             {cartItems.map(item => (
               <div key={item.id} className={styles.cartItem}>
                 <div className={styles.itemLeft}>
                   <div className={styles.productImage}>
-                    <img src={item.image} alt={item.name} />
+                    <img src="/sofa.png" alt="" />
                   </div>
                   
                   <div className={styles.productRating}>
@@ -224,25 +243,36 @@ export default function CartPage() {
                 
                 <div className={styles.formRow}>
                   <div className={styles.inputField}>
-                    <input 
-                      type="text" 
-                      name="firstName" 
-                      placeholder="Имя *" 
-                      required
-                      value={formData.firstName}
-                      onChange={handleInputChange}
-                    />
+                    <div className={styles.inputContainer}>
+                      <input 
+                        type="text" 
+                        name="firstName" 
+                        placeholder=" " 
+                        required
+                        value={formData.firstName}
+                        onChange={handleInputChange}
+                      />
+                      <span className={styles.floatingLabel}>
+                        Имя <span className={styles.requiredStar}>*</span>
+                      </span>
+                    </div>
                   </div>
                   
-                  <div className={styles.inputField}>
-                    <input 
-                      type="text" 
-                      name={formData.isLegalEntity ? "inn" : "lastName"} 
-                      placeholder={formData.isLegalEntity ? "Укажите ИНН ИП или организацию *" : "Фамилия *"} 
-                      required
-                      value={formData.isLegalEntity ? formData.inn || "" : formData.lastName}
-                      onChange={handleInputChange}
-                    />
+                  <div className={formData.isLegalEntity ? `${styles.inputField} ${styles.innInput}` : styles.inputField}>
+                    <div className={styles.inputContainer}>
+                      <input 
+                        type="text" 
+                        name={formData.isLegalEntity ? "inn" : "lastName"} 
+                        placeholder=" " 
+                        required
+                        value={formData.isLegalEntity ? formData.inn || "" : formData.lastName}
+                        onChange={handleInputChange}
+                      />
+                      <span className={styles.floatingLabel}>
+                        {formData.isLegalEntity ? "Укажите ИНН ИП или организацию " : "Фамилия "}
+                        <span className={styles.requiredStar}>*</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
                 
@@ -271,25 +301,35 @@ export default function CartPage() {
                 
                 <div className={styles.formRow}>
                   <div className={styles.inputField}>
-                    <input 
-                      type="tel" 
-                      name="phone" 
-                      placeholder="Телефон *" 
-                      required
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                    />
+                    <div className={styles.inputContainer}>
+                      <input 
+                        type="tel" 
+                        name="phone" 
+                        placeholder=" " 
+                        required
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                      />
+                      <span className={styles.floatingLabel}>
+                        Телефон   
+                      </span>
+                    </div>
                   </div>
                   
                   <div className={styles.inputField}>
-                    <input 
-                      type="email" 
-                      name="email" 
-                      placeholder="Электронная почта *" 
-                      required
-                      value={formData.email}
-                      onChange={handleInputChange}
-                    />
+                    <div className={styles.inputContainer}>
+                      <input 
+                        type="email" 
+                        name="email" 
+                        placeholder=" " 
+                        required
+                        value={formData.email}
+                        onChange={handleInputChange}
+                      />
+                      <span className={styles.floatingLabel}>
+                        Электронная почта <span className={styles.requiredStar}>*</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -299,13 +339,17 @@ export default function CartPage() {
               <h2 className={styles.sectionTitle}>Адрес доставки</h2>
               <div className={styles.formContent}>
                 <div className={styles.addressField}>
-                  <input 
-                    type="text" 
-                    name="city" 
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className={styles.cityField}
-                  />
+                  <div className={styles.inputContainer}>
+                    <input 
+                      type="text" 
+                      name="city" 
+                      placeholder=" "
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      className={styles.cityField}
+                    />
+                    <span className={styles.floatingLabel}>Населенный пункт <span className={styles.requiredStar}>*</span></span>
+                  </div>
                 </div>
                 
                 <div className={styles.deliveryOptions}>
@@ -346,13 +390,46 @@ export default function CartPage() {
                   
                   {formData.delivery === 'pickup' && (
                     <div className={styles.addressField}>
-                      <input 
-                        type="text" 
-                        name="pickupAddress" 
-                        value={formData.pickupAddress}
-                        onChange={handleInputChange}
-                        className={styles.pickupAddressField}
-                      />
+                      <div className={styles.customSelect}>
+                        <div 
+                          className={styles.selectHeader} 
+                          onClick={() => setIsPickupDropdownOpen(!isPickupDropdownOpen)}
+                        >
+                          <div className={styles.inputContainer}>
+                            <input 
+                              type="text" 
+                              name="pickupAddress" 
+                              placeholder=" "
+                              value={formData.pickupAddress}
+                              onChange={handleInputChange}
+                              className={styles.pickupAddressField}
+                              readOnly
+                            />
+                            <span className={styles.floatingLabel}>
+                              Адрес пункта выдачи <span className={styles.requiredStar}>*</span>
+                            </span>
+                          </div>
+                          <div className={styles.selectArrow}>
+                            <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M1 1L7 7L13 1" stroke="#C1AF86" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          </div>
+                        </div>
+                        
+                        {isPickupDropdownOpen && (
+                          <div className={styles.selectOptions}>
+                            {pickupAddresses.map((address, index) => (
+                              <div 
+                                key={index} 
+                                className={styles.selectOption}
+                                onClick={() => handleSelectPickupAddress(address)}
+                              >
+                                {address}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                   
@@ -360,42 +437,43 @@ export default function CartPage() {
                     <div className={styles.addressToDelivery}>
                       <div className={styles.addressFields}>
                         <div className={styles.addressField}>
-                          <label className={styles.addressLabel}>
-                            Адрес пункта выдачи
-                            <span className={styles.required}>*</span>
-                          </label>
-                          <input 
-                            type="text" 
-                            name="address" 
-                            value={formData.address || formData.pickupAddress}
-                            onChange={handleInputChange}
-                            placeholder="ул. Кипарисовая, 56"
-                            className={styles.addressInput}
-                            required
-                          />
+                          <div className={styles.inputContainer}>
+                            <input 
+                              type="text" 
+                              name="address" 
+                              placeholder=" "
+                              value={formData.address || formData.pickupAddress}
+                              onChange={handleInputChange}
+                              className={styles.addressInput}
+                              required
+                            />
+                            <span className={styles.floatingLabel}>
+                              Адрес пункта выдачи <span className={styles.requiredStar}>*</span>
+                            </span>
+                          </div>
                         </div>
                         
                         <div className={styles.inputField}>
-                          <input 
-                            type="text" 
-                            name="apartment" 
-                            placeholder="Квартира" 
-                            value={formData.apartment}
-                            onChange={handleInputChange}
-                            className={styles.apartmentField}
-                          />
+                          <div className={styles.inputContainer}>
+                            <input 
+                              type="text" 
+                              name="apartment" 
+                              placeholder=" " 
+                              value={formData.apartment}
+                              onChange={handleInputChange}
+                              className={styles.apartmentField}
+                            />
+                            <span className={styles.floatingLabel}>Квартира</span>
+                          </div>
                         </div>
                       </div>
                       
                       <div className={styles.mapContainer}>
-                        {/* Здесь будет Яндекс карта */}
-                        <div className={styles.mapPlaceholder}>
-                          <img 
-                            src="/images/products/map-placeholder.svg" 
-                            alt="Карта" 
-                            style={{ width: '100%', height: '300px', backgroundColor: '#f5f5f5' }}
-                          />
-                        </div>
+                        <YMaps>
+                          <Map defaultState={{ center: [43.585472, 39.723098], zoom: 12 }} width="100%" height="300px">
+                            <Placemark geometry={[43.585472, 39.723098]} />
+                          </Map>
+                        </YMaps>
                       </div>
                     </div>
                   )}
@@ -449,21 +527,27 @@ export default function CartPage() {
             </div>
             
             <div className={styles.commentField}>
-              <textarea 
-                name="comment" 
-                placeholder="Комментарий к заказу" 
-                value={formData.comment}
-                onChange={handleInputChange}
-              ></textarea>
+              <div className={styles.inputContainer}>
+                <textarea 
+                  name="comment" 
+                  placeholder=" " 
+                  value={formData.comment}
+                  onChange={handleInputChange}
+                ></textarea>
+                <span className={styles.floatingLabel}>Комментарий к заказу</span>
+              </div>
             </div>
             
             <p className={styles.termsText}>
-              Делая заказ, Вы даете согласие на обработку персональных данных, принимаете
-              правилами пользования, политику конфиденциальности и договор оферты.
+              Делая заказ, Вы даете согласие на обработку персональных данных, принимаете <br />
+            <a href="">  правилами пользования</a>,  <a href=""> политику конфиденциальности </a> и <a href=""> договор оферты.</a>
             </p>
           
           
-            <div className={styles.orderSummary}>
+          
+          </form>
+        </div>
+        <div className={styles.orderSummary}>
               <h2 className={styles.summaryTitle}>Информация о заказе</h2>
               
               <div className={styles.summaryContent}>
@@ -472,7 +556,7 @@ export default function CartPage() {
                     <span>{cartItems.length} {cartItems.length === 1 ? 'товар' : cartItems.length < 5 ? 'товара' : 'товаров'}</span>
                     <div className={styles.summaryRowPrice}>
                       <span>{cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
-                      <span className={styles.currency}>₽</span>
+                     ₽
                     </div>
                   </div>
                 </div>
@@ -482,20 +566,23 @@ export default function CartPage() {
                     <span>Скидка</span>
                     <div className={styles.summaryRowPrice}>
                       <span>{discount.toLocaleString()}</span>
-                      <span className={styles.currency}>₽</span>
+                    ₽
                     </div>
                   </div>
                 </div>
                 
                 {showPromoCodeInput ? (
                   <div className={styles.promoCodeForm}>
-                    <input 
-                      type="text" 
-                      className={styles.promoCodeInput} 
-                      placeholder="Введите промокод"
-                      value={promoCode}
-                      onChange={(e) => setPromoCode(e.target.value)}
-                    />
+                    <div className={styles.inputContainer}>
+                      <input 
+                        type="text" 
+                        className={styles.promoCodeInput} 
+                        placeholder=" "
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
+                      />
+                      <span className={styles.floatingLabel}>Введите промокод</span>
+                    </div>
                     <button 
                       type="button" 
                       className={styles.promoCodeButton}
@@ -538,8 +625,6 @@ export default function CartPage() {
                 </svg>
               </button>
             </div>
-          </form>
-        </div>
       </div>
     </div>
   );
