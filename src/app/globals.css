@@ -106,3 +106,6 @@ input[type='file'] {
 .modals div > p{
 	text-align: left;
 }
+* {
+    -webkit-tap-highlight-color: transparent;
+}

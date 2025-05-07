@@ -8,7 +8,6 @@ export default function Filters({ isVisible, onClose }) {
 
   const mainFilters = [
     { title: 'Порядок', type: 'checkbox' },
-    { title: 'От именитых дизайнеров', type: 'checkbox' },
     { title: 'Цена', type: 'range' },
     { title: 'Размер', type: 'select' },
     { title: 'Популярные цвета', type: 'colors' },
@@ -56,7 +55,7 @@ export default function Filters({ isVisible, onClose }) {
               className={styles.toggleInput}
             />
             <span className={styles.toggleSwitch}></span>
-            <span className={styles.toggleText}>В наличии доставка<br/>3-5 дней</span>
+            <span className={styles.toggleText}>В наличии</span>
           </label>
         </div>
 
