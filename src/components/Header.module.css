@@ -57,27 +57,43 @@
 .header__nav {
   display: flex;
   align-items: center;
-  gap: 2rem;
+
 }
 
 .header__navItem {
   position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.header__navItem:hover .header__navLink {
+  border-bottom: 1px solid #a45b38;
+  color: #a45b38;
+}
+
+.header__navItem:hover{
+  color: #a45b38;
+  color: #a45b38;
 }
 
 .header__navLink {
+  padding: 0 12px;
+  height: auto;
+  line-height: 56px;
+  border-bottom: 1px solid #fff;
+  position: relative;
   color: #323433;
-  text-decoration: none;
-  font-size: 1rem;
-  padding: 0.5rem;
-  transition: color 0.3s ease;
+  z-index: 2;
+  display: block;
+  white-space: nowrap;
 }
 
-.header__navLink:hover {
-  color: #C1A286;
-}
+
+
+
 
 .header__navLink.active {
-  color: #C1A286;
+  color: #a45b38;
 }
 
 /* Мобильные стили */
@@ -450,7 +466,6 @@ color: #323433;
   .header__nav {
     display: flex;
     align-items: center;
-    gap: 2rem;
   }
 
   /* Скрываем бургер на десктопе */
@@ -509,18 +524,7 @@ font-family: "Montserrat", sans-serif;
 
   }
   
-  
-  .header__navLink {
-    font-family: "Montserrat", sans-serif;
-    font-weight: 400;
-    font-size: 16px;
-    line-height: 150%;
-    color: #323433;
-    position: relative;
-    text-decoration: none;
-    padding: 15px 0;
-    transition: color 0.3s ease;
-  }
+
 
   
   .searchDropdown{
@@ -643,7 +647,7 @@ font-family: "Montserrat", sans-serif;
 .header__nav {
   display: flex;
   position: relative;
-  gap: 30px;
+ 
 }
 
 .header__icons {
@@ -675,25 +679,52 @@ font-family: "Montserrat", sans-serif;
   position: relative;
 }
 
-.dropdown {
-    position: absolute;
-    top: 70px;
-    left: 0;
-    right: 0;
-    background-color: #fff;
-    z-index: 1000;
-    padding: 40px 0;
+@keyframes slideInDown {
+  0% {
+    transform: translateY(-10px);
     opacity: 0;
-
-    pointer-events: none;
-    transition: opacity 0.3s ease;
+    visibility: hidden;
   }
-  
-  .dropdown--open {
+  100% {
+    transform: translateY(0);
     opacity: 1;
- 
-    pointer-events: auto;
+    visibility: visible;
   }
+}
+
+.dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  opacity: 0;
+  transform: translateY(-20px);
+  box-sizing: border-box;
+  top: 85px;
+  height: 0;
+  overflow: hidden;
+  transition: opacity 0.6s ease, transform 0.6s ease, height 0.6s ease;
+  background: #fff;
+  z-index: 100;
+}
+
+.dropdown--open {
+  height: auto;
+  opacity: 1;
+  transform: translateY(0);
+  padding: 24px 0;
+  animation: dropdownAppear 0.6s ease forwards;
+}
+
+@keyframes dropdownAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .dropdown__container {
   display: flex;

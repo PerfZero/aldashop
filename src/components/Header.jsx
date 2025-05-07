@@ -16,14 +16,7 @@ export default function Header() {
   const [mobileExpandedCategory, setMobileExpandedCategory] = useState(null);
   const [categories, setCategories] = useState({});
   const timeoutRef = useRef(null);
-  const navItemsRef = useRef({});
-  const navRef = useRef(null);
   const mobileMenuRef = useRef(null);
-  const [indicatorStyle, setIndicatorStyle] = useState({
-    left: 0,
-    width: 0,
-    opacity: 0,
-  });
   const { cartItems } = useCart();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,59 +41,17 @@ export default function Header() {
     fetchCategories();
   }, []);
 
-  useEffect(() => {
-    if (activeMenu) {
-      updateIndicator(activeMenu);
-    }
-  }, [activeMenu]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (activeMenu) {
-        updateIndicator(activeMenu);
-      }
-    }, 200);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const updateIndicator = (menuKey) => {
-    const menuItemRef = navItemsRef.current[menuKey];
-    const navElement = navRef.current;
-
-    if (menuItemRef && navElement) {
-      const rect = menuItemRef.getBoundingClientRect();
-      const parentRect = navElement.getBoundingClientRect();
-      setIndicatorStyle({
-        left: rect.left - parentRect.left,
-        width: rect.width,
-        opacity: 1,
-      });
-    }
-  };
-
-  const setNavRef = (element, key) => {
-    if (element) {
-      navItemsRef.current[key] = element;
-    }
-  };
-
   const handleMouseEnter = (menu) => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
     setIsDropdownOpen(menu);
-    updateIndicator(menu);
   };
 
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsDropdownOpen(null);
-      if (activeMenu) {
-        updateIndicator(activeMenu);
-      } else {
-        setIndicatorStyle({ left: 0, width: 0, opacity: 0 });
-      }
-    }, 300);
+    }, 100);
   };
 
   const handleDropdownMouseEnter = () => {
@@ -112,12 +63,7 @@ export default function Header() {
   const handleDropdownMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsDropdownOpen(null);
-      if (activeMenu) {
-        updateIndicator(activeMenu);
-      } else {
-        setIndicatorStyle({ left: 0, width: 0, opacity: 0 });
-      }
-    }, 300);
+    }, 100);
   };
 
   const handleMobileMenuClick = (menu) => {
@@ -207,22 +153,13 @@ export default function Header() {
         </button>
 
         {/* Десктопное меню */}
-        <nav className={styles.header__nav} ref={navRef}>
-          <div
-            className={styles["nav-indicator"]}
-            style={{
-              left: `${indicatorStyle.left}px`,
-              width: `${indicatorStyle.width}px`,
-              opacity: indicatorStyle.opacity,
-            }}
-          />
+        <nav className={styles.header__nav}>
           {Object.entries(categories).map(([key, category]) => (
             <div
               key={key}
               className={styles.header__navItem}
               onMouseEnter={() => handleMouseEnter(key)}
               onMouseLeave={handleMouseLeave}
-              ref={(el) => setNavRef(el, key)}
             >
               <Link
                 href={`/categories/${category.slug}`}
@@ -441,9 +378,10 @@ export default function Header() {
         className={`${styles.dropdown} ${isDropdownOpen ? styles['dropdown--open'] : ''}`}
         onMouseEnter={handleDropdownMouseEnter}
         onMouseLeave={handleDropdownMouseLeave}
+        key={isDropdownOpen}
       >
         {isDropdownOpen && categories[isDropdownOpen] && (
-          <div className={styles.dropdown__container}>
+          <div className={styles.dropdown__container} key={isDropdownOpen}>
             <div className={styles.dropdown__left}>
               <h3 className={styles.dropdown__title}>{categories[isDropdownOpen].label}</h3>
               {categories[isDropdownOpen].subItems.length > 0 ? (
