@@ -20,6 +20,10 @@
   display: none;
 }
 
+.filters__footer{
+  display: none;
+}
+
 .toggleSwitch {
   width: 44px;
   height: 28px;
@@ -184,6 +188,10 @@ color: #323433;
 display: block;
 font-family: "Tenor Sans", sans-serif;
 
+  }
+
+  .filters__footer{
+    display: flex;
   }
 }
 
