@@ -1,6 +1,5 @@
 'use client';
 import { createContext, useState, useContext, useEffect } from 'react';
-import { demoProducts } from './testData';
 import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -15,11 +14,17 @@ export function CartProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated, getAuthHeaders, refreshToken } = useAuth();
 
-  // Загружаем данные корзины из API или localStorage
-  useEffect(() => {
-    const loadCart = async () => {
-      setIsLoading(true);
-      try {
+     // Загружаем данные корзины из API или localStorage
+   useEffect(() => {
+     const loadCart = async () => {
+       setIsLoading(true);
+       
+       // Очищаем localStorage от тестовых данных
+       if (typeof window !== 'undefined') {
+         localStorage.removeItem('cart');
+       }
+       
+       try {
         // Если пользователь авторизован, загружаем корзину из API
         if (isAuthenticated) {
           let headers = getAuthHeaders();
@@ -71,35 +76,31 @@ export function CartProvider({ children }) {
       setIsLoading(false);
     };
 
-    const loadFromLocalStorage = () => {
-      if (typeof window !== 'undefined') {
-        const storedCart = localStorage.getItem('cart');
-        if (storedCart) {
-          try {
-            setCartItems(JSON.parse(storedCart));
-          } catch (error) {
-            console.error('Ошибка при загрузке корзины из localStorage:', error);
+                   const loadFromLocalStorage = () => {
+        if (typeof window !== 'undefined') {
+          const storedCart = localStorage.getItem('cart');
+          if (storedCart) {
+            try {
+              setCartItems(JSON.parse(storedCart));
+            } catch (error) {
+              console.error('Ошибка при загрузке корзины из localStorage:', error);
+              setCartItems([]);
+            }
+          } else {
             setCartItems([]);
           }
-        } else {
-          // Если корзина пуста, добавляем демо-товары для демонстрации
-          setCartItems([
-            { ...demoProducts[0], quantity: 1 },
-            { ...demoProducts[1], quantity: 1 }
-          ]);
         }
-      }
-    };
+      };
 
     loadCart();
   }, [isAuthenticated, getAuthHeaders, refreshToken]);
 
-  // Сохраняем корзину в localStorage только для неавторизованных пользователей
-  useEffect(() => {
-    if (isLoaded && !isAuthenticated && typeof window !== 'undefined') {
-      localStorage.setItem('cart', JSON.stringify(cartItems));
-    }
-  }, [cartItems, isLoaded, isAuthenticated]);
+           // Сохраняем корзину в localStorage только для неавторизованных пользователей
+    useEffect(() => {
+      if (isLoaded && !isAuthenticated && typeof window !== 'undefined') {
+        localStorage.setItem('cart', JSON.stringify(cartItems));
+      }
+    }, [cartItems, isLoaded, isAuthenticated]);
 
   // Добавление товара в корзину
   const addToCart = async (product) => {

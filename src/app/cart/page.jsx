@@ -221,7 +221,7 @@ export default function CartPage() {
       <div className={styles.empty}>
         <h1 className={styles.title}>Корзина</h1>
         <p className={styles.emptyText}>Ваша корзина пуста</p>
-        <Link href="/menu" className={styles.continueButton}>
+        <Link href="/" className={styles.continueButton}>
           Продолжить покупки
         </Link>
       </div>

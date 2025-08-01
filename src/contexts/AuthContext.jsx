@@ -17,8 +17,8 @@ export function AuthProvider({ children }) {
       
       if (accessToken) {
         try {
-          console.log('🔐 Making request to /api/auth/user...');
-          const response = await fetch('/api/auth/user', {
+          console.log('🔐 Making request to /api/user/profile...');
+          const response = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
             },
@@ -44,7 +44,7 @@ export function AuthProvider({ children }) {
                if (refreshResult.success) {
                  console.log('✅ Token refreshed successfully, fetching user data...');
                  try {
-                   const userResponse = await fetch('/api/auth/user', {
+                   const userResponse = await fetch('/api/user/profile', {
                      headers: {
                        'Authorization': `Bearer ${refreshResult.accessToken}`,
                      },
@@ -116,7 +116,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem('refreshToken', data.refresh);
       
       console.log('👤 Fetching user data...');
-      const userResponse = await fetch('/api/auth/user', {
+      const userResponse = await fetch('/api/user/profile', {
         headers: {
           'Authorization': `Bearer ${data.access}`,
         },
