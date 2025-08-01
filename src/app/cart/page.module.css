@@ -92,6 +92,17 @@ border-top: 1px solid rgba(193, 175, 134, 0.5);
     height: 100%;
     object-fit: cover;
   }
+
+  .bestsellerBadge {
+    background: linear-gradient(135deg, #A45B38 0%, #C1AF86 100%);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
   
   .productRating {
     display: flex;

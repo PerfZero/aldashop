@@ -7,7 +7,7 @@ import { useCart } from '../components/CartContext';
 import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, clearCart, isLoading } = useCart();
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [showPromoCodeInput, setShowPromoCodeInput] = useState(false);
@@ -19,14 +19,18 @@ export default function CartPage() {
     inn: '',
     phone: '',
     email: '',
-    city: 'Краснодарский край, г. Сочи',
+    region: 'Краснодарский край',
+    city: 'Сочи',
+    street: '',
+    house: '',
     pickupAddress: 'ул. Кипарисовая, 56',
-    address: '',
     apartment: '',
     isLegalEntity: false,
-    delivery: 'pickup', // pickup или address
-    payment: 'card', // card или sbp
-    comment: ''
+    delivery: 'pickup',
+    payment: 'card',
+    comment: '',
+    coordinates: null,
+    fullAddress: ''
   });
   const [isPickupDropdownOpen, setIsPickupDropdownOpen] = useState(false);
   const pickupAddresses = [
@@ -102,12 +106,56 @@ export default function CartPage() {
     }
   };
   
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Заказ оформлен', { formData, cartItems, totalPrice });
-    // Здесь будет логика оформления заказа
-    alert('Заказ успешно оформлен!');
-    clearCart();
+    
+    const orderData = {
+      customer: {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        inn: formData.inn,
+        phone: formData.phone,
+        email: formData.email,
+        isLegalEntity: formData.isLegalEntity
+      },
+      delivery: {
+        delivery: formData.delivery,
+        city: formData.city,
+        address: formData.address,
+        apartment: formData.apartment,
+        pickupAddress: formData.pickupAddress,
+        coordinates: formData.coordinates || null,
+        fullAddress: formData.fullAddress || formData.address
+      },
+      items: cartItems,
+      totalPrice: totalPrice,
+      payment: {
+        payment: formData.payment
+      },
+      comment: formData.comment
+    };
+
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Заказ успешно оформлен! Номер заказа: ${result.orderId}`);
+        clearCart();
+      } else {
+        alert('Ошибка при оформлении заказа');
+      }
+    } catch (error) {
+      console.error('Ошибка при отправке заказа:', error);
+      alert('Ошибка при оформлении заказа');
+    }
   };
 
   const handleSelectPickupAddress = (address) => {
@@ -117,6 +165,56 @@ export default function CartPage() {
     }));
     setIsPickupDropdownOpen(false);
   };
+
+  const handleMapClick = (event) => {
+    const coords = event.get('coords');
+    console.log('Координаты клика:', coords);
+    
+    ymaps.geocode(coords).then((res) => {
+      const firstGeoObject = res.geoObjects.get(0);
+      const address = firstGeoObject.getAddressLine();
+      const components = firstGeoObject.properties.get('metaDataProperty').GeocoderMetaData.Address.Components;
+      
+      console.log('Полный адрес от Яндекс:', address);
+      console.log('Компоненты адреса:', components);
+      
+      let region = '';
+      let city = '';
+      let street = '';
+      let house = '';
+      
+      components.forEach(component => {
+        if (component.kind === 'administrative_area_level_1') {
+          region = component.name;
+        } else if (component.kind === 'locality') {
+          city = component.name;
+        } else if (component.kind === 'route') {
+          street = component.name;
+        } else if (component.kind === 'street_number') {
+          house = component.name;
+        }
+      });
+      
+      setFormData(prev => ({
+        ...prev,
+        region: region || prev.region,
+        city: city || prev.city,
+        street: street || prev.street,
+        house: house || prev.house,
+        coordinates: coords,
+        fullAddress: address
+      }));
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className={styles.empty}>
+        <h1 className={styles.title}>Корзина</h1>
+        <p className={styles.emptyText}>Загрузка корзины...</p>
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -142,62 +240,46 @@ export default function CartPage() {
               <div key={item.id} className={styles.cartItem}>
                 <div className={styles.itemLeft}>
                   <div className={styles.productImage}>
-                    <img src="/sofa.png" alt="" />
+                    <img src={item.image} alt={item.name} />
                   </div>
                   
-                  <div className={styles.productRating}>
-                    <div className={styles.stars}>
-                      {[...Array(5)].map((_, index) => (
-                        <svg 
-                          key={index}
-                          width="12" 
-                          height="12"
-                          viewBox="0 0 15 14" 
-                          fill="none" 
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path 
-                            d="M7.5 0L9.18386 5.18237H14.6329L10.2245 8.38525L11.9084 13.5676L7.5 10.3647L3.09161 13.5676L4.77547 8.38525L0.367076 5.18237H5.81614L7.5 0Z" 
-                            fill={index < Math.floor(item.rating) ? "#A45B38" : "none"} 
-                            stroke={index >= Math.floor(item.rating) ? "#A45B38" : "none"}
-                          />
-                        </svg>
-                      ))}
+                  {item.isBestseller && (
+                    <div className={styles.bestsellerBadge}>
+                      <span>Бестселлер</span>
                     </div>
-                    <span className={styles.reviews}>({item.reviews})</span>
-                  </div>
+                  )}
                 </div>
                 
                 <div className={styles.itemContent}>
                   <h3 className={styles.productName}>{item.name}</h3>
-                  <p className={styles.productArticle}>Артикул: {item.id}</p>
+                  <p className={styles.productArticle}>Артикул: {item.article}</p>
                   
                   <div className={styles.productDetails}>
                     <div className={styles.colorMaterial}>
-                      <span>{item.color}</span>
+                      <span>{item.color || 'Не указан'}</span>
                       <span className={styles.detailDivider}></span>
-                      <span>{item.material}</span>
+                      <span>{item.material || 'Не указан'}</span>
                       <span className={styles.detailDivider}></span>
-                      <span>{item.dimensions}</span>
+                      <span>{item.dimensions || 'Не указаны'}</span>
                     </div>
                     
                     <div className={styles.quantityPrice}>
                       <div className={styles.quantityControls}>
                         <div className={styles.quantityButtons}>
-                          <button 
-                            className={styles.minusButton} 
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                          >
+                                                     <button 
+                             className={styles.minusButton} 
+                             onClick={async () => await updateQuantity(item.id, item.quantity - 1)}
+                             disabled={item.quantity <= 1}
+                           >
                             <svg width="10" height="2" viewBox="0 0 10 2" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M9 1H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
                             </svg>
                           </button>
                           <span className={styles.quantity}>{item.quantity}</span>
-                          <button 
-                            className={styles.plusButton} 
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          >
+                                                     <button 
+                             className={styles.plusButton} 
+                             onClick={async () => await updateQuantity(item.id, item.quantity + 1)}
+                           >
                             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M5 1V9M9 5H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
                             </svg>
@@ -212,10 +294,10 @@ export default function CartPage() {
                     </div>
                   </div>
                   
-                  <button 
-                    className={styles.removeButton} 
-                    onClick={() => removeFromCart(item.id)}
-                  >
+                                     <button 
+                     className={styles.removeButton} 
+                     onClick={async () => await removeFromCart(item.id)}
+                   >
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M13 1L1 13M1 1L13 13" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
                     </svg>
@@ -470,7 +552,7 @@ export default function CartPage() {
                       
                       <div className={styles.mapContainer}>
                         <YMaps>
-                          <Map defaultState={{ center: [43.585472, 39.723098], zoom: 12 }} width="100%" height="300px">
+                          <Map defaultState={{ center: [43.585472, 39.723098], zoom: 12 }} width="100%" height="300px" onClick={handleMapClick}>
                             <Placemark geometry={[43.585472, 39.723098]} />
                           </Map>
                         </YMaps>

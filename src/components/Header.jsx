@@ -2,32 +2,39 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import styles from "./Header.module.css";
 import AuthModal from "./AuthModal";
 import { useCart } from "../app/components/CartContext";
+import { useAuth } from "../contexts/AuthContext";
+import { useFavourites } from "../contexts/FavouritesContext";
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { isAuthenticated, logout, isLoading } = useAuth();
+  
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mobileExpandedCategory, setMobileExpandedCategory] = useState(null);
-  const [categories, setCategories] = useState({});
+  const [categories, setCategories] = useState([]);
   const timeoutRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const { cartItems } = useCart();
+  const { favourites } = useFavourites();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const searchRef = useRef(null);
+
   
-  // Получаем общее количество товаров в корзине
   const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const favouritesCount = favourites.length;
 
   useEffect(() => {
-    // Загрузка категорий при монтировании компонента
     const fetchCategories = async () => {
       try {
         const response = await fetch('/api/categories');
@@ -85,6 +92,8 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isSearchOpen]);
 
+
+
   // Имитация поиска (заглушка)
   useEffect(() => {
     if (searchQuery.length > 1) {
@@ -131,6 +140,10 @@ export default function Header() {
     }
   };
 
+  const handleMenuClick = (category) => {
+    setActiveMenu(category);
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.header__container}>
@@ -154,21 +167,21 @@ export default function Header() {
 
         {/* Десктопное меню */}
         <nav className={styles.header__nav}>
-          {Object.entries(categories).map(([key, category]) => (
+          {categories.map((category) => (
             <div
-              key={key}
+              key={category.id}
               className={styles.header__navItem}
-              onMouseEnter={() => handleMouseEnter(key)}
+              onMouseEnter={() => handleMouseEnter(category.id)}
               onMouseLeave={handleMouseLeave}
             >
               <Link
                 href={`/categories/${category.slug}`}
                 className={`${styles.header__navLink} ${
-                  activeMenu === key ? styles.active : ""
+                  activeMenu === category.id ? styles.active : ""
                 }`}
-                onClick={() => handleMenuClick(key)}
+                onClick={() => handleMenuClick(category.id)}
               >
-                {category.label}
+                {category.title}
               </Link>
             </div>
           ))}
@@ -189,13 +202,13 @@ export default function Header() {
           <div className={styles.mobileMenu__body}>
             {/* Левая колонка — категории */}
             <div className={styles.mobileMenu__sidebar}>
-              {Object.entries(categories).map(([key, category]) => (
+              {categories.map((category) => (
                 <button
-                  key={key}
-                  className={`${styles.mobileMenu__sidebarItem} ${mobileExpandedCategory === key ? styles.active : ''}`}
-                  onClick={() => setMobileExpandedCategory(key)}
+                  key={category.id}
+                  className={`${styles.mobileMenu__sidebarItem} ${mobileExpandedCategory === category.id ? styles.active : ''}`}
+                  onClick={() => setMobileExpandedCategory(category.id)}
                 >
-                  {category.label}
+                  {category.title}
                 </button>
               ))}
               <div className={styles.mobileMenu__sidebarBottom}>
@@ -206,19 +219,27 @@ export default function Header() {
                 >
                   Избранное
                 </Link>
+                                 <button 
+                   className={styles.mobileMenu__sidebarItem}
+                   onClick={() => {
+                     if (isAuthenticated) {
+                       router.push('/account');
+                     } else {
+                       setIsAuthModalOpen(true);
+                     }
+                     setIsMobileMenuOpen(false);
+                   }}
+                 >
+                   Профиль
+                 </button>
                 <button 
                   className={styles.mobileMenu__sidebarItem}
                   onClick={() => {
-                    setIsAuthModalOpen(true);
-                    setIsMobileMenuOpen(false);
-                  }}
-                >
-                  Профиль
-                </button>
-                <button 
-                  className={styles.mobileMenu__sidebarItem}
-                  onClick={() => {
-                    setIsAuthModalOpen(true);
+                    if (isAuthenticated) {
+                      // Переход к покупкам
+                    } else {
+                      setIsAuthModalOpen(true);
+                    }
                     setIsMobileMenuOpen(false);
                   }}
                 >
@@ -228,35 +249,41 @@ export default function Header() {
             </div>
             {/* Правая колонка — подкатегории и картинки */}
             <div className={styles.mobileMenu__content}>
-              {mobileExpandedCategory && categories[mobileExpandedCategory] && (
+              {mobileExpandedCategory && categories.find(cat => cat.id === mobileExpandedCategory) && (
                 <>
-                 
-                  {categories[mobileExpandedCategory].subItems?.length > 0 ? (
+                  {categories.find(cat => cat.id === mobileExpandedCategory)?.subcategories?.length > 0 ? (
                     <div className={styles.mobileMenu__dropdownLinks}>
-                      {categories[mobileExpandedCategory].subItems.map((subItem, index) => (
-                        <Link
-                          key={index}
-                          href={`/categories/${subItem.slug}`}
-                          className={styles.mobileMenu__categoryItem}
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          <img
-                            src={subItem.image || "/images/sofa.png"}
-                            alt={subItem.label}
-                            className={styles.mobileMenu__categoryImage}
-                          />
-                          <div className={styles.mobileMenu__categoryInfo}>
-                            <div className={styles.mobileMenu__categoryTitle}>
-                              {subItem.label}
-                            </div>
-                            {subItem.description && (
-                              <div className={styles.mobileMenu__categoryDesc}>
-                                {subItem.description}
+                      {categories.find(cat => cat.id === mobileExpandedCategory)?.subcategories.map((subcategory) => {
+                        const category = categories.find(cat => cat.id === mobileExpandedCategory);
+                        let imageSrc = "/images/sofa.png";
+                        
+                        if (category) {
+                          imageSrc = `http://62.181.44.89${category.photo_new_products}`;
+                        }
+
+                        return (
+                          <Link
+                            key={subcategory.id}
+                            href={`/categories/${subcategory.slug}`}
+                            className={styles.mobileMenu__categoryItem}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <img
+                              src={imageSrc}
+                              alt={subcategory.title}
+                              className={styles.mobileMenu__categoryImage}
+                              onError={(e) => {
+                                e.target.src = "/images/sofa.png";
+                              }}
+                            />
+                            <div className={styles.mobileMenu__categoryInfo}>
+                              <div className={styles.mobileMenu__categoryTitle}>
+                                {subcategory.title}
                               </div>
-                            )}
-                          </div>
-                        </Link>
-                      ))}
+                            </div>
+                          </Link>
+                        );
+                      })}
                     </div>
                   ) : (
                     <p className={styles.mobileMenu__dropdownEmpty}>Пока нет подкатегорий</p>
@@ -326,21 +353,27 @@ export default function Header() {
                 )}
               </div>
             )}
-            <button 
-              className={`${styles.header__icon} ${styles["header__icon--user"]}`}
-              onClick={() => setIsAuthModalOpen(true)}
-            >
-              <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M8.45312 0.0234375C7.19531 0.179688 6.14453 0.691406 5.26953 1.57812C4.49219 2.36328 4.04688 3.19922 3.81641 4.29688C3.72266 4.75781 3.72266 5.78906 3.81641 6.25C4.04688 7.34766 4.49609 8.1875 5.26953 8.96875C6.05469 9.76172 6.91406 10.2266 8.02344 10.457C8.48047 10.5508 9.50781 10.5508 9.98438 10.457C11.0391 10.2461 11.9141 9.77734 12.6953 9.00391C13.4844 8.22656 13.9531 7.35938 14.1836 6.25C14.2773 5.78906 14.2773 4.75781 14.1836 4.29688C14.0312 3.57422 13.7539 2.90625 13.3555 2.30469C13.1094 1.93359 12.3477 1.16797 11.9844 0.929688C11.3555 0.511719 10.6758 0.226562 10.0078 0.0976562C9.69141 0.0351562 8.72656 -0.0117188 8.45312 0.0234375ZM9.9375 1.28125C10.7109 1.48438 11.3633 1.85156 11.8945 2.37891C12.4219 2.90625 12.7773 3.53906 12.9961 4.33594C13.1094 4.76172 13.1094 5.78516 12.9961 6.21094C12.7773 7.00781 12.4219 7.64062 11.8945 8.16797C11.3672 8.69531 10.7344 9.05078 9.9375 9.26953C9.51172 9.38281 8.48828 9.38281 8.0625 9.26953C7.26562 9.05078 6.63281 8.69531 6.10547 8.16797C4.59766 6.65625 4.5 4.26172 5.88281 2.61719C6.48047 1.90625 7.46094 1.35547 8.375 1.21484C8.75781 1.15625 9.58984 1.19141 9.9375 1.28125Z"
-                  fill="#323433"
-                />
-                <path
-                  d="M6.90224 11.7812C4.71474 12.0469 2.74208 13.2852 1.47255 15.1953C0.726454 16.3125 0.300673 17.6328 0.226454 19.043C0.203016 19.4766 0.206923 19.5273 0.285048 19.6797C0.339735 19.7891 0.41786 19.8672 0.523329 19.9219C0.675673 20 0.734266 20 8.99989 20C17.2655 20 17.3241 20 17.4765 19.9219C17.5819 19.8672 17.66 19.7891 17.7147 19.6797C17.7929 19.5273 17.7968 19.4766 17.7733 19.043C17.6718 17.1172 16.9374 15.4297 15.6015 14.0469C14.3358 12.7383 12.703 11.9414 10.9179 11.7578C10.328 11.6992 7.4452 11.7148 6.90224 11.7812ZM10.8554 12.9297C13.4452 13.2266 15.6171 15.0508 16.3397 17.543C16.4569 17.9375 16.578 18.5508 16.578 18.7344V18.8281H8.99989H1.42177V18.7148C1.42177 18.5039 1.58192 17.7695 1.71083 17.3672C2.13661 16.0703 2.94911 14.9531 4.0663 14.1211C4.46474 13.8242 5.34755 13.3711 5.85536 13.207C6.24208 13.0781 6.69911 12.9805 7.11317 12.9336C7.51161 12.8867 10.4491 12.8867 10.8554 12.9297Z"
-                  fill="#323433"
-                />
-              </svg>
-            </button>
+                         <button 
+               className={`${styles.header__icon} ${styles["header__icon--user"]}`}
+               onClick={() => {
+                 if (isAuthenticated) {
+                   router.push('/account');
+                 } else {
+                   setIsAuthModalOpen(true);
+                 }
+               }}
+             >
+               <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 <path
+                   d="M8.45312 0.0234375C7.19531 0.179688 6.14453 0.691406 5.26953 1.57812C4.49219 2.36328 4.04688 3.19922 3.81641 4.29688C3.72266 4.75781 3.72266 5.78906 3.81641 6.25C4.04688 7.34766 4.49609 8.1875 5.26953 8.96875C6.05469 9.76172 6.91406 10.2266 8.02344 10.457C8.48047 10.5508 9.50781 10.5508 9.98438 10.457C11.0391 10.2461 11.9141 9.77734 12.6953 9.00391C13.4844 8.22656 13.9531 7.35938 14.1836 6.25C14.2773 5.78906 14.2773 4.75781 14.1836 4.29688C14.0312 3.57422 13.7539 2.90625 13.3555 2.30469C13.1094 1.93359 12.3477 1.16797 11.9844 0.929688C11.3555 0.511719 10.6758 0.226562 10.0078 0.0976562C9.69141 0.0351562 8.72656 -0.0117188 8.45312 0.0234375ZM9.9375 1.28125C10.7109 1.48438 11.3633 1.85156 11.8945 2.37891C12.4219 2.90625 12.7773 3.53906 12.9961 4.33594C13.1094 4.76172 13.1094 5.78516 12.9961 6.21094C12.7773 7.00781 12.4219 7.64062 11.8945 8.16797C11.3672 8.69531 10.7344 9.05078 9.9375 9.26953C9.51172 9.38281 8.48828 9.38281 8.0625 9.26953C7.26562 9.05078 6.63281 8.69531 6.10547 8.16797C4.59766 6.65625 4.5 4.26172 5.88281 2.61719C6.48047 1.90625 7.46094 1.35547 8.375 1.21484C8.75781 1.15625 9.58984 1.19141 9.9375 1.28125Z"
+                   fill="#323433"
+                 />
+                 <path
+                   d="M6.90224 11.7812C4.71474 12.0469 2.74208 13.2852 1.47255 15.1953C0.726454 16.3125 0.300673 17.6328 0.226454 19.043C0.203016 19.4766 0.206923 19.5273 0.285048 19.6797C0.339735 19.7891 0.41786 19.8672 0.523329 19.9219C0.675673 20 0.734266 20 8.99989 20C17.2655 20 17.3241 20 17.4765 19.9219C17.5819 19.8672 17.66 19.7891 17.7147 19.6797C17.7929 19.5273 17.7968 19.4766 17.7733 19.043C17.6718 17.1172 16.9374 15.4297 15.6015 14.0469C14.3358 12.7383 12.703 11.9414 10.9179 11.7578C10.328 11.6992 7.4452 11.7148 6.90224 11.7812ZM10.8554 12.9297C13.4452 13.2266 15.6171 15.0508 16.3397 17.543C16.4569 17.9375 16.578 18.5508 16.578 18.7344V18.8281H8.99989H1.42177V18.7148C1.42177 18.5039 1.58192 17.7695 1.71083 17.3672C2.13661 16.0703 2.94911 14.9531 4.0663 14.1211C4.46474 13.8242 5.34755 13.3711 5.85536 13.207C6.24208 13.0781 6.69911 12.9805 7.11317 12.9336C7.51161 12.8867 10.4491 12.8867 10.8554 12.9297Z"
+                   fill="#323433"
+                 />
+               </svg>
+             </button>
             <Link 
               href="/favorites"
               className={`${styles.header__icon} ${styles["header__icon--favorite"]}`}
@@ -353,6 +386,9 @@ export default function Header() {
                   fill="#323433"
                 />
               </svg>
+              {favouritesCount > 0 && (
+                <span className={styles.header__favouritesCount}>{favouritesCount}</span>
+              )}
             </Link>
           </div>
           {/* Корзина — всегда показывается */}
@@ -380,18 +416,18 @@ export default function Header() {
         onMouseLeave={handleDropdownMouseLeave}
         key={isDropdownOpen}
       >
-        {isDropdownOpen && categories[isDropdownOpen] && (
+        {isDropdownOpen && categories.find(cat => cat.id === isDropdownOpen) && (
           <div className={styles.dropdown__container} key={isDropdownOpen}>
             <div className={styles.dropdown__left}>
-              <h3 className={styles.dropdown__title}>{categories[isDropdownOpen].label}</h3>
-              {categories[isDropdownOpen].subItems.length > 0 ? (
-                categories[isDropdownOpen].subItems.map((subItem, index) => (
+              <h3 className={styles.dropdown__title}>{categories.find(cat => cat.id === isDropdownOpen)?.title}</h3>
+              {categories.find(cat => cat.id === isDropdownOpen)?.subcategories?.length > 0 ? (
+                categories.find(cat => cat.id === isDropdownOpen)?.subcategories.map((subcategory) => (
                   <Link
-                    key={index}
-                    href={`/categories/${subItem.slug}`}
+                    key={subcategory.id}
+                    href={`/categories/${subcategory.slug}`}
                     className={styles.dropdown__link}
                   >
-                    {subItem.label}
+                    {subcategory.title}
                   </Link>
                 ))
               ) : (
@@ -399,27 +435,51 @@ export default function Header() {
               )}
             </div>
             <div className={styles.dropdown__right}>
-              {rightMenuItems.map((item, index) => (
-                <div key={index} className={styles.dropdown__rightItem}>
-                  <img
-                    src={`/images/${item.toLowerCase()}.png`}
-                    alt={item}
-                    className={styles.dropdown__image}
-                  />
-                  <Link
-                    href={`/categories/trending/${item.toLowerCase().replace(/\s+/g, "-")}`}
-                    className={styles.dropdown__rightLink}
-                  >
-                    {item}
-                    <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                        d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z"
-                        fill="#C1A286"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-              ))}
+              {rightMenuItems.map((item, index) => {
+                const category = categories.find(cat => cat.id === isDropdownOpen);
+                let imageSrc = `/images/${item.toLowerCase()}.png`;
+                
+                if (category) {
+                  switch (item) {
+                    case "Новинки":
+                      imageSrc = `http://62.181.44.89${category.photo_new_products}`;
+                      break;
+                    case "Бестселлеры":
+                      imageSrc = `http://62.181.44.89${category.photo_bestsellers}`;
+                      break;
+                    case "Распродажа":
+                      imageSrc = `http://62.181.44.89${category.photo_sale}`;
+                      break;
+                    default:
+                      imageSrc = `/images/${item.toLowerCase()}.png`;
+                  }
+                }
+
+                return (
+                  <div key={index} className={styles.dropdown__rightItem}>
+                    <img
+                      src={imageSrc}
+                      alt={item}
+                      className={styles.dropdown__image}
+                      onError={(e) => {
+                        e.target.src = `/images/${item.toLowerCase()}.png`;
+                      }}
+                    />
+                    <Link
+                      href={`/categories/trending/${item.toLowerCase().replace(/\s+/g, "-")}`}
+                      className={styles.dropdown__rightLink}
+                    >
+                      {item}
+                      <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                          d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z"
+                          fill="#C1A286"
+                        />
+                      </svg>
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -314,6 +314,11 @@ color: #323433;
     display: inline-flex;
 }
 
+.header__icon--favorite {
+    display: inline-flex;
+    position: relative;
+}
+
 .mobileSearch {
     width: 100%;
     background: #fff;
@@ -809,6 +814,23 @@ font-family: "Montserrat", sans-serif;
 }
 
 .header__cartCount {
+  position: absolute;
+  top: 2px;
+  right: -0px;
+  background-color: #A45B38;
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 50%;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.header__favouritesCount {
   position: absolute;
   top: 2px;
   right: -0px;

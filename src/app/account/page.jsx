@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import styles from './page.module.css';
 import React from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const menuItems = [
   {
@@ -21,7 +22,7 @@ const menuItems = [
     label: 'Избранное',
     icon: (
         <svg width="16" height="14" viewBox="0 0 16 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M14.1164 6.74413C14.7379 6.11284 15.0832 5.2605 15.0762 4.37464C15.0693 3.48878 14.7108 2.64195 14.0795 2.02044C13.7669 1.71271 13.3968 1.46955 12.9902 1.30486C12.5836 1.14017 12.1486 1.05717 11.71 1.06059C10.8241 1.06752 9.9773 1.42607 9.3558 2.05736C9.18703 2.22613 8.97256 2.43328 8.71238 2.67881L7.98897 3.36002L7.26556 2.67881C7.00479 2.43269 6.79003 2.22554 6.62126 2.05736C5.99486 1.43096 5.14528 1.07906 4.25942 1.07906C3.37355 1.07906 2.52397 1.43096 1.89757 2.05736C0.607216 3.3486 0.592274 5.4362 1.85011 6.73358L7.98897 12.8724L14.1164 6.74413ZM1.15131 1.31198C1.55943 0.903747 2.04398 0.579914 2.57728 0.358974C3.11057 0.138035 3.68217 0.0243179 4.25942 0.0243179C4.83667 0.0243179 5.40826 0.138035 5.94156 0.358974C6.47485 0.579914 6.9594 0.903747 7.36752 1.31198C7.5275 1.47254 7.73465 1.67236 7.98897 1.91145C8.24212 1.67236 8.44926 1.47225 8.61041 1.3111C9.42832 0.4806 10.5426 0.00902982 11.7082 0.000128331C12.8738 -0.00877315 13.9952 0.445723 14.8257 1.26363C15.6562 2.08154 16.1278 3.19587 16.1367 4.36147C16.1456 5.52707 15.6911 6.64847 14.8732 7.47897L8.61041 13.7426C8.44558 13.9074 8.22204 14 7.98897 14C7.75589 14 7.53236 13.9074 7.36752 13.7426L1.10297 7.47809C0.299606 6.64955 -0.145629 5.53827 -0.136584 4.38425C-0.127538 3.23022 0.335061 2.12606 1.15131 1.31022V1.31198Z" fill="#323433" />
+        <path fillRule="evenodd" clipRule="evenodd" d="M14.1164 6.74413C14.7379 6.11284 15.0832 5.2605 15.0762 4.37464C15.0693 3.48878 14.7108 2.64195 14.0795 2.02044C13.7669 1.71271 13.3968 1.46955 12.9902 1.30486C12.5836 1.14017 12.1486 1.05717 11.71 1.06059C10.8241 1.06752 9.9773 1.42607 9.3558 2.05736C9.18703 2.22613 8.97256 2.43328 8.71238 2.67881L7.98897 3.36002L7.26556 2.67881C7.00479 2.43269 6.79003 2.22554 6.62126 2.05736C5.99486 1.43096 5.14528 1.07906 4.25942 1.07906C3.37355 1.07906 2.52397 1.43096 1.89757 2.05736C0.607216 3.3486 0.592274 5.4362 1.85011 6.73358L7.98897 12.8724L14.1164 6.74413ZM1.15131 1.31198C1.55943 0.903747 2.04398 0.579914 2.57728 0.358974C3.11057 0.138035 3.68217 0.0243179 4.25942 0.0243179C4.83667 0.0243179 5.40826 0.138035 5.94156 0.358974C6.47485 0.579914 6.9594 0.903747 7.36752 1.31198C7.5275 1.47254 7.73465 1.67236 7.98897 1.91145C8.24212 1.67236 8.44926 1.47225 8.61041 1.3111C9.42832 0.4806 10.5426 0.00902982 11.7082 0.000128331C12.8738 -0.00877315 13.9952 0.445723 14.8257 1.26363C15.6562 2.08154 16.1278 3.19587 16.1367 4.36147C16.1456 5.52707 15.6911 6.64847 14.8732 7.47897L8.61041 13.7426C8.44558 13.9074 8.22204 14 7.98897 14C7.75589 14 7.53236 13.9074 7.36752 13.7426L1.10297 7.47809C0.299606 6.64955 -0.145629 5.53827 -0.136584 4.38425C-0.127538 3.23022 0.335061 2.12606 1.15131 1.31022V1.31198Z" fill="#323433" />
       </svg>
     )
   },
@@ -181,11 +182,53 @@ const OrderCard = ({ order, isCompleted, isExpanded, onToggleExpand }) => {
 };
 
 export default function AccountPage() {
-  const [activeTab, setActiveTab] = useState('orders');
+  const { getUserProfile, updateUserProfile, user } = useAuth();
+  const [activeTab, setActiveTab] = useState('account');
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [profileData, setProfileData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const toggleOrderExpand = (orderId) => {
     setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+  };
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      setIsLoading(true);
+      const result = await getUserProfile();
+      if (result.success) {
+        setProfileData(result.data);
+      }
+      setIsLoading(false);
+    };
+
+    if (activeTab === 'account') {
+      loadProfile();
+    }
+  }, [activeTab, getUserProfile]);
+
+
+
+  const handleUpdateProfile = async (formData) => {
+    setIsLoading(true);
+    setMessage('');
+    
+    const result = await updateUserProfile(formData);
+    if (result.success) {
+      // После успешного обновления перезагружаем профиль
+      const profileResult = await getUserProfile();
+      if (profileResult.success) {
+        setProfileData(profileResult.data);
+      }
+      setIsEditing(false);
+      setMessage('Профиль успешно обновлен!');
+    } else {
+      setMessage(`Ошибка: ${result.error}`);
+    }
+    
+    setIsLoading(false);
   };
 
   const mockOrders = [
@@ -273,34 +316,34 @@ export default function AccountPage() {
         return (
           <div className={styles.account__content}>
             <h3 className={styles.account__title}>Мой профиль</h3>
-            <form className={styles.account__form}>
-            <div className={styles.account__field}>
-              <label className={styles.account__label}>Фамилия</label>
-              <div className={styles.account__value}>Иванов</div>
-            </div>
-            <div className={styles.account__field}>
-              <label className={styles.account__label}>Имя</label>
-              <div className={styles.account__value}>Сергей</div>
-            </div>
-            <div className={styles.account__field}>
-              <label className={styles.account__label}>Электронная почта</label>
-              <div className={styles.account__value}>user23@gmail.com</div>
-            </div>
-            <div className={styles.account__field}>
-              <label className={styles.account__label}>Номер телефона</label>
-              <div className={styles.account__value}>—</div>
-            </div>
             
-            <div className={styles.account__field}>
-              <label className={styles.account__label}>Пароль</label>
-              <div className={styles.account__value}>*******</div>
-            </div>
-            
-            </form>
-            <div className={styles.account__actions}>
-              <button className={styles.account__button}>Редактировать данные</button>
-              <button className={styles.account__button}>Обновить пароль</button>
-            </div>  
+            {message && (
+              <div className={`${styles.message} ${message.includes('Ошибка') ? styles.message_error : styles.message_success}`}>
+                {message}
+              </div>
+            )}
+
+            {isLoading ? (
+              <div className={styles.loading}>Загрузка профиля...</div>
+            ) : profileData ? (
+              <>
+                {isEditing ? (
+                  <ProfileEditForm 
+                    profileData={profileData} 
+                    onSave={handleUpdateProfile}
+                    onCancel={() => setIsEditing(false)}
+                    isLoading={isLoading}
+                  />
+                ) : (
+                  <ProfileView 
+                    profileData={profileData}
+                    onEdit={() => setIsEditing(true)}
+                  />
+                )}
+              </>
+            ) : (
+              <div className={styles.error}>Не удалось загрузить профиль</div>
+            )}
           </div>
         );
       case 'favorites':
@@ -309,7 +352,7 @@ export default function AccountPage() {
             <h3 className={styles.favorites__title}>Избранное</h3>
             <p className={styles.favorites__text}>
               Нажимайте на <span className={styles.favorites__icon}><svg width="27" height="28" viewBox="0 0 27 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path fill-rule="evenodd" clip-rule="evenodd" d="M21.6954 14.7257C22.4908 13.9177 22.9327 12.8268 22.9239 11.693C22.915 10.5592 22.4561 9.47537 21.6481 8.67992C21.2481 8.28605 20.7743 7.97484 20.254 7.76405C19.7337 7.55327 19.1769 7.44704 18.6155 7.45143C17.4817 7.46029 16.3978 7.91919 15.6024 8.72717C15.3864 8.94317 15.1119 9.20829 14.7789 9.52254L13.853 10.3944L12.9271 9.52254C12.5934 9.20754 12.3185 8.94242 12.1025 8.72717C11.3008 7.92545 10.2134 7.47506 9.07965 7.47506C7.94585 7.47506 6.85849 7.92545 6.05677 8.72717C4.40527 10.3798 4.38615 13.0517 5.99602 14.7122L13.853 22.5692L21.6954 14.7257ZM5.10165 7.77317C5.624 7.25068 6.24416 6.83621 6.92671 6.55344C7.60926 6.27066 8.34084 6.12512 9.07965 6.12512C9.81846 6.12512 10.55 6.27066 11.2326 6.55344C11.9151 6.83621 12.5353 7.25068 13.0576 7.77317C13.2624 7.97867 13.5275 8.23442 13.853 8.54042C14.177 8.23442 14.4421 7.97829 14.6484 7.77204C15.6952 6.7091 17.1214 6.10555 18.6133 6.09416C20.1051 6.08277 21.5403 6.66447 22.6033 7.71129C23.6662 8.75812 24.2698 10.1843 24.2812 11.6761C24.2925 13.168 23.7108 14.6032 22.664 15.6662L14.6484 23.6829C14.4374 23.8938 14.1513 24.0123 13.853 24.0123C13.5547 24.0123 13.2686 23.8938 13.0576 23.6829L5.03977 15.665C4.01157 14.6046 3.44172 13.1823 3.4533 11.7053C3.46488 10.2283 4.05695 8.81509 5.10165 7.77092V7.77317Z" fill="#323433" fill-opacity="0.5" />
+                 <path fillRule="evenodd" clipRule="evenodd" d="M21.6954 14.7257C22.4908 13.9177 22.9327 12.8268 22.9239 11.693C22.915 10.5592 22.4561 9.47537 21.6481 8.67992C21.2481 8.28605 20.7743 7.97484 20.254 7.76405C19.7337 7.55327 19.1769 7.44704 18.6155 7.45143C17.4817 7.46029 16.3978 7.91919 15.6024 8.72717C15.3864 8.94317 15.1119 9.20829 14.7789 9.52254L13.853 10.3944L12.9271 9.52254C12.5934 9.20754 12.3185 8.94242 12.1025 8.72717C11.3008 7.92545 10.2134 7.47506 9.07965 7.47506C7.94585 7.47506 6.85849 7.92545 6.05677 8.72717C4.40527 10.3798 4.38615 13.0517 5.99602 14.7122L13.853 22.5692L21.6954 14.7257ZM5.10165 7.77317C5.624 7.25068 6.24416 6.83621 6.92671 6.55344C7.60926 6.27066 8.34084 6.12512 9.07965 6.12512C9.81846 6.12512 10.55 6.27066 11.2326 6.55344C11.9151 6.83621 12.5353 7.25068 13.0576 7.77317C13.2624 7.97867 13.5275 8.23442 13.853 8.54042C14.177 8.23442 14.4421 7.97829 14.6484 7.77204C15.6952 6.7091 17.1214 6.10555 18.6133 6.09416C20.1051 6.08277 21.5403 6.66447 22.6033 7.71129C23.6662 8.75812 24.2698 10.1843 24.2812 11.6761C24.2925 13.168 23.7108 14.6032 22.664 15.6662L14.6484 23.6829C14.4374 23.8938 14.1513 24.0123 13.853 24.0123C13.5547 24.0123 13.2686 23.8938 13.0576 23.6829L5.03977 15.665C4.01157 14.6046 3.44172 13.1823 3.4533 11.7053C3.46488 10.2283 4.05695 8.81509 5.10165 7.77092V7.77317Z" fill="#323433" fillOpacity="0.5" />
 </svg></span>, чтобы сохранить любимые товары, следить за снижением цен и акциями
             </p>
             <Link href="/catalog" className={styles.favorites__link}>
@@ -546,4 +589,138 @@ export default function AccountPage() {
       </div>
     </main>
   );
-} 
+}
+
+const ProfileView = ({ profileData, onEdit }) => {
+  const user_data = profileData?.user_data || {};
+  const can_edit = profileData?.can_edit || false;
+  
+  return (
+    <>
+      <div className={styles.account__form}>
+        <div className={styles.account__field}>
+          <label className={styles.account__label}>Фамилия</label>
+          <div className={styles.account__value}>{user_data.last_name || '—'}</div>
+        </div>
+        <div className={styles.account__field}>
+          <label className={styles.account__label}>Имя</label>
+          <div className={styles.account__value}>{user_data.first_name || '—'}</div>
+        </div>
+        <div className={styles.account__field}>
+          <label className={styles.account__label}>Отчество</label>
+          <div className={styles.account__value}>{user_data.patronymic || '—'}</div>
+        </div>
+        <div className={styles.account__field}>
+          <label className={styles.account__label}>Электронная почта</label>
+          <div className={styles.account__value}>{user_data.email || '—'}</div>
+        </div>
+        <div className={styles.account__field}>
+          <label className={styles.account__label}>Номер телефона</label>
+          <div className={styles.account__value}>{user_data.phone || '—'}</div>
+        </div>
+      </div>
+      
+      <div className={styles.account__actions}>
+        <button className={styles.account__button} onClick={onEdit}>
+          Редактировать данные
+        </button>
+        <Link href="/auth/change-password" className={styles.account__button}>
+          Обновить пароль
+        </Link>
+      </div>
+    </>
+  );
+};
+
+const ProfileEditForm = ({ profileData, onSave, onCancel, isLoading }) => {
+  const user_data = profileData?.user_data || {};
+  const [formData, setFormData] = useState({
+    first_name: user_data.first_name || '',
+    last_name: user_data.last_name || '',
+    patronymic: user_data.patronymic || '',
+    phone: user_data.phone || '',
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(formData);
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  return (
+    <form className={styles.account__form} onSubmit={handleSubmit}>
+      <div className={styles.account__field}>
+        <label className={styles.account__label}>Фамилия</label>
+        <input
+          type="text"
+          name="last_name"
+          value={formData.last_name}
+          onChange={handleChange}
+          className={styles.account__input}
+          maxLength={100}
+        />
+      </div>
+      <div className={styles.account__field}>
+        <label className={styles.account__label}>Имя</label>
+        <input
+          type="text"
+          name="first_name"
+          value={formData.first_name}
+          onChange={handleChange}
+          className={styles.account__input}
+          maxLength={100}
+          required
+        />
+      </div>
+      <div className={styles.account__field}>
+        <label className={styles.account__label}>Отчество</label>
+        <input
+          type="text"
+          name="patronymic"
+          value={formData.patronymic}
+          onChange={handleChange}
+          className={styles.account__input}
+          maxLength={100}
+        />
+      </div>
+      <div className={styles.account__field}>
+        <label className={styles.account__label}>Номер телефона</label>
+        <input
+          type="tel"
+          name="phone"
+          value={formData.phone}
+          onChange={handleChange}
+          className={styles.account__input}
+          pattern="^\+?1?\d{9,15}$"
+          maxLength={20}
+          placeholder="+7 900 000-00-00"
+        />
+      </div>
+      
+      <div className={styles.account__actions}>
+        <button 
+          type="submit" 
+          className={styles.account__button}
+          disabled={isLoading}
+        >
+          {isLoading ? 'Сохранение...' : 'Сохранить'}
+        </button>
+        <button 
+          type="button" 
+          className={styles.account__button_secondary}
+          onClick={onCancel}
+          disabled={isLoading}
+        >
+          Отмена
+        </button>
+      </div>
+    </form>
+  );
+}; 

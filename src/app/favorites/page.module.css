@@ -29,6 +29,38 @@
   color: rgba(50, 52, 51, 0.5);
 }
 
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.loading {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 18px;
+  color: rgba(50, 52, 51, 0.7);
+}
+
+.favoritesContainer {
+  padding: 40px 0;
+}
+
+.favoritesCount {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 16px;
+  color: rgba(50, 52, 51, 0.7);
+  text-align: center;
+  margin: 0;
+}
+
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 40px;
+  margin-top: 60px;
+}
+
 .content {
   display: flex;
   flex-direction: column;
@@ -139,5 +171,14 @@ color: #c1a286;
   font-size: 14px;
 }
 
+.productsGrid {
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.favoritesContainer {
+  padding: 20px 0;
+}
 
 }

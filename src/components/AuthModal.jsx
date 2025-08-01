@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import styles from './AuthModal.module.css';
 
 export default function AuthModal({ isOpen, onClose }) {
+  const { login, register, resetPassword } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [isResetPassword, setIsResetPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -16,7 +18,9 @@ export default function AuthModal({ isOpen, onClose }) {
   });
   const [errors, setErrors] = useState({});
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [resetError, setResetError] = useState('');
+  const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -64,31 +68,52 @@ export default function AuthModal({ isOpen, onClose }) {
     e.preventDefault();
     setIsSubmitted(true);
     setResetError('');
+    setIsLoading(true);
     
-    if (validateForm()) {
-      if (isResetPassword) {
-        try {
-          // Здесь будет API запрос для проверки email
-          // Имитация API запроса
-          const emailExists = false; // Это будет результат проверки с бэкенда
+    try {
+      if (validateForm()) {
+        if (isResetPassword) {
+          const result = await resetPassword(formData.email);
           
-          if (!emailExists) {
-            setResetError('Электронная почта не найдена');
-            return;
+          if (result.success) {
+            setResetError('');
+            setShowConfirmationMessage(true);
+            setTimeout(() => {
+              setShowConfirmationMessage(false);
+              onClose();
+            }, 3000);
+          } else {
+            setResetError(result.error);
           }
-          
-          // Если email найден, отправляем письмо для сброса пароля
-          console.log('Password reset email sent to:', formData.email);
-          // Здесь будет логика отправки письма
-          
-        } catch (error) {
-          console.error('Error during password reset:', error);
-          setResetError('Произошла ошибка при сбросе пароля');
+        } else {
+          if (!isLogin) {
+            const result = await register(formData.email, formData.name, formData.password);
+            
+            if (result.success) {
+              setShowConfirmationMessage(true);
+              setTimeout(() => {
+                setShowConfirmationMessage(false);
+                onClose();
+              }, 3000);
+            } else {
+              setErrors(prev => ({ ...prev, general: result.error }));
+            }
+          } else {
+            const result = await login(formData.email, formData.password);
+            
+            if (result.success) {
+              onClose();
+            } else {
+              setErrors(prev => ({ ...prev, general: result.error }));
+            }
+          }
         }
-      } else {
-        // Логика для входа/регистрации
-        console.log('Form submitted:', formData);
       }
+    } catch (error) {
+      console.error('Error during auth:', error);
+      setErrors(prev => ({ ...prev, general: 'Произошла ошибка при авторизации' }));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -117,6 +142,13 @@ export default function AuthModal({ isOpen, onClose }) {
     setErrors({});
     setResetError('');
     setIsSubmitted(false);
+    setShowConfirmationMessage(false);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
   };
 
   const handleBackToLogin = () => {
@@ -124,9 +156,41 @@ export default function AuthModal({ isOpen, onClose }) {
     setErrors({});
     setResetError('');
     setIsSubmitted(false);
+    setShowConfirmationMessage(false);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: ''
+    });
   };
 
   if (!isOpen) return null;
+
+  if (showConfirmationMessage) {
+    return (
+      <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className={styles.modal}>
+          <button className={styles.closeButton} onClick={onClose}>
+            <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7.5 7.5L22.5 22.5M22.5 7.5L7.5 22.5" stroke="#C1AF86" stroke-linecap="round" />
+            </svg>
+          </button>
+          <div className={styles.confirmationMessage}>
+            <h2 className={styles.title}>
+              {showConfirmationMessage && isResetPassword ? 'Письмо отправлено!' : 'Регистрация успешна!'}
+            </h2>
+            <p className={styles.subtitle}>
+              {showConfirmationMessage && isResetPassword 
+                ? 'Письмо с инструкциями по сбросу пароля отправлено на вашу электронную почту. Пожалуйста, проверьте почту и следуйте инструкциям.'
+                : 'Письмо с подтверждением отправлено на вашу электронную почту. Пожалуйста, проверьте почту и перейдите по ссылке для подтверждения аккаунта.'
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
@@ -162,8 +226,8 @@ export default function AuthModal({ isOpen, onClose }) {
                     <span className={styles.errorText}>{resetError}</span>
                   )}
                 </div>
-                <button type="submit" className={styles.submitButton}>
-                  Отправить ссылку
+                <button type="submit" className={styles.submitButton} disabled={isLoading}>
+                  {isLoading ? "Загрузка..." : "Отправить ссылку"}
                 </button>
               </form>
               <p className={styles.switchMode}>
@@ -275,9 +339,12 @@ export default function AuthModal({ isOpen, onClose }) {
                     </a>
                   )}
 
-                  <button type="submit" className={styles.submitButton}>
-                    {isLogin ? "Войти" : "Зарегистрироваться"}
+                  <button type="submit" className={styles.submitButton} disabled={isLoading}>
+                    {isLoading ? "Загрузка..." : (isLogin ? "Войти" : "Зарегистрироваться")}
                   </button>
+                  {errors.general && (
+                    <span className={styles.errorText}>{errors.general}</span>
+                  )}
                 </form>
 
                 <p className={styles.switchMode}>
@@ -286,6 +353,13 @@ export default function AuthModal({ isOpen, onClose }) {
                     setIsLogin(!isLogin);
                     setErrors({});
                     setIsSubmitted(false);
+                    setShowConfirmationMessage(false);
+                    setFormData({
+                      name: '',
+                      email: '',
+                      password: '',
+                      confirmPassword: ''
+                    });
                   }}>
                     {isLogin ? "Зарегистрироваться" : "Войти"}
                   </button>

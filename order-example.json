@@ -1,0 +1,49 @@
+{
+  "customer": {
+    "firstName": "Иван",
+    "lastName": "Иванов",
+    "inn": "1234567890",
+    "phone": "+7 (999) 123-45-67",
+    "email": "ivanov@example.com",
+    "isLegalEntity": true
+  },
+  "delivery": {
+    "delivery": "address",
+    "region": "Краснодарский край",
+    "city": "Сочи",
+    "street": "ул. Кипарисовая",
+    "house": "56",
+    "apartment": "15",
+    "pickupAddress": "",
+    "coordinates": {
+      "lat": 43.585472,
+      "lng": 39.723098
+    },
+    "fullAddress": "Россия, Краснодарский край, Сочи, ул. Кипарисовая, 56"
+  },
+  "items": [
+    {
+      "id": "1",
+      "name": "Диван-кровать Скаген",
+      "price": 25000,
+      "quantity": 1,
+      "color": "Серый",
+      "material": "Рогожка",
+      "dimensions": "200x90x85 см"
+    },
+    {
+      "id": "2",
+      "name": "Кресло-мешок",
+      "price": 5000,
+      "quantity": 2,
+      "color": "Синий",
+      "material": "Велюр",
+      "dimensions": "80x80x80 см"
+    }
+  ],
+  "totalPrice": 35000,
+  "payment": {
+    "payment": "card"
+  },
+  "comment": "Доставить после 18:00"
+} 

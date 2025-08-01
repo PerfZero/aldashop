@@ -294,6 +294,28 @@ display: flex;
 align-items: center;
 transition: all 0.3s ease;
 justify-content: space-between;
+background: none;
+cursor: pointer;
+}
+
+.product__cart_button.added {
+  background: #C1A286;
+  color: #FFFFFF;
+}
+
+.product__cart_button.added svg path {
+  stroke: #FFFFFF;
+}
+
+.product__favorite_button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
 }
 
 .product__favorite_button svg path{
@@ -304,6 +326,13 @@ justify-content: space-between;
   fill: #a45b38;
 }
 
+.product__favorite_button_active svg path {
+  fill: #C1AF86;
+}
+
+.product__favorite_button_active:hover svg path {
+  fill: #a45b38;
+}
 
 .product__cart_button:hover{
   background: #a45b38;
