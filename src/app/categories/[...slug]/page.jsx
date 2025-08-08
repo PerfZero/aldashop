@@ -55,12 +55,25 @@ export default function CategoryPage({ params }) {
         category_id: 1,
         subcategory_id: null,
         sort: getSortValue(sortBy),
-        in_stock: true,
+        in_stock: filters.in_stock !== undefined ? filters.in_stock : true,
         page: page - 1,
         limit: pagination.page_size,
-        material: 0,
-        bestseller: false
+        material: filters.material || 0,
+        bestseller: filters.bestseller || false,
+        price: {
+          min: filters.price?.min || 0,
+          max: filters.price?.max || 10000
+        },
+        colors: filters.colors && filters.colors.length > 0 ? filters.colors.map(color => parseInt(color)) : [],
+        sizes: {
+          width: filters.sizes?.width || 0,
+          height: filters.sizes?.height || 0,
+          depth: filters.sizes?.depth || 0
+        },
+        search: filters.search || ""
       };
+
+      console.log('Отправляем фильтры:', requestBody);
 
       const response = await fetch('/api/products/models-list', {
         method: 'POST',
@@ -106,6 +119,7 @@ export default function CategoryPage({ params }) {
   };
 
   const handleFiltersApply = (newFilters) => {
+    console.log('Применяем фильтры:', newFilters);
     setAppliedFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
     fetchProducts(newFilters, 1);

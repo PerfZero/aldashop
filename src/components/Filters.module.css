@@ -18,7 +18,10 @@
 }
 
 .filters__footer{
-  display: none;
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px solid rgba(193, 175, 134, 0.8);
 }
 
 .toggleSwitch {
@@ -385,6 +388,38 @@ border-radius: 100px;
 
 .filters__title{
   display: none;
+}
+
+.filters__button {
+  flex: 1;
+  padding: 12px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 150%;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.filters__button_cancel {
+  background: none;
+  border: 1px solid #a45b38;
+  color: #a45b38;
+}
+
+.filters__button_cancel:hover {
+  background: rgba(164, 91, 56, 0.1);
+}
+
+.filters__button_apply {
+  background: #a45b38;
+  border: none;
+  color: #fff;
+}
+
+.filters__button_apply:hover {
+  background: #8b4d2e;
 }
 
 /* Мобильные стили */

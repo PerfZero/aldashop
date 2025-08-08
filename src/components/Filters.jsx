@@ -33,7 +33,9 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
       onApply(finalFilters);
     }
     
-    onClose();
+    if (window.innerWidth <= 768) {
+      onClose();
+    }
   };
 
   if (loading) {
@@ -419,7 +421,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
           className={`${styles.filters__button} ${styles.filters__button_cancel}`}
           onClick={handleCancel}
         >
-          Отменить
+          Сброс
         </button>
         <button 
           className={`${styles.filters__button} ${styles.filters__button_apply}`}
