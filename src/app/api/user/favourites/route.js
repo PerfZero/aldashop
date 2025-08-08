@@ -19,7 +19,7 @@ export async function POST(request) {
       });
     }
 
-    const response = await fetch(`http://62.181.44.89/api/user/favourites/`, {
+    const response = await fetch(`https://aldalinde.ru/api/user/favourites/`, {
       method: 'POST',
       headers: {
         'Authorization': authHeader,
@@ -35,7 +35,6 @@ export async function POST(request) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error adding to favourites:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -54,7 +53,7 @@ export async function GET(request) {
       });
     }
 
-    const response = await fetch(`http://62.181.44.89/api/user/favourites/`, {
+    const response = await fetch(`https://aldalinde.ru/api/user/favourites/`, {
       headers: {
         'Authorization': authHeader,
       },
@@ -67,7 +66,6 @@ export async function GET(request) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error fetching favourites:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

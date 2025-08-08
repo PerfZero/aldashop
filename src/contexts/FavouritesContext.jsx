@@ -52,8 +52,8 @@ export function FavouritesProvider({ children }) {
             name: product.title || `Товар ${product.id}`,
             price: product.price,
             discountedPrice: product.discounted_price,
-            image: mainPhoto?.photo ? `http://62.181.44.89${mainPhoto.photo}` : '/sofa.png',
-            hoverImage: secondaryPhoto?.photo ? `http://62.181.44.89${secondaryPhoto.photo}` : null,
+                    image: mainPhoto?.photo ? `https://aldalinde.ru${mainPhoto.photo}` : '/sofa.png',
+        hoverImage: secondaryPhoto?.photo ? `https://aldalinde.ru${secondaryPhoto.photo}` : null,
             article: product.article || `ART${product.id}`,
             inStock: product.in_stock,
             isBestseller: product.bestseller,
@@ -69,7 +69,6 @@ export function FavouritesProvider({ children }) {
         setFavourites(favouritesList);
       }
     } catch (error) {
-      console.error('Ошибка при загрузке избранного:', error);
     }
     setIsLoading(false);
   };
@@ -81,7 +80,6 @@ export function FavouritesProvider({ children }) {
         try {
           setFavourites(JSON.parse(storedFavourites));
         } catch (error) {
-          console.error('Ошибка при загрузке избранного из localStorage:', error);
           setFavourites([]);
         }
       }
@@ -136,7 +134,6 @@ export function FavouritesProvider({ children }) {
           toast.error('Ошибка при добавлении в избранное');
         }
       } catch (error) {
-        console.error('Ошибка при добавлении в избранное:', error);
         toast.error('Ошибка при добавлении в избранное');
       }
     } else {
@@ -192,7 +189,6 @@ export function FavouritesProvider({ children }) {
           toast.error('Ошибка при удалении из избранного');
         }
       } catch (error) {
-        console.error('Ошибка при удалении из избранного:', error);
         toast.error('Ошибка при удалении из избранного');
       }
     } else {

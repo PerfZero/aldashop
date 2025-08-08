@@ -11,81 +11,60 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('🔍 Initializing auth...');
       const accessToken = localStorage.getItem('accessToken');
-      console.log('📦 Access token from localStorage:', accessToken ? 'exists' : 'not found');
       
       if (accessToken) {
         try {
-          console.log('🔐 Making request to /api/user/profile...');
           const response = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
             },
           });
 
-          console.log('📡 Response status:', response.status);
-          console.log('📡 Response ok:', response.ok);
-
-                     if (response.ok) {
-             const userData = await response.json();
-             console.log('👤 User data received:', userData);
-             setUser(userData.user_data);
-             setIsAuthenticated(true);
-             console.log('✅ Auth initialized successfully');
-           } else {
-            console.log('❌ User request failed, trying refresh token...');
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData.user_data);
+            setIsAuthenticated(true);
+          } else {
             const refreshTokenValue = localStorage.getItem('refreshToken');
-            console.log('🔄 Refresh token exists:', !!refreshTokenValue);
             
-                         if (refreshTokenValue) {
-               const refreshResult = await refreshToken();
-               console.log('🔄 Refresh result:', refreshResult);
-               if (refreshResult.success) {
-                 console.log('✅ Token refreshed successfully, fetching user data...');
-                 try {
-                   const userResponse = await fetch('/api/user/profile', {
-                     headers: {
-                       'Authorization': `Bearer ${refreshResult.accessToken}`,
-                     },
-                   });
-                                       if (userResponse.ok) {
-                      const userData = await userResponse.json();
-                      console.log('👤 User data after refresh:', userData);
-                      setUser(userData.user_data);
-                      setIsAuthenticated(true);
-                      console.log('✅ Auth initialized successfully after refresh');
-                    } else {
-                     console.log('❌ Failed to fetch user data after refresh');
-                     localStorage.removeItem('accessToken');
-                     localStorage.removeItem('refreshToken');
-                   }
-                 } catch (error) {
-                   console.error('💥 Error fetching user data after refresh:', error);
-                   localStorage.removeItem('accessToken');
-                   localStorage.removeItem('refreshToken');
-                 }
-               } else {
-                 console.log('❌ Refresh failed, clearing tokens');
-                 localStorage.removeItem('accessToken');
-                 localStorage.removeItem('refreshToken');
-               }
-             } else {
-               console.log('❌ No refresh token, clearing access token');
-               localStorage.removeItem('accessToken');
-               localStorage.removeItem('refreshToken');
-             }
+            if (refreshTokenValue) {
+              const refreshResult = await refreshToken();
+              if (refreshResult.success) {
+                try {
+                  const userResponse = await fetch('/api/user/profile', {
+                    headers: {
+                      'Authorization': `Bearer ${refreshResult.accessToken}`,
+                    },
+                  });
+                  
+                  if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    setUser(userData.user_data);
+                    setIsAuthenticated(true);
+                  } else {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                  }
+                } catch (error) {
+                  localStorage.removeItem('accessToken');
+                  localStorage.removeItem('refreshToken');
+                }
+              } else {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+              }
+            } else {
+              localStorage.removeItem('accessToken');
+              localStorage.removeItem('refreshToken');
+            }
           }
         } catch (error) {
-          console.error('💥 Error initializing auth:', error);
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
         }
-      } else {
-        console.log('❌ No access token found');
       }
       
-      console.log('🏁 Setting isLoading to false');
       setIsLoading(false);
     };
 
@@ -94,7 +73,6 @@ export function AuthProvider({ children }) {
 
   const login = async (email, password) => {
     try {
-      console.log('🔐 Login attempt for:', email);
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -104,38 +82,28 @@ export function AuthProvider({ children }) {
       });
 
       const data = await response.json();
-      console.log('📡 Login response status:', response.status);
-      console.log('📡 Login response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Ошибка входа');
       }
 
-      console.log('✅ Login successful, saving tokens...');
       localStorage.setItem('accessToken', data.access);
       localStorage.setItem('refreshToken', data.refresh);
       
-      console.log('👤 Fetching user data...');
       const userResponse = await fetch('/api/user/profile', {
         headers: {
           'Authorization': `Bearer ${data.access}`,
         },
       });
 
-      console.log('📡 User response status:', userResponse.status);
-             if (userResponse.ok) {
-         const userData = await userResponse.json();
-         console.log('👤 User data:', userData);
-         setUser(userData.user_data);
-       } else {
-        console.log('❌ Failed to fetch user data');
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setUser(userData.user_data);
       }
       
       setIsAuthenticated(true);
-      console.log('✅ Login completed, isAuthenticated set to true');
       return { success: true };
     } catch (error) {
-      console.error('💥 Login error:', error);
       return { success: false, error: error.message };
     }
   };
@@ -163,12 +131,10 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    console.log('🚪 Logout called');
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     setIsAuthenticated(false);
     setUser(null);
-    console.log('✅ Logout completed');
   };
 
   const resetPassword = async (email) => {

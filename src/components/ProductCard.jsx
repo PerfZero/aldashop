@@ -31,7 +31,7 @@ export default function ProductCard({ product }) {
         material_id: materialId,
       };
       
-      console.log('🔍 [ProductCard] Fetching details for:', requestBody);
+
       
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
@@ -43,15 +43,12 @@ export default function ProductCard({ product }) {
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ [ProductCard] API error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log('✅ [ProductCard] Received data:', data);
       
       if (data.error) {
-        console.error('❌ [ProductCard] API error:', data.error);
         return;
       }
       
@@ -75,7 +72,6 @@ export default function ProductCard({ product }) {
         });
       }
     } catch (error) {
-      console.error('❌ [ProductCard] Error fetching product details:', error);
     } finally {
       setIsLoading(false);
     }
@@ -157,7 +153,7 @@ export default function ProductCard({ product }) {
     await toggleFavourite(productToToggle);
   };
 
-  const hasDiscount = currentProduct.discountedPrice && currentProduct.price > currentProduct.discountedPrice;
+  const hasDiscount = currentProduct.discountedPrice && currentProduct.discountedPrice !== null && currentProduct.price > currentProduct.discountedPrice;
   const originalPrice = currentProduct.price?.toLocaleString('ru-RU');
   const discountedPrice = currentProduct.discountedPrice?.toLocaleString('ru-RU');
 
@@ -235,11 +231,11 @@ export default function ProductCard({ product }) {
         <div className={styles.card__price_container}>
           {hasDiscount ? (
             <>
-              <p className={styles.card__price_original}>{originalPrice} ₽</p>
-              <p className={styles.card__price_discounted}>{discountedPrice} ₽</p>
+              <p className={styles.card__price_original}>{currentProduct.discountedPrice} ₽</p>
+              <p className={styles.card__price_discounted}>{currentProduct.price} ₽</p>
             </>
           ) : (
-            <p className={styles.card__price}>{originalPrice} ₽</p>
+            <p className={styles.card__price}>{currentProduct.price} ₽</p>
           )}
         </div>
         

@@ -10,7 +10,7 @@ export async function DELETE(request, { params }) {
       });
     }
 
-    const response = await fetch(`http://62.181.44.89/api/user/cart/${productId}/`, {
+    const response = await fetch(`https://aldalinde.ru/api/user/cart/${productId}/`, {
       method: 'DELETE',
       headers: {
         'Authorization': authHeader,
@@ -35,7 +35,6 @@ export async function DELETE(request, { params }) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Error deleting cart item:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

@@ -4,15 +4,21 @@ import Link from 'next/link';
 import Image from 'next/image';
 import styles from './page.module.css';
 import { useCart } from '../components/CartContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, isLoading } = useCart();
+  const { isAuthenticated, getAuthHeaders } = useAuth();
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [showPromoCodeInput, setShowPromoCodeInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
+  const [promoCodeStatus, setPromoCodeStatus] = useState(null); // null, 'loading', 'valid', 'invalid'
+  const [promoCodeError, setPromoCodeError] = useState('');
   const [innStatus, setInnStatus] = useState(null); // null, 'valid', 'invalid'
+  const [autocompleteData, setAutocompleteData] = useState(null);
+  const [isLoadingAutocomplete, setIsLoadingAutocomplete] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -24,27 +30,108 @@ export default function CartPage() {
     street: '',
     house: '',
     pickupAddress: 'ул. Кипарисовая, 56',
+    pickupAddressId: null,
     apartment: '',
     isLegalEntity: false,
     delivery: 'pickup',
-    payment: 'card',
+    payment: 'sbp',
     comment: '',
     coordinates: null,
-    fullAddress: ''
+    fullAddress: '',
+    // Поля для юридического лица
+    legalFullName: '',
+    legalKpp: '',
+    legalOgrn: '',
+    legalAddress: '',
+    legalBankName: '',
+    legalBik: '',
+    legalCorrespondentAccount: '',
+    legalPaymentAccount: '',
+    legalSignatoryName: '',
+    legalSignatoryPosition: ''
   });
   const [isPickupDropdownOpen, setIsPickupDropdownOpen] = useState(false);
-  const pickupAddresses = [
+  const [showSavedAddresses, setShowSavedAddresses] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [pickupAddresses, setPickupAddresses] = useState([
     'ул. Кипарисовая, 56',
     'ул. Морская, 24',
     'ул. Морская, 24',
     'ул. Морская, 24',
     'ул. Морская, 24',
     'ул. Приморская, 118'
-  ];
+  ]);
 
   useEffect(() => {
     calculateTotal();
   }, [cartItems, discount]);
+
+  useEffect(() => {
+    const loadAutocompleteData = async () => {
+      console.log('Проверяем авторизацию:', isAuthenticated);
+      if (isAuthenticated) {
+        setIsLoadingAutocomplete(true);
+        try {
+          console.log('Отправляем запрос на автодополнение...');
+          const response = await fetch('/api/order/autocomplete/', {
+            headers: getAuthHeaders(),
+          });
+          
+          console.log('Статус ответа:', response.status);
+          
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Полученные данные автодополнения:', data);
+            setAutocompleteData(data);
+            
+            // Обновляем адреса пунктов выдачи
+            if (data.pickup_addresses && data.pickup_addresses.length > 0) {
+              const pickupAddressesList = data.pickup_addresses.map(address => address.full_address);
+              setPickupAddresses(pickupAddressesList);
+              console.log('Обновлены адреса пунктов выдачи:', pickupAddressesList);
+            }
+            
+            // Автозаполнение полей профиля
+            if (data.profile_fields) {
+              console.log('Заполняем поля профиля:', data.profile_fields);
+              setFormData(prev => {
+                const newData = {
+                  ...prev,
+                  firstName: data.profile_fields.first_name || prev.firstName,
+                  lastName: data.profile_fields.last_name || prev.lastName,
+                  phone: data.profile_fields.phone || prev.phone,
+                  email: data.emails?.[0] || prev.email,
+                };
+                console.log('Новые данные формы:', newData);
+                return newData;
+              });
+            } else {
+              console.log('Нет данных profile_fields в ответе');
+            }
+          } else {
+            console.log('Ошибка ответа:', response.status, response.statusText);
+          }
+        } catch (error) {
+          console.error('Ошибка при загрузке данных автодополнения:', error);
+        } finally {
+          setIsLoadingAutocomplete(false);
+        }
+      } else {
+        console.log('Пользователь не авторизован');
+      }
+    };
+
+    loadAutocompleteData();
+  }, [isAuthenticated, getAuthHeaders]);
+
+  useEffect(() => {
+    // Сбрасываем промокод при изменении корзины
+    if (promoCodeStatus === 'valid') {
+      setPromoCodeStatus(null);
+      setPromoCodeError('');
+      setDiscount(0);
+    }
+  }, [cartItems]);
 
   useEffect(() => {
     // Сброс статуса ИНН при изменении формы заказа от юр. лица
@@ -96,61 +183,152 @@ export default function CartPage() {
     }));
   };
   
-  const handlePromoCodeSubmit = (e) => {
+  const handlePromoCodeSubmit = async (e) => {
     e.preventDefault();
-    // Здесь будет логика проверки промокода
-    console.log('Применяем промокод:', promoCode);
-    if (promoCode.toUpperCase() === 'СКИДКА') {
-      // Пример: применение скидки, если промокод верный
-      setDiscount(5000);
+    
+    if (!promoCode.trim()) {
+      setPromoCodeError('Введите промокод');
+      return;
+    }
+    
+    setPromoCodeStatus('loading');
+    setPromoCodeError('');
+    
+    try {
+      const currentTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      
+      const response = await fetch('/api/order/check-promo/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          promo_code: promoCode.trim(),
+          current_total: currentTotal
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok && data.is_valid) {
+        setPromoCodeStatus('valid');
+        setDiscount(data.discount || 0);
+        setPromoCodeError('');
+      } else {
+        setPromoCodeStatus('invalid');
+        setDiscount(0);
+        setPromoCodeError('Неверный промокод');
+      }
+    } catch (error) {
+      console.error('Ошибка при проверке промокода:', error);
+      setPromoCodeStatus('invalid');
+      setDiscount(0);
+      setPromoCodeError('Ошибка при проверке промокода');
     }
   };
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Формируем данные заказа согласно API документации
     const orderData = {
-      customer: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        inn: formData.inn,
-        phone: formData.phone,
-        email: formData.email,
-        isLegalEntity: formData.isLegalEntity
-      },
-      delivery: {
-        delivery: formData.delivery,
-        city: formData.city,
-        address: formData.address,
-        apartment: formData.apartment,
-        pickupAddress: formData.pickupAddress,
-        coordinates: formData.coordinates || null,
-        fullAddress: formData.fullAddress || formData.address
-      },
-      items: cartItems,
-      totalPrice: totalPrice,
-      payment: {
-        payment: formData.payment
-      },
-      comment: formData.comment
+      email: formData.email,
+      message: formData.comment || null,
+      pickup: formData.delivery === 'pickup',
+      pay_method: formData.payment,
+      first_name: formData.firstName,
+      last_name: formData.lastName,
+      phone: formData.phone
     };
 
+    // Добавляем промокод только если он валидный
+    if (promoCodeStatus === 'valid' && promoCode) {
+      orderData.promo_code = promoCode;
+    }
+
+    // Добавляем адрес доставки, если не самовывоз
+    if (formData.delivery === 'address') {
+      orderData.delivery_address = {
+        administrative_area: formData.region || 'Краснодарский край',
+        locality: formData.city,
+        route: formData.street || '',
+        street_number: formData.house || '',
+        postal_code: '',
+        entrance: '',
+        floor: '',
+        apartment: formData.apartment || ''
+      };
+    }
+
+    // Добавляем адрес пункта выдачи, если самовывоз
+    if (formData.delivery === 'pickup') {
+      // Используем сохраненный ID или ищем в API данных
+      let pickupId = formData.pickupAddressId;
+      
+      if (!pickupId && autocompleteData?.pickup_addresses) {
+        const pickupAddress = autocompleteData.pickup_addresses.find(
+          addr => addr.full_address === formData.pickupAddress
+        );
+        if (pickupAddress) {
+          pickupId = pickupAddress.id;
+        }
+      }
+      
+      if (pickupId) {
+        orderData.pickup_address = {
+          id: pickupId
+        };
+      } else {
+        // Если не нашли ID, используем адрес как fallback
+        orderData.pickup_address = {
+          address: formData.pickupAddress
+        };
+      }
+    }
+
+    // Добавляем данные юридического лица, если выбрано
+    if (formData.isLegalEntity && formData.inn) {
+      orderData.legal_person = {
+        full_name: formData.legalFullName || formData.lastName || '',
+        inn: formData.inn,
+        kpp: formData.legalKpp || '',
+        ogrn: formData.legalOgrn || '',
+        legal_address: formData.legalAddress || '',
+        bank_name: formData.legalBankName || '',
+        bik: formData.legalBik || '',
+        correspondent_account: formData.legalCorrespondentAccount || '',
+        payment_account: formData.legalPaymentAccount || '',
+        signatory_name: formData.legalSignatoryName || '',
+        signatory_position: formData.legalSignatoryPosition || ''
+      };
+    }
+
+    console.log('Отправляем заказ:', orderData);
+
     try {
-      const response = await fetch('/api/orders', {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (isAuthenticated) {
+        const authHeaders = getAuthHeaders();
+        Object.assign(headers, authHeaders);
+      }
+      
+      const response = await fetch('/api/order/create-order/', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify(orderData)
       });
 
       const result = await response.json();
+      console.log('Ответ сервера:', result);
 
-      if (result.success) {
-        alert(`Заказ успешно оформлен! Номер заказа: ${result.orderId}`);
+      if (response.ok) {
+        alert(`Заказ успешно оформлен!`);
         clearCart();
       } else {
-        alert('Ошибка при оформлении заказа');
+        alert(`Ошибка при оформлении заказа: ${result.error || 'Неизвестная ошибка'}`);
       }
     } catch (error) {
       console.error('Ошибка при отправке заказа:', error);
@@ -164,6 +342,31 @@ export default function CartPage() {
       pickupAddress: address
     }));
     setIsPickupDropdownOpen(false);
+  };
+
+  const handleSelectPickupAddressFromAPI = (address) => {
+    setFormData(prev => ({
+      ...prev,
+      pickupAddress: address.full_address,
+      pickupAddressId: address.id
+    }));
+    setIsPickupDropdownOpen(false);
+  };
+
+  const handleSelectSavedAddress = (address) => {
+    setFormData(prev => ({
+      ...prev,
+      city: address.locality || prev.city,
+      street: address.route || prev.street,
+      house: address.street_number || prev.house,
+      apartment: address.apartment || prev.apartment,
+      fullAddress: address.full_address || prev.fullAddress,
+      coordinates: address.coordinates_x && address.coordinates_y 
+        ? [parseFloat(address.coordinates_y), parseFloat(address.coordinates_x)]
+        : prev.coordinates
+    }));
+    setSelectedAddressId(address.id);
+    setShowSavedAddresses(false);
   };
 
   const handleMapClick = (event) => {
@@ -309,7 +512,10 @@ export default function CartPage() {
           
           <form className={styles.checkoutForm} onSubmit={handleSubmit}>
             <div className={styles.formSection}>
-              <h2 className={styles.sectionTitle}>Покупатель</h2>
+              <h2 className={styles.sectionTitle}>
+                Покупатель
+                {isLoadingAutocomplete && <span className={styles.loadingIndicator}>Загрузка данных...</span>}
+              </h2>
               <div className={styles.formContent}>
                 <div className={styles.switchField}>
                   <label className={styles.switch}>
@@ -378,6 +584,28 @@ export default function CartPage() {
                     <p className={styles.innValid}>
                       ИНН: {formData.inn}
                     </p>
+                  </div>
+                )}
+
+                {autocompleteData?.legal_persons && autocompleteData.legal_persons.length > 0 && (
+                  <div className={styles.savedAddresses}>
+                    <h4>Сохраненные юридические лица</h4>
+                    {autocompleteData.legal_persons.map((legalPerson) => (
+                      <div 
+                        key={legalPerson.id}
+                        className={styles.savedAddress}
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            inn: legalPerson.inn || prev.inn,
+                            isLegalEntity: true
+                          }));
+                          setInnStatus('valid');
+                        }}
+                      >
+                        {legalPerson.full_name} (ИНН: {legalPerson.inn})
+                      </div>
+                    ))}
                   </div>
                 )}
                 
@@ -500,15 +728,29 @@ export default function CartPage() {
                         
                         {isPickupDropdownOpen && (
                           <div className={styles.selectOptions}>
-                            {pickupAddresses.map((address, index) => (
-                              <div 
-                                key={index} 
-                                className={styles.selectOption}
-                                onClick={() => handleSelectPickupAddress(address)}
-                              >
-                                {address}
-                              </div>
-                            ))}
+                            {autocompleteData?.pickup_addresses && autocompleteData.pickup_addresses.length > 0 ? (
+                              // Показываем адреса из API
+                              autocompleteData.pickup_addresses.map((address) => (
+                                <div 
+                                  key={address.id} 
+                                  className={styles.selectOption}
+                                  onClick={() => handleSelectPickupAddressFromAPI(address)}
+                                >
+                                  {address.full_address}
+                                </div>
+                              ))
+                            ) : (
+                              // Показываем статические адреса как fallback
+                              pickupAddresses.map((address, index) => (
+                                <div 
+                                  key={index} 
+                                  className={styles.selectOption}
+                                  onClick={() => handleSelectPickupAddress(address)}
+                                >
+                                  {address}
+                                </div>
+                              ))
+                            )}
                           </div>
                         )}
                       </div>
@@ -517,6 +759,20 @@ export default function CartPage() {
                   
                   {formData.delivery === 'address' && (
                     <div className={styles.addressToDelivery}>
+                      {autocompleteData?.delivery_addresses && autocompleteData.delivery_addresses.length > 0 && (
+                        <div className={styles.savedAddresses}>
+                          <h4>Сохраненные адреса</h4>
+                          {autocompleteData.delivery_addresses.map((address) => (
+                            <div 
+                              key={address.id}
+                              className={`${styles.savedAddress} ${selectedAddressId === address.id ? styles.selected : ''}`}
+                              onClick={() => handleSelectSavedAddress(address)}
+                            >
+                              {address.full_address}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className={styles.addressFields}>
                         <div className={styles.addressField}>
                           <div className={styles.inputContainer}>
@@ -572,15 +828,15 @@ export default function CartPage() {
                       <input 
                         type="radio" 
                         name="payment" 
-                        value="card"
-                        checked={formData.payment === 'card'}
+                        value="sbp"
+                        checked={formData.payment === 'sbp'}
                         onChange={handleRadioChange}
                       />
                       <div className={styles.radioContent}>
                         <span className={styles.radioCircle}></span>
                         <div>
-                          <p className={styles.radioTitle}>Оплата картой на сайте</p>
-                          <p className={styles.radioDesc}>После подтверждения заказа вы попадете на форму оплаты</p>
+                          <p className={styles.radioTitle}>Оплата через СБП</p>
+                          <p className={styles.radioDesc}>Оплата через банковское приложение, не нужно вводить данные карты</p>
                         </div>
                       </div>
                     </label>
@@ -591,15 +847,15 @@ export default function CartPage() {
                       <input 
                         type="radio" 
                         name="payment" 
-                        value="sbp"
-                        checked={formData.payment === 'sbp'}
+                        value="card"
+                        checked={formData.payment === 'card'}
                         onChange={handleRadioChange}
                       />
                       <div className={styles.radioContent}>
                         <span className={styles.radioCircle}></span>
                         <div>
-                          <p className={styles.radioTitle}>Оплата через СБП</p>
-                          <p className={styles.radioDesc}>Оплата через банковское приложение, не нужно вводить данные карты</p>
+                          <p className={styles.radioTitle}>Оплата картой на сайте</p>
+                          <p className={styles.radioDesc}>После подтверждения заказа вы попадете на форму оплаты</p>
                         </div>
                       </div>
                     </label>
@@ -658,20 +914,38 @@ export default function CartPage() {
                     <div className={styles.inputContainer}>
                       <input 
                         type="text" 
-                        className={styles.promoCodeInput} 
+                        className={`${styles.promoCodeInput} ${promoCodeStatus === 'invalid' ? styles.error : ''} ${promoCodeStatus === 'valid' ? styles.success : ''}`}
                         placeholder=" "
                         value={promoCode}
-                        onChange={(e) => setPromoCode(e.target.value)}
+                        onChange={(e) => {
+                          setPromoCode(e.target.value);
+                          if (promoCodeStatus !== null) {
+                            setPromoCodeStatus(null);
+                            setPromoCodeError('');
+                          }
+                        }}
+                        disabled={promoCodeStatus === 'loading'}
                       />
                       <span className={styles.floatingLabel}>Введите промокод</span>
                     </div>
                     <button 
                       type="button" 
-                      className={styles.promoCodeButton}
+                      className={`${styles.promoCodeButton} ${promoCodeStatus === 'loading' ? styles.loading : ''}`}
                       onClick={handlePromoCodeSubmit}
+                      disabled={promoCodeStatus === 'loading'}
                     >
-                      Активировать
+                      {promoCodeStatus === 'loading' ? 'Проверяем...' : 'Активировать'}
                     </button>
+                    {promoCodeError && (
+                      <div className={styles.promoCodeError}>
+                        {promoCodeError}
+                      </div>
+                    )}
+                    {promoCodeStatus === 'valid' && (
+                      <div className={styles.promoCodeSuccess}>
+                        Промокод применен! Скидка: {discount.toLocaleString()} ₽
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div 
@@ -700,7 +974,7 @@ export default function CartPage() {
                 </div>
               </div>
               
-              <button type="submit" className={styles.confirmButton}>
+              <button type="submit" className={styles.confirmButton} onClick={handleSubmit}>
                 Подтвердить заказ
                 <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="white"/>

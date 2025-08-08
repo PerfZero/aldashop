@@ -3,7 +3,7 @@ export async function POST(request, { params }) {
     const { uidb64, token } = params;
     const body = await request.json();
     
-    const response = await fetch(`http://62.181.44.89/api/auth/reset-password-confirm/${uidb64}/${token}/`, {
+    const response = await fetch(`https://aldalinde.ru/api/auth/reset-password-confirm/${uidb64}/${token}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -22,7 +22,6 @@ export async function POST(request, { params }) {
 
     return Response.json(data, { status: 200 });
   } catch (error) {
-    console.error('Error during password reset confirmation:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

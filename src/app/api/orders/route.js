@@ -50,7 +50,7 @@ export async function POST(request) {
       comment: comment
     };
 
-    console.log('Новый заказ:', order);
+
 
     return NextResponse.json({
       success: true,
@@ -59,7 +59,6 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('Ошибка при создании заказа:', error);
     return NextResponse.json(
       { success: false, message: 'Ошибка при создании заказа' },
       { status: 500 }
@@ -102,7 +101,6 @@ export async function GET() {
 
     return NextResponse.json(mockOrders);
   } catch (error) {
-    console.error('Ошибка при получении заказов:', error);
     return NextResponse.json(
       { success: false, message: 'Ошибка при получении заказов' },
       { status: 500 }

@@ -37,162 +37,60 @@ const menuItems = [
   }
 ];
 
-const steps = ['Принят', 'Оплачен', 'Собран', 'Отправлен', 'Получен'];
 
-const OrderCard = ({ order, isCompleted, isExpanded, onToggleExpand }) => {
-  // вычисляем ширину линии прогресса
-  const progressWidth = isCompleted
-    ? '100%'
-    : `${(order.currentStep / (steps.length - 1)) * 100}%`;
 
-  return (
-    <>
-      <div className={`${styles.order} ${isCompleted ? styles.order_completed : ''}`}>
-        <div className={styles.order__header}>
-          <div className={styles.order__info}>
-            <div className={styles.order__number}>Заказ №{order.number}</div>
-            <div className={styles.order__date}>Заказан: {order.orderDate}</div>
-          </div>
-          {isCompleted ? (
-            <div className={styles.order__status}>
-              <div className={styles.order__status_text}>Получен</div>
-              <div className={styles.order__delivery_date}>{order.completionDate}</div>
-            </div>
-          ) : (
-            <div className={styles.order__delivery}>
-              <div className={styles.order__delivery_text}>Ожидаемое получение</div>
-              <div className={styles.order__delivery_date}>{order.expectedDate}</div>
-              <div className={styles.order__delivery_days}>{order.daysLeft} дней</div>
-            </div>
-          )}
-        </div>
 
-        <div
-          className={styles.order__steps}
-          style={{ '--progress-width': progressWidth }}
-        >
-          {steps.map((step, index) => (
-            <div
-              key={step}
-              className={`${styles.order__step} ${
-                (isCompleted || index <= order.currentStep) ? styles.order__step_active : ''
-              }`}
-            >
-              <div className={styles.order__step_dot}></div>
-              <div className={styles.order__step_text}>{step}</div>
-            </div>
-          ))}
-        </div>
-
-        <div className={styles.order__details}>
-          {isCompleted ? (
-            <>
-              <div className={styles.order__collected}>Получен 02.03.2025</div>
-              <div className={styles.order__delivery_method}><span>Способ доставки:</span> {order.deliveryMethod}</div>
-              <div className={styles.order__delivery_address}><span>Адрес доставки:</span> {order.deliveryAddress}</div>
-              <div className={styles.order__total_cost}>Стоимость товара: <span>{order.totalAmount} руб.</span></div>
-              <div className={styles.order__quantity}>Количество: <span>{order.quantity} шт.</span></div>
-            </>
-          ) : (
-            <>
-              <div className={styles.order__collected}>Собран 15.01.2025</div>
-              <div className={styles.order__delivery_method}><span>Способ доставки:</span> {order.deliveryMethod}</div>
-              <div className={styles.order__delivery_address}><span>Адрес доставки:</span> {order.deliveryAddress}</div>
-              <div className={styles.order__payment_status}>Оплачено: <span>{order.paidAmount} руб.</span><span> / {order.totalAmount} руб.</span></div>
-              <div className={styles.order__progress_status}>Прогресс: <span>{order.progress}%</span></div>
-              <div className={styles.order__contact_info}>Контактная информация: <span>{order.contactInfo}</span></div>
-              <div className={styles.order__total_cost}>Стоимость товара: <span>{order.totalAmount} руб.</span></div>
-              <div className={styles.order__quantity}>Количество: <span>{order.quantity} шт.</span></div>
-              <div className={styles.order__pay_action}>
-                <button className={styles.order__pay_button}>
-                  Оплатить
-                  <svg width="30" height="30" viewBox="0 0 32 12" fill="none">
-                    <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="currentColor"/>
-                  </svg>
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-      
-      <div className={styles.order__details_button} onClick={() => onToggleExpand(order.number)}>
-        {isExpanded ? 'Свернуть' : 'Подробнее'}
-      </div>
-      
-      {isExpanded && (
-        <div className={styles.order__expanded_details}>
-          <div className={styles.order__expanded_header}>
-            <h3>Заказ №{order.number}</h3>
-            <div className={styles.order__expanded_total}>{order.totalAmount} ₽</div>
-          </div>
-          
-          {order.items && order.items.map((item) => (
-            <div key={item.id} className={styles.order__expanded_item}>
-              <div className={styles.order__expanded_item_image}>
-                <img src={item.image} alt={item.title} />
-              </div>
-              <div className={styles.order__expanded_item_info}>
-                <div className={styles.order__expanded_item_title}>{item.title}</div>
-                <div className={styles.order__expanded_item_article}>Артикул: <span>{item.article}</span></div>
-                <div className={styles.order__expanded_item_material}>{item.material}</div>
-                <div className={styles.order__expanded_item_size}>{item.size}</div>
-                <div className={styles.order__expanded_item_color_row}>
-                  <span className={styles.order__expanded_item_color_label}>Цвет:</span>
-                  <span className={styles.order__expanded_item_color_circle} style={{background: item.color}}></span>
-                </div>
-                <div className={styles.order__expanded_item_price}>{item.price} ₽</div>
-              </div>
-              <div className={styles.order__expanded_item_quantity}>{item.quantity} шт.</div>
-            </div>
-          ))}
-          
-          <div className={styles.order__expanded_summary}>
-            <div className={styles.order__expanded_summary_item}>
-              <span>Способ оплаты:</span>
-              <span>{order.paymentMethod || 'Оплата картой на сайте'}</span>
-            </div>
-            <div className={styles.order__expanded_summary_item}>
-              <span>Стоимость товара:</span>
-              <span>{order.totalAmount} руб.</span>
-            </div>
-            <div className={styles.order__expanded_summary_item}>
-              <span>Стоимость доставки:</span>
-              <span>{order.deliveryCost || '0'} руб.</span>
-            </div>
-            <div className={styles.order__expanded_summary_item}>
-              <span>Скидка:</span>  
-              <span>{order.discount || '0'} руб.</span>
-            </div>
-            <div className={styles.order__expanded_summary_total}>
-              <span>Итого:</span>
-              <span>{order.totalAmount} руб.</span>
-            </div>
-          </div>
-          
-          {!isCompleted && (
-            <div className={styles.order__expanded_actions}>
-              <button className={styles.order__cancel_button}>Отменить заказ</button>
-            </div>
-          )}
-        </div>
-      )}
-    </>
-  );
-};
 
 export default function AccountPage() {
-  const { getUserProfile, updateUserProfile, user } = useAuth();
+  const { getUserProfile, updateUserProfile, user, getAuthHeaders } = useAuth();
   const [activeTab, setActiveTab] = useState('account');
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [profileData, setProfileData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [ordersError, setOrdersError] = useState('');
+  const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+  const [orderDetailsLoading, setOrderDetailsLoading] = useState(false);
+  const [orderDetailsError, setOrderDetailsError] = useState('');
 
-  const toggleOrderExpand = (orderId) => {
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+  const toggleOrderExpand = async (orderId) => {
+    if (expandedOrderId === orderId) {
+      setExpandedOrderId(null);
+      setSelectedOrderDetails(null);
+      setOrderDetailsError('');
+    } else {
+      setExpandedOrderId(orderId);
+      setOrderDetailsLoading(true);
+      setOrderDetailsError('');
+      
+      try {
+        const headers = getAuthHeaders();
+        const response = await fetch(`/api/order/detail/${orderId}`, {
+          headers: {
+            ...headers,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Ошибка загрузки деталей заказа');
+        }
+
+        const data = await response.json();
+        setSelectedOrderDetails(data);
+      } catch (error) {
+        setOrderDetailsError(error.message);
+      } finally {
+        setOrderDetailsLoading(false);
+      }
+    }
   };
+
+  const steps = ['Принят', 'Оплачен', 'Собран', 'Отправлен', 'Получен'];
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -208,6 +106,39 @@ export default function AccountPage() {
       loadProfile();
     }
   }, [activeTab, getUserProfile]);
+
+  useEffect(() => {
+    const loadOrders = async () => {
+      if (activeTab === 'orders') {
+        setOrdersLoading(true);
+        setOrdersError('');
+        
+        try {
+          const headers = getAuthHeaders();
+          const response = await fetch('/api/order/active-orders/?limit=10', {
+            headers: {
+              ...headers,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Ошибка загрузки заказов');
+          }
+
+          const data = await response.json();
+          setOrders(data.results || []);
+        } catch (error) {
+          setOrdersError(error.message);
+        } finally {
+          setOrdersLoading(false);
+        }
+      }
+    };
+
+    loadOrders();
+  }, [activeTab, getAuthHeaders]);
 
 
 
@@ -231,84 +162,7 @@ export default function AccountPage() {
     setIsLoading(false);
   };
 
-  const mockOrders = [
-    {
-      number: '4544',
-      orderDate: '12.02.2023, 13:34',
-      expectedDate: '27.02.2025',
-      daysLeft: '15',
-      currentStep: 2,
-      progress: 100,
-      deliveryMethod: 'Курьерская доставка',
-      deliveryAddress: 'Москва, ул. Тверская, д. 15',
-      paidAmount: '15 000',
-      totalAmount: '25 000',
-      quantity: '2',
-      contactInfo: '+7 900 000-00-00',
-      paymentMethod: 'Оплата картой на сайте',
-      paymentCardType: 'Дебетовая карта',
-      paymentCardNumber: '*1232',
-      collectionDate: '15.01.2025',
-      deliveryCost: '0',
-      discount: '0',
-      items: [
-        {
-          id: 1,
-          title: 'Диван-кровать Скайли бежевого цвета',
-          size: '236x95x92 см',
-          price: '25 000',
-          quantity: 1,
-          image: '/images/sofa1.jpg',
-          article: 'IMR-1798647',
-          material: 'Велюр',
-          color: '#E5C9B6'
-        },
-        {
-          id: 2,
-          title: 'Диван-кровать Скайли бежевого цвета',
-          size: '236x95x92 см',
-          price: '25 000',
-          quantity: 1,
-          image: '/images/sofa2.jpg',
-          article: 'IMR-1798648',
-          material: 'Велюр',
-          color: '#E5C9B6'
-        }
-      ]
-    },
-    {
-      number: '4544',
-      orderDate: '12.02.2023, 13:34',
-      completionDate: '27.02.2023',
-      collectionDate: '15.01.2023',
-      currentStep: 4,
-      progress: 100,
-      deliveryMethod: 'Курьерская доставка',
-      deliveryAddress: 'Москва, ул. Тверская, д. 15',
-      paidAmount: '25 000',
-      totalAmount: '25 000',
-      quantity: '1',
-      contactInfo: '+7 900 000-00-00',
-      paymentMethod: 'Оплата картой на сайте',
-      paymentCardType: 'Дебетовая карта',
-      paymentCardNumber: '*1232',
-      deliveryCost: '0',
-      discount: '0',
-      items: [
-        {
-          id: 1,
-          title: 'Диван-кровать Скайли бежевого цвета',
-          size: '236x95x92 см',
-          price: '25 000',
-          quantity: 1,
-          image: '/images/sofa1.jpg',
-          article: 'IMR-1798647',
-          material: 'Велюр',
-          color: '#E5C9B6'
-        }
-      ]
-    }
-  ];
+
 
   const renderContent = () => {
     switch (activeTab) {
@@ -364,12 +218,59 @@ export default function AccountPage() {
         );
       case 'orders':
         if (expandedOrderId) {
-          const selectedOrder = mockOrders.find((order, index) => order.number === expandedOrderId);
-          const isCompleted = mockOrders.indexOf(selectedOrder) === 1;
+          if (orderDetailsLoading) {
+            return (
+              <div className={styles.orders__content}>
+                <div className={styles.loading}>Загрузка деталей заказа...</div>
+              </div>
+            );
+          }
           
-          const progressWidth = isCompleted
-            ? '100%'
-            : `${(selectedOrder.currentStep / (steps.length - 1)) * 100}%`;
+          if (orderDetailsError) {
+            return (
+              <div className={styles.orders__content}>
+                <div className={styles.error}>Ошибка: {orderDetailsError}</div>
+                <button className={styles.order__back_button_top} onClick={() => setExpandedOrderId(null)}>
+                  Вернуться к списку заказов
+                </button>
+              </div>
+            );
+          }
+          
+          if (!selectedOrderDetails) {
+            return (
+              <div className={styles.orders__content}>
+                <div className={styles.error}>Детали заказа не найдены</div>
+                <button className={styles.order__back_button_top} onClick={() => setExpandedOrderId(null)}>
+                  Вернуться к списку заказов
+                </button>
+              </div>
+            );
+          }
+          
+          const isCompleted = selectedOrderDetails.status_with_date?.includes('Получен') || false;
+          const orderNumber = selectedOrderDetails.id || 'Неизвестный заказ';
+          const orderDate = selectedOrderDetails.created_at || '';
+          const deliveryDate = selectedOrderDetails.received_date ? new Date(selectedOrderDetails.received_date).toLocaleDateString('ru-RU') : '';
+          const totalAmount = selectedOrderDetails.summ || '0';
+          const deliveryType = selectedOrderDetails.delivery_type || 'Не указан';
+          const address = selectedOrderDetails.delivery_type === 'Самовывоз' 
+            ? `${selectedOrderDetails.address?.administrative_area || ''} ${selectedOrderDetails.address?.locality || ''} ${selectedOrderDetails.address?.route || ''} ${selectedOrderDetails.address?.street_number || ''}`.trim() || 'Не указан'
+            : selectedOrderDetails.address?.full_address || 'Не указан';
+          const productCount = selectedOrderDetails.products?.length || '0';
+          const paidFor = selectedOrderDetails.paid_for || '0';
+          const payMethod = selectedOrderDetails.pay_method || 'Не указан';
+          const message = selectedOrderDetails.message || '';
+          
+          let currentStep = 0;
+          if (selectedOrderDetails.status_with_date?.includes('Ожидает подтверждения')) currentStep = 0;
+          else if (selectedOrderDetails.status_with_date?.includes('Оплачен')) currentStep = 1;
+          else if (selectedOrderDetails.status_with_date?.includes('Собран')) currentStep = 2;
+          else if (selectedOrderDetails.status_with_date?.includes('Отправлен')) currentStep = 3;
+          else if (isCompleted) currentStep = 4;
+          else currentStep = 0;
+          
+          const progressWidth = isCompleted ? '100%' : `${(currentStep / (steps.length - 1)) * 100}%`;
           
           return (
             <div className={styles.orders__content}>
@@ -386,11 +287,11 @@ export default function AccountPage() {
                 
                 <div className={styles.order__expanded_header_info}>
                   {isCompleted ? (
-                    <div className={styles.order__collected}>Получен {selectedOrder.completionDate}</div>
+                    <div className={styles.order__collected}>Получен {deliveryDate}</div>
                   ) : (
                     <>
-                      <div className={styles.order__collected}>Собран {selectedOrder.collectionDate}</div>
-                      <div className={styles.order__progress_status}>Прогресс: <span>{selectedOrder.progress}%</span></div>
+                                          <div className={styles.order__collected}>В обработке</div>
+                    <div className={styles.order__progress_status}>Прогресс: <span>{Math.round((currentStep / (steps.length - 1)) * 100)}%</span></div>
                     </>
                   )}
                 </div>
@@ -400,7 +301,7 @@ export default function AccountPage() {
                     <div
                       key={step}
                       className={`${styles.order__step} ${
-                        (isCompleted || index <= selectedOrder.currentStep) ? styles.order__step_active : ''
+                        (isCompleted || index <= currentStep) ? styles.order__step_active : ''
                       }`}
                     >
                       <div className={styles.order__step_dot}></div>
@@ -411,22 +312,21 @@ export default function AccountPage() {
                 
                 <div className={styles.order__expanded_details_container}>
                   <div className={styles.order__expanded_details_info}>
-                    <div className={styles.order__delivery_method}><span>Способ доставки:</span> {selectedOrder.deliveryMethod}</div>
-                    <div className={styles.order__contact_info}>Контактная информация:<span> {selectedOrder.contactInfo}</span></div>
-                    <div className={styles.order__delivery_address}><span>Адрес доставки:</span> {selectedOrder.deliveryAddress}</div>
-
+                    <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
+                    <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
+                    <div className={styles.order__payment_method}><span>Способ оплаты:</span> {payMethod}</div>
 
                     {!isCompleted && (
-                      <div className={styles.order__payment_status}><span>Оплачено:</span> <span className={styles.order__paid}>{selectedOrder.paidAmount} руб.</span><span className={styles.order__total}> / {selectedOrder.totalAmount} руб.</span></div>
+                      <div className={styles.order__payment_status}><span>Оплачено:</span> <span className={styles.order__paid}>{paidFor} руб.</span><span className={styles.order__total}> / {totalAmount} руб.</span></div>
                     )}
-                                        <div className={styles.order__payment_method}><span>Способ оплаты:</span> {selectedOrder.paymentMethod}</div>
-                                        <div className={styles.order__payment_card}><span>{selectedOrder.paymentCardType}</span> {selectedOrder.paymentCardNumber}</div>
 
-
-                    <div className={styles.order__total_cost}>Стоимость товара: < span>{selectedOrder.totalAmount} руб.</span></div>
-                    <div className={styles.order__quantity}>Количество: <span>{selectedOrder.quantity} шт.</span></div>
-                 
+                    <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
+                    <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                     
+                    {message && (
+                      <div className={styles.order__message}><span>Комментарий к заказу:</span> {message}</div>
+                    )}
+                 
                     {!isCompleted && (
                       <div className={styles.order__pay_action}>
                         <button className={styles.order__pay_button}>
@@ -441,35 +341,53 @@ export default function AccountPage() {
                 </div>
                 
                 <div className={styles.orders__expanded_order_wrapper}>
-                <div className={styles.orders__expanded_order_title}>
-                  <div className={styles.orders__expanded_order_number}>Заказ №{selectedOrder.number}</div>
-                  <div className={styles.orders__expanded_order_total}>{selectedOrder.totalAmount} ₽</div>
-                </div>
-                
-                <div className={styles.orders__items_list}>
-                  {selectedOrder.items && selectedOrder.items.map((item) => (
-                    <div key={item.id} className={styles.order__expanded_item}>
-                      <div className={styles.order__expanded_item_image}>
-                        <img src={item.image} alt={item.title} />
-                      </div>
-                      <div className={styles.order__expanded_item_info}>
-                        <div className={styles.order__expanded_item_title}>{item.title}</div>
-                        <div className={styles.order__expanded_item_article}>Артикул: <span>{item.article}</span></div>
-                        <div className={styles.order__expanded_item_details}>
-                        <div className={styles.order__expanded_item_color_row}>
-                          <span className={styles.order__expanded_item_color_label}>Цвет:</span>
-                          <span className={styles.order__expanded_item_color_circle} style={{background: item.color}}></span>
+                  <div className={styles.orders__expanded_order_title}>
+                    <div className={styles.orders__expanded_order_number}>Заказ {orderNumber}</div>
+                    <div className={styles.orders__expanded_order_total}>{totalAmount} ₽</div>
+                  </div>
+                  
+                  <div className={styles.orders__items_list}>
+                    {selectedOrderDetails.products && selectedOrderDetails.products.map((product, index) => (
+                      <div key={product.id || index} className={styles.order__expanded_item}>
+                        <div className={styles.order__expanded_item_image}>
+                          {product.photos && product.photos.length > 0 && (
+                            <img src={product.photos[0].photo} alt={product.title} />
+                          )}
                         </div>
-                          <div className={styles.order__expanded_item_material}>{item.material}</div>
-                          <div className={styles.order__expanded_item_size}>{item.size}</div>
-                        
+                        <div className={styles.order__expanded_item_info}>
+                          <div className={styles.order__expanded_item_title}>{product.title}</div>
+                          <div className={styles.order__expanded_item_article}>Артикул: <span>{product.generated_article}</span></div>
+                          <div className={styles.order__expanded_item_details}>
+                            {product.color && (
+                              <div className={styles.order__expanded_item_color_row}>
+                                <span className={styles.order__expanded_item_color_label}>Цвет:</span>
+                                <span className={styles.order__expanded_item_color_circle} style={{background: `#${product.color.code_hex}`}}></span>
+                                <span className={styles.order__expanded_item_color_name}>{product.color.title}</span>
+                              </div>
+                            )}
+                            {product.material && (
+                              <div className={styles.order__expanded_item_material}>Материал: {product.material.title}</div>
+                            )}
+                            {product.sizes && (
+                              <div className={styles.order__expanded_item_size}>Размеры: {product.sizes.width}x{product.sizes.height}x{product.sizes.depth} см</div>
+                            )}
+                            {product.discounted_price && product.discounted_price !== null && product.discounted_price < product.price ? (
+                              <>
+                                <div className={styles.order__expanded_item_price_info}>Цена: <span style={{textDecoration: 'line-through', color: '#999'}}>{product.price} ₽</span></div>
+                                <div className={styles.order__expanded_item_discount}>Скидочная цена: <span style={{color: '#e74c3c', fontWeight: 'bold'}}>{product.discounted_price} ₽</span></div>
+                              </>
+                            ) : (
+                              <div className={styles.order__expanded_item_price_info}>Цена: {product.price} ₽</div>
+                            )}
+                          </div>
+                          <div className={styles.order__expanded_item_price}>
+                            {product.discounted_price && product.discounted_price !== null && product.discounted_price < product.price ? product.discounted_price : product.price} ₽
+                          </div>
                         </div>
-                        <div className={styles.order__expanded_item_price}>{item.price} ₽</div>
+                        <div className={styles.order__expanded_item_quantity}>1 шт.</div>
                       </div>
-                      <div className={styles.order__expanded_item_quantity}>{item.quantity} шт.</div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -479,43 +397,79 @@ export default function AccountPage() {
         return (
           <div className={styles.orders__content}>
             <h3 className={styles.orders__title}>Заказы</h3>
-            {mockOrders.map((order, index) => {
-              const isCompleted = index === 1;
+            
+            {ordersLoading && (
+              <div className={styles.loading}>Загрузка заказов...</div>
+            )}
+            
+            {ordersError && (
+              <div className={styles.error}>Ошибка: {ordersError}</div>
+            )}
+            
+            {!ordersLoading && !ordersError && orders.length === 0 && (
+              <div className={styles.empty_orders}>
+                <p>У вас пока нет заказов</p>
+                <Link href="/catalog" className={styles.orders__link}>
+                  Перейти в каталог
+                </Link>
+              </div>
+            )}
+            
+            {!ordersLoading && !ordersError && orders.length > 0 && orders.map((order, index) => {
+              const isCompleted = order.status_with_date?.includes('Получен') || false;
+              const orderId = order.id || index + 1;
+              const orderNumber = order.order_number || `Заказ ${index + 1}`;
+              const orderDate = order.created_at || '';
+              const deliveryDate = order.received_date ? new Date(order.received_date).toLocaleDateString('ru-RU') : '';
+              const totalAmount = order.summ || '0';
+              const deliveryType = order.delivery_type || 'Не указан';
+              const address = order.delivery_type === 'Самовывоз' 
+                ? `${order.address?.administrative_area || ''} ${order.address?.locality || ''} ${order.address?.route || ''} ${order.address?.street_number || ''}`.trim() || 'Не указан'
+                : order.address?.full_address || 'Не указан';
+              const productCount = order.product_count || '0';
+              const paidFor = order.paid_for || '0';
+              
+              let currentStep = 0;
+              if (order.status_with_date?.includes('Ожидает подтверждения')) currentStep = 0;
+              else if (order.status_with_date?.includes('Оплачен')) currentStep = 1;
+              else if (order.status_with_date?.includes('Собран')) currentStep = 2;
+              else if (order.status_with_date?.includes('Отправлен')) currentStep = 3;
+              else if (isCompleted) currentStep = 4;
+              else currentStep = 0;
+              
+              const progressWidth = isCompleted ? '100%' : `${(currentStep / (steps.length - 1)) * 100}%`;
+              
               return (
-                <React.Fragment key={`${order.number}-${index}`}>
-                  {isCompleted &&
-                    (index === 1 || !mockOrders.slice(0, index).some((o, i) => i !== index && i > 0)) ? (
-                      <div className={styles.orders__completed_title}>Завершённые заказы</div>
-                    ) : null}
+                <React.Fragment key={`${orderNumber}-${index}`}>
                   <div className={`${styles.order} ${isCompleted ? styles.order_completed : ''}`}>
                     <div className={styles.order__header}>
                       <div className={styles.order__info}>
-                        <div className={styles.order__number}>Заказ №{order.number}</div>
-                        <div className={styles.order__date}>Заказан: {order.orderDate}</div>
+                        <div className={styles.order__number}>Заказ {orderNumber}</div>
+                        <div className={styles.order__date}>Заказан: {orderDate}</div>
                       </div>
                       {isCompleted ? (
                         <div className={styles.order__status}>
                           <div className={styles.order__status_text}>Получен</div>
-                          <div className={styles.order__delivery_date}>{order.completionDate}</div>
+                          <div className={styles.order__delivery_date}>{deliveryDate}</div>
                         </div>
                       ) : (
                         <div className={styles.order__delivery}>
                           <div className={styles.order__delivery_text}>Ожидаемое получение</div>
-                          <div className={styles.order__delivery_date}>{order.expectedDate}</div>
-                          <div className={styles.order__delivery_days}>{order.daysLeft} дней</div>
+                          <div className={styles.order__delivery_date}>{order.status_with_date || 'Статус обновляется'}</div>
+                          <div className={styles.order__delivery_days}>15 дней</div>
                         </div>
                       )}
                     </div>
 
                     <div
                       className={styles.order__steps}
-                      style={{ '--progress-width': isCompleted ? '100%' : `${(order.currentStep / (steps.length - 1)) * 100}%` }}
+                      style={{ '--progress-width': progressWidth }}
                     >
                       {steps.map((step, stepIndex) => (
                         <div
                           key={step}
                           className={`${styles.order__step} ${
-                            (isCompleted || stepIndex <= order.currentStep) ? styles.order__step_active : ''
+                            (isCompleted || stepIndex <= currentStep) ? styles.order__step_active : ''
                           }`}
                         >
                           <div className={styles.order__step_dot}></div>
@@ -527,22 +481,21 @@ export default function AccountPage() {
                     <div className={styles.order__details}>
                       {isCompleted ? (
                         <>
-                          <div className={styles.order__collected}>Получен 02.03.2025</div>
-                          <div className={styles.order__delivery_method}><span>Способ доставки:</span> {order.deliveryMethod}</div>
-                          <div className={styles.order__delivery_address}><span>Адрес доставки:</span> {order.deliveryAddress}</div>
-                          <div className={styles.order__total_cost}>Стоимость товара: <span>{order.totalAmount} руб.</span></div>
-                          <div className={styles.order__quantity}>Количество: <span>{order.quantity} шт.</span></div>
+                          <div className={styles.order__collected}>Получен {deliveryDate}</div>
+                          <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
+                          <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
+                          <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
+                          <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                         </>
                       ) : (
                         <>
                           <div className={styles.order__collected}>Собран 15.01.2025</div>
-                          <div className={styles.order__delivery_method}><span>Способ доставки:</span> {order.deliveryMethod}</div>
-                          <div className={styles.order__delivery_address}><span>Адрес доставки:</span> {order.deliveryAddress}</div>
-                          <div className={styles.order__payment_status}>Оплачено: <span>{order.paidAmount} руб.</span><span> / {order.totalAmount} руб.</span></div>
-                          <div className={styles.order__progress_status}>Прогресс: <span>{order.progress}%</span></div>
-                          <div className={styles.order__contact_info}>Контактная информация: <span>{order.contactInfo}</span></div>
-                          <div className={styles.order__total_cost}>Стоимость товара: <span>{order.totalAmount} руб.</span></div>
-                          <div className={styles.order__quantity}>Количество: <span>{order.quantity} шт.</span></div>
+                          <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
+                          <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
+                          <div className={styles.order__payment_status}>Оплачено: <span>{paidFor} руб.</span><span> / {totalAmount} руб.</span></div>
+                          <div className={styles.order__progress_status}>Прогресс: <span>{Math.round((currentStep / (steps.length - 1)) * 100)}%</span></div>
+                          <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
+                          <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                           <div className={styles.order__pay_action}>
                             <button className={styles.order__pay_button}>
                               Оплатить
@@ -555,7 +508,7 @@ export default function AccountPage() {
                       )}
                     </div>
                   </div>
-                  <div className={styles.order__details_button} onClick={() => toggleOrderExpand(order.number)}>
+                  <div className={styles.order__details_button} onClick={() => toggleOrderExpand(orderId)}>
                     Подробнее
                   </div>
                 </React.Fragment>

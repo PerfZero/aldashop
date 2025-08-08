@@ -41,7 +41,6 @@ export default function CategoryPage({ params }) {
       const data = await response.json();
       setFilters(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error('Error fetching filters:', error);
       setError('Ошибка загрузки фильтров');
     } finally {
       setLoading(false);
@@ -89,7 +88,6 @@ export default function CategoryPage({ params }) {
         count: data.count || 0
       }));
     } catch (error) {
-      console.error('Error fetching products:', error);
       setError('Ошибка загрузки товаров');
     } finally {
       setProductsLoading(false);
@@ -142,8 +140,8 @@ export default function CategoryPage({ params }) {
       name: product.title,
       article: product.article,
       price: product.product?.price || '0',
-      image: mainPhoto?.photo ? `http://62.181.44.89${mainPhoto.photo}` : '/sofa.png',
-      hoverImage: secondaryPhoto?.photo ? `http://62.181.44.89${secondaryPhoto.photo}` : '/sofa.png',
+              image: mainPhoto?.photo ? `https://aldalinde.ru${mainPhoto.photo}` : '/sofa.png',
+        hoverImage: secondaryPhoto?.photo ? `https://aldalinde.ru${secondaryPhoto.photo}` : '/sofa.png',
       isBestseller: product.is_bestseller,
       discount: 0,
       sizes: product.available_sizes?.map(size => size.value) || [],

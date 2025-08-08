@@ -3,8 +3,8 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'http',
-        hostname: '62.181.44.89',
+        protocol: 'https',
+        hostname: 'aldalinde.ru',
         port: '',
         pathname: '/media/**',
       },

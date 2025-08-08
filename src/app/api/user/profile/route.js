@@ -6,7 +6,7 @@ export async function GET(request) {
       return Response.json({ error: 'No authorization header' }, { status: 401 });
     }
 
-    const response = await fetch('http://62.181.44.89/api/user/profile/', {
+    const response = await fetch('https://aldalinde.ru/api/user/profile/', {
       method: 'GET',
       headers: {
         'accept': 'application/json',
@@ -22,7 +22,6 @@ export async function GET(request) {
 
     return Response.json(data, { status: 200 });
   } catch (error) {
-    console.error('Error fetching user profile:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -37,7 +36,7 @@ export async function PATCH(request) {
 
     const body = await request.json();
 
-    const response = await fetch('http://62.181.44.89/api/user/profile/', {
+    const response = await fetch('https://aldalinde.ru/api/user/profile/', {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -55,7 +54,6 @@ export async function PATCH(request) {
 
     return Response.json(data, { status: 200 });
   } catch (error) {
-    console.error('Error updating user profile:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

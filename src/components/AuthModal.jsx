@@ -110,7 +110,6 @@ export default function AuthModal({ isOpen, onClose }) {
         }
       }
     } catch (error) {
-      console.error('Error during auth:', error);
       setErrors(prev => ({ ...prev, general: 'Произошла ошибка при авторизации' }));
     } finally {
       setIsLoading(false);

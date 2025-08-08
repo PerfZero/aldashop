@@ -1,6 +1,6 @@
 export async function GET() {
   try {
-    const response = await fetch('http://62.181.44.89/api/products/category-list/', {
+    const response = await fetch('https://aldalinde.ru/api/products/category-list/', {
       headers: {
         'Content-Type': 'application/json',
       },
@@ -14,7 +14,6 @@ export async function GET() {
     
     return Response.json(data);
   } catch (error) {
-    console.error('Error fetching categories:', error);
     return Response.json({ error: 'Failed to fetch categories' }, { status: 500 });
   }
 }

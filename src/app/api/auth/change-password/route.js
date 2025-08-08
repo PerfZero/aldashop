@@ -3,7 +3,7 @@ export async function POST(request) {
     const body = await request.json();
     const authHeader = request.headers.get('authorization');
     
-    const response = await fetch('http://62.181.44.89/api/auth/change-password/', {
+    const response = await fetch('https://aldalinde.ru/api/auth/change-password/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -24,7 +24,6 @@ export async function POST(request) {
 
     return Response.json(data, { status: 200 });
   } catch (error) {
-    console.error('Error during password change:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

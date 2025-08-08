@@ -2,7 +2,7 @@ export async function GET(request, { params }) {
   try {
     const { key } = params;
     
-    const response = await fetch(`http://62.181.44.89/api/auth/verify-email/${key}/`, {
+    const response = await fetch(`https://aldalinde.ru/api/auth/verify-email/${key}/`, {
       method: 'GET',
       headers: {
         'accept': 'application/json',
@@ -17,7 +17,6 @@ export async function GET(request, { params }) {
 
     return Response.json(data, { status: 200 });
   } catch (error) {
-    console.error('Error during email verification:', error);
     return Response.json({ error: 'Internal server error' }, { status: 500 });
   }
 } 

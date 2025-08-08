@@ -33,7 +33,6 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
       onApply(finalFilters);
     }
     
-    console.log('Applied filters:', finalFilters);
     onClose();
   };
 

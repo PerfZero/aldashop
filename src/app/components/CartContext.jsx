@@ -50,7 +50,7 @@ export function CartProvider({ children }) {
               id: item.product.id,
               name: `Товар ${item.product.id}`,
               price: item.product.price,
-              image: item.product.photos?.[0]?.photo ? `http://62.181.44.89${item.product.photos[0].photo}` : '/sofa.png',
+              image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
               quantity: item.quantity,
               article: `ART${item.product.id}`,
               inStock: item.product.in_stock,
@@ -61,7 +61,6 @@ export function CartProvider({ children }) {
             })) || [];
             setCartItems(apiCartItems);
           } else {
-            console.error('Ошибка загрузки корзины из API');
             loadFromLocalStorage();
           }
         } else {
@@ -69,7 +68,6 @@ export function CartProvider({ children }) {
           loadFromLocalStorage();
         }
       } catch (error) {
-        console.error('Ошибка при загрузке корзины:', error);
         loadFromLocalStorage();
       }
       setIsLoaded(true);
@@ -83,7 +81,6 @@ export function CartProvider({ children }) {
             try {
               setCartItems(JSON.parse(storedCart));
             } catch (error) {
-              console.error('Ошибка при загрузке корзины из localStorage:', error);
               setCartItems([]);
             }
           } else {
@@ -175,10 +172,8 @@ export function CartProvider({ children }) {
             toast.success('Товар добавлен в корзину!');
           }
         } else {
-          console.error('Ошибка добавления товара в корзину');
         }
       } catch (error) {
-        console.error('Ошибка при добавлении товара в корзину:', error);
       }
     } else {
       // Для неавторизованных пользователей работаем с localStorage
@@ -201,11 +196,15 @@ export function CartProvider({ children }) {
   };
 
   // Удаление товара из корзины
-  const removeFromCart = async (productId) => {
+  const removeFromCart = async (productId, removeAll = true) => {
     if (isAuthenticated) {
       try {
         let headers = getAuthHeaders();
-        let response = await fetch(`/api/user/cart/${productId}`, {
+        const url = removeAll 
+          ? `/api/user/cart/${productId}?all=true`
+          : `/api/user/cart/${productId}`;
+          
+        let response = await fetch(url, {
           method: 'DELETE',
           headers,
         });
@@ -214,7 +213,7 @@ export function CartProvider({ children }) {
           const refreshResult = await refreshToken();
           if (refreshResult.success) {
             headers = getAuthHeaders();
-            response = await fetch(`/api/user/cart/${productId}`, {
+            response = await fetch(url, {
               method: 'DELETE',
               headers,
             });
@@ -243,7 +242,7 @@ export function CartProvider({ children }) {
               id: item.product.id,
               name: `Товар ${item.product.id}`,
               price: item.product.price,
-              image: item.product.photos?.[0]?.photo ? `http://62.181.44.89${item.product.photos[0].photo}` : '/sofa.png',
+              image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
               quantity: item.quantity,
               article: `ART${item.product.id}`,
               inStock: item.product.in_stock,
@@ -259,7 +258,6 @@ export function CartProvider({ children }) {
           toast.error('Ошибка при удалении товара');
         }
       } catch (error) {
-        console.error('Ошибка при удалении товара:', error);
         toast.error('Ошибка при удалении товара');
       }
     } else {
@@ -271,8 +269,8 @@ export function CartProvider({ children }) {
   // Обновление количества товара
   const updateQuantity = async (productId, newQuantity) => {
     if (newQuantity <= 0) {
-      // Если количество меньше или равно 0, удаляем товар
-      removeFromCart(productId);
+      // Если количество меньше или равно 0, полностью удаляем товар
+      removeFromCart(productId, true);
       return;
     }
 
@@ -341,6 +339,11 @@ export function CartProvider({ children }) {
                 });
               }
             }
+            
+            // Если товар полностью удален (статус 204), прерываем цикл
+            if (response.status === 204) {
+              break;
+            }
           }
         }
 
@@ -365,7 +368,7 @@ export function CartProvider({ children }) {
             id: item.product.id,
             name: `Товар ${item.product.id}`,
             price: item.product.price,
-            image: item.product.photos?.[0]?.photo ? `http://62.181.44.89${item.product.photos[0].photo}` : '/sofa.png',
+            image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
             quantity: item.quantity,
             article: `ART${item.product.id}`,
             inStock: item.product.in_stock,
@@ -378,7 +381,6 @@ export function CartProvider({ children }) {
           toast.success('Количество обновлено');
         }
       } catch (error) {
-        console.error('Ошибка при обновлении количества:', error);
         toast.error('Ошибка при обновлении количества');
       }
     } else {

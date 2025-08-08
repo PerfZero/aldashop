@@ -41,7 +41,6 @@ export default function Header() {
         const data = await response.json();
         setCategories(data);
       } catch (error) {
-        console.error('Error fetching categories:', error);
       }
     };
 
@@ -258,7 +257,7 @@ export default function Header() {
                         let imageSrc = "/images/sofa.png";
                         
                         if (category) {
-                          imageSrc = `http://62.181.44.89${category.photo_new_products}`;
+                          imageSrc = `https://aldalinde.ru${category.photo_new_products}`;
                         }
 
                         return (
@@ -442,13 +441,13 @@ export default function Header() {
                 if (category) {
                   switch (item) {
                     case "Новинки":
-                      imageSrc = `http://62.181.44.89${category.photo_new_products}`;
+                      imageSrc = `https://aldalinde.ru${category.photo_new_products}`;
                       break;
                     case "Бестселлеры":
-                      imageSrc = `http://62.181.44.89${category.photo_bestsellers}`;
+                      imageSrc = `https://aldalinde.ru${category.photo_bestsellers}`;
                       break;
                     case "Распродажа":
-                      imageSrc = `http://62.181.44.89${category.photo_sale}`;
+                      imageSrc = `https://aldalinde.ru${category.photo_sale}`;
                       break;
                     default:
                       imageSrc = `/images/${item.toLowerCase()}.png`;

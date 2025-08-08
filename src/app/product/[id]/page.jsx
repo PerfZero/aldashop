@@ -45,7 +45,6 @@ export default function ProductPage({ params }) {
       }
 
       const data = await response.json();
-      console.log('✅ [Product Page] Received data:', data);
 
       if (data.error) {
         throw new Error(data.error);
@@ -73,13 +72,8 @@ export default function ProductPage({ params }) {
          setSelectedMaterial(data.available_materials[0]);
        }
        
-               console.log('🎯 [Product Page] Initial options set:', {
-          color: data.color || data.available_colors?.[0],
-          size: data.sizes || data.available_sizes?.[0],
-          material: data.material || data.available_materials?.[0]
-        });
+        
     } catch (error) {
-      console.error('❌ [Product Page] Error fetching product details:', error);
       setError(error.message);
     } finally {
       setLoading(false);
@@ -89,12 +83,7 @@ export default function ProductPage({ params }) {
   const fetchProductDetailsByOptions = async (sizeId, colorId, materialId) => {
     try {
       setLoading(true);
-      console.log('🔍 [Product Page] Fetching with options:', {
-        model_id: originalModelId || product.id,
-        size_id: sizeId,
-        color_id: colorId,
-        material_id: materialId,
-      });
+
       
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
@@ -114,21 +103,6 @@ export default function ProductPage({ params }) {
       }
 
       const data = await response.json();
-      console.log('✅ [Product Page] Received options data:', data);
-      console.log('🔍 [Product Page] Requested vs Received:', {
-        requested: {
-          model_id: originalModelId || product.id,
-          size_id: sizeId,
-          color_id: colorId,
-          material_id: materialId,
-        },
-        received: {
-          id: data.id,
-          size: data.sizes?.id,
-          color: data.color?.id,
-          material: data.material?.id,
-        }
-      });
 
       // Проверяем, совпадают ли запрошенные и полученные опции
       const optionsMatch = 
@@ -137,8 +111,6 @@ export default function ProductPage({ params }) {
         data.material?.id === materialId;
 
       if (!optionsMatch) {
-        console.warn('⚠️ [Product Page] Requested options not available, API returned different options');
-        // Можно показать уведомление пользователю
         alert('Выбранная комбинация опций недоступна. Показан ближайший доступный вариант.');
       }
 
@@ -165,30 +137,18 @@ export default function ProductPage({ params }) {
         window.history.replaceState({}, '', `/product/${data.id}`);
       }
     } catch (error) {
-      console.error('❌ [Product Page] Error fetching product details by options:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const handleSizeChange = (size) => {
-    console.log('🔧 [Product Page] handleSizeChange called with:', size);
-    console.log('🔧 [Product Page] Current selectedColor:', selectedColor);
-    console.log('🔧 [Product Page] Current selectedMaterial:', selectedMaterial);
-    
     setSelectedSize(size);
     const colorObj = selectedColor;
     const materialObj = selectedMaterial;
     
     if (colorObj && materialObj) {
-      console.log('🔧 [Product Page] Calling fetchProductDetailsByOptions with:', {
-        sizeId: size.id,
-        colorId: colorObj.id,
-        materialId: materialObj.id
-      });
       fetchProductDetailsByOptions(size.id, colorObj.id, materialObj.id);
-    } else {
-      console.warn('⚠️ [Product Page] Missing color or material object');
     }
   };
 
@@ -239,7 +199,6 @@ export default function ProductPage({ params }) {
              data.color?.id === colorId && 
              data.material?.id === materialId;
     } catch (error) {
-      console.error('Error checking options availability:', error);
       return false;
     }
   };

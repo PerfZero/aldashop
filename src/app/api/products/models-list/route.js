@@ -2,7 +2,7 @@ export async function POST(request) {
   try {
     const body = await request.json();
     
-    const response = await fetch('http://62.181.44.89/api/products/models-list/', {
+    const response = await fetch('https://aldalinde.ru/api/products/models-list/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -11,15 +11,29 @@ export async function POST(request) {
       body: JSON.stringify(body),
     });
 
-    const data = await response.json();
-
     if (!response.ok) {
-      return Response.json(data, { status: response.status });
+      const errorText = await response.text();
+      
+      if (response.status === 500 && errorText.includes('average_rating')) {
+        return Response.json({ 
+          error: 'Временная ошибка сервера. Попробуйте позже.',
+          details: 'Проблема с рейтингом товаров'
+        }, { status: 503 });
+      }
+      
+      return Response.json({ error: `Внешний API ошибка: ${response.status}` }, { status: response.status });
     }
 
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      return Response.json({ error: 'Внешний API вернул не JSON' }, { status: 500 });
+    }
+
+    const data = await response.json();
+    
     return Response.json(data);
   } catch (error) {
-    console.error('Error fetching products:', error);
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
   }
 }
