@@ -47,30 +47,35 @@ export default function CategoryPage({ params }) {
     }
   };
 
-  const fetchProducts = async (filters = {}, page = 1) => {
+  const fetchProducts = async (appliedFilters = {}, page = 1) => {
     try {
       setProductsLoading(true);
+      
+      const priceFilter = filters.find(f => f.slug === 'price');
+      const sizesFilter = filters.find(f => f.slug === 'sizes');
+      const defaultMinPrice = priceFilter?.min || 0;
+      const defaultMaxPrice = priceFilter?.max || 100000;
       
       const requestBody = {
         category_id: 1,
         subcategory_id: null,
         sort: getSortValue(sortBy),
-        in_stock: filters.in_stock !== undefined ? filters.in_stock : true,
+        in_stock: appliedFilters.in_stock !== undefined ? appliedFilters.in_stock : true,
         page: page - 1,
         limit: pagination.page_size,
-        material: filters.material || 0,
-        bestseller: filters.bestseller || false,
+        material: appliedFilters.material || 0,
+        bestseller: appliedFilters.bestseller || false,
         price: {
-          min: filters.price?.min || 0,
-          max: filters.price?.max || 10000
+          min: appliedFilters.price?.min || defaultMinPrice,
+          max: appliedFilters.price?.max || defaultMaxPrice
         },
-        colors: filters.colors && filters.colors.length > 0 ? filters.colors.map(color => parseInt(color)) : [],
+        colors: appliedFilters.colors && appliedFilters.colors.length > 0 ? appliedFilters.colors.map(color => parseInt(color)) : [],
         sizes: {
-          width: filters.sizes?.width || 0,
-          height: filters.sizes?.height || 0,
-          depth: filters.sizes?.depth || 0
+          width: appliedFilters.sizes?.width || 0,
+          height: appliedFilters.sizes?.height || 0,
+          depth: appliedFilters.sizes?.depth || 0
         },
-        search: filters.search || ""
+        search: appliedFilters.search || ""
       };
 
       console.log('Отправляем фильтры:', requestBody);

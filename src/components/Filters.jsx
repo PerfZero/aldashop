@@ -17,9 +17,20 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
 
   if (!isVisible) return null;
 
-  const handleCancel = () => {
+  const handleReset = () => {
     setTempFilters({});
     setInStockDelivery(false);
+    
+    const resetFilters = {
+      in_stock: false
+    };
+    
+    if (onApply) {
+      onApply(resetFilters);
+    }
+  };
+
+  const handleCancel = () => {
     onClose();
   };
 
@@ -419,7 +430,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
       <div className={styles.filters__footer}>
         <button 
           className={`${styles.filters__button} ${styles.filters__button_cancel}`}
-          onClick={handleCancel}
+          onClick={handleReset}
         >
           Сброс
         </button>

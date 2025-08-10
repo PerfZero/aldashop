@@ -1,13 +1,43 @@
+"use client";
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import DeliverySection from './components/DeliverySection';
+import EmailVerificationModal from '../components/EmailVerificationModal';
+import ResetPasswordModal from '../components/ResetPasswordModal';
 
 
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+
+  useEffect(() => {
+    const key = searchParams.get('key');
+    const uidb64 = searchParams.get('uidb64');
+    const token = searchParams.get('token');
+
+    if (key) {
+      setShowEmailModal(true);
+    } else if (uidb64 && token) {
+      setShowResetModal(true);
+    }
+  }, [searchParams]);
+
   return (
     <div className={styles.page}>
+      <EmailVerificationModal 
+        isOpen={showEmailModal} 
+        onClose={() => setShowEmailModal(false)} 
+      />
+      <ResetPasswordModal 
+        isOpen={showResetModal} 
+        onClose={() => setShowResetModal(false)} 
+      />
       <main className={styles.main}>
         <section className={styles.promo}>
           <div className={styles.promo_container}>

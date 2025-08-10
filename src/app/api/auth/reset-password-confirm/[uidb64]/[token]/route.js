@@ -1,27 +1,28 @@
 export async function POST(request, { params }) {
+  const { uidb64, token } = params;
+
   try {
-    const { uidb64, token } = params;
     const body = await request.json();
-    
-    const response = await fetch(`https://aldalinde.ru/api/auth/reset-password-confirm/${uidb64}/${token}/`, {
+
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/reset-password-confirm/${uidb64}/${token}/`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'accept': 'application/json',
       },
-      body: JSON.stringify({
-        new_password: body.new_password
-      }),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (response.ok) {
+      return Response.json(data);
+    } else {
       return Response.json(data, { status: response.status });
     }
-
-    return Response.json(data, { status: 200 });
   } catch (error) {
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json(
+      { error: 'Произошла ошибка при сбросе пароля' },
+      { status: 500 }
+    );
   }
 } 

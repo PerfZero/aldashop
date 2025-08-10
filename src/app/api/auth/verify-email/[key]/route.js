@@ -1,22 +1,25 @@
 export async function GET(request, { params }) {
+  const { key } = params;
+
   try {
-    const { key } = params;
-    
-    const response = await fetch(`https://aldalinde.ru/api/auth/verify-email/${key}/`, {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email/${key}/`, {
       method: 'GET',
       headers: {
-        'accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     });
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (response.ok) {
+      return Response.json(data);
+    } else {
       return Response.json(data, { status: response.status });
     }
-
-    return Response.json(data, { status: 200 });
   } catch (error) {
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return Response.json(
+      { detail: 'Произошла ошибка при подтверждении email' },
+      { status: 500 }
+    );
   }
 } 
