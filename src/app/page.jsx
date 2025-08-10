@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import DeliverySection from './components/DeliverySection';
@@ -11,7 +11,7 @@ import ResetPasswordModal from '../components/ResetPasswordModal';
 
 
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -267,5 +267,13 @@ export default function Home() {
         </section>
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      <HomeContent />
+    </Suspense>
   );
 }
