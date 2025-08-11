@@ -22,7 +22,6 @@
 }
 
 .card__link img {
-  object-fit: none;
   object-position: center;
   transition: 0.2s ease;
 }
@@ -52,7 +51,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: none;
+
   object-position: center;
   transition: opacity 0.3s ease;
 }
