@@ -18,7 +18,7 @@ export default function ProductPage({ params }) {
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
-  const [originalModelId, setOriginalModelId] = useState(null);
+  const [modelId, setModelId] = useState(null);
   const [isAdded, setIsAdded] = useState(false);
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
@@ -27,51 +27,108 @@ export default function ProductPage({ params }) {
     fetchProductDetails();
   }, [resolvedParams.id]);
 
-  const fetchProductDetails = async (productId = null) => {
+  const fetchProductDetails = async (productId = null, sizeId = null, colorId = null, materialId = null) => {
     try {
       setLoading(true);
-      const response = await fetch('/api/products/product-page/', {
+      
+      // Если это первая загрузка, получаем товар по product_id
+      if (!modelId && !sizeId && !colorId && !materialId) {
+        const response = await fetch('/api/products/product-page/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            product_id: parseInt(productId || resolvedParams.id),
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.error) {
+          throw new Error(data.error);
+        }
+
+        setProduct(data);
+        
+        // Сохраняем model_id из ответа для дальнейших запросов
+        const actualModelId = data.model_id || data.model?.id || data.id;
+        setModelId(actualModelId);
+        
+        // Устанавливаем начальные опции
+        if (data.color) {
+          setSelectedColor(data.color);
+        } else if (data.available_colors?.length > 0) {
+          setSelectedColor(data.available_colors[0]);
+        }
+        
+        if (data.sizes && data.available_sizes) {
+          const matchingSize = data.available_sizes.find(s => s.id === data.sizes.id);
+          setSelectedSize(matchingSize || data.available_sizes[0]);
+        } else if (data.available_sizes?.length > 0) {
+          setSelectedSize(data.available_sizes[0]);
+        }
+        
+        if (data.material) {
+          setSelectedMaterial(data.material);
+        } else if (data.available_materials?.length > 0) {
+          setSelectedMaterial(data.available_materials[0]);
+        }
+        
+        return;
+      }
+      
+      // Для изменения опций используем product-detail с сохраненным modelId
+      const requestBody = {
+        model_id: modelId,
+        size_id: sizeId,
+        color_id: colorId,
+        material_id: materialId,
+      };
+      
+      const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          product_id: parseInt(productId || resolvedParams.id),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.log('ОШИБКА 400 - Полный ответ сервера:', errorText);
+        console.log('ОШИБКА 400 - Статус:', response.status);
+        console.log('ОШИБКА 400 - Отправленные данные:', requestBody);
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
 
-      const data = await response.json();
+      const responseText = await response.text();
+      console.log('Сырой ответ от сервера:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Распарсенные данные:', data);
+      } catch (parseError) {
+        console.log('ОШИБКА парсинга JSON:', parseError);
+        console.log('Сырой текст который не удалось распарсить:', responseText);
+        throw new Error('Invalid JSON response');
+      }
 
       if (data.error) {
+        console.log('Ошибка в данных:', data.error);
         throw new Error(data.error);
       }
 
       setProduct(data);
-      setOriginalModelId(data.id); // Сохраняем оригинальный model_id
-      
-             // Устанавливаем начальные значения из текущих опций товара
-       if (data.color) {
-         setSelectedColor(data.color);
-       } else if (data.available_colors?.length > 0) {
-         setSelectedColor(data.available_colors[0]);
-       }
-       
-       if (data.sizes) {
-         setSelectedSize(data.sizes);
-       } else if (data.available_sizes?.length > 0) {
-         setSelectedSize(data.available_sizes[0]);
-       }
-       
-       if (data.material) {
-         setSelectedMaterial(data.material);
-       } else if (data.available_materials?.length > 0) {
-         setSelectedMaterial(data.available_materials[0]);
-       }
-       
         
     } catch (error) {
       setError(error.message);
@@ -83,61 +140,65 @@ export default function ProductPage({ params }) {
   const fetchProductDetailsByOptions = async (sizeId, colorId, materialId) => {
     try {
       setLoading(true);
-
+      const requestBody = {
+        model_id: modelId,
+        size_id: sizeId,
+        color_id: colorId,
+        material_id: materialId,
+      };
+      console.log('Отправляем запрос на прямой API:', requestBody);
       
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model_id: originalModelId || product.id,
-          size_id: sizeId,
-          color_id: colorId,
-          material_id: materialId,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.log('Ошибка ответа:', response.status, errorText);
+        console.log('Full error response:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
 
       const data = await response.json();
-
-      // Проверяем, совпадают ли запрошенные и полученные опции
-      const optionsMatch = 
-        data.sizes?.id === sizeId && 
-        data.color?.id === colorId && 
-        data.material?.id === materialId;
-
-      if (!optionsMatch) {
-        alert('Выбранная комбинация опций недоступна. Показан ближайший доступный вариант.');
-      }
+      console.log('Response data:', data);
 
       if (data.error) {
         throw new Error(data.error);
       }
 
-      // Обновляем продукт с новыми данными
-      setProduct(prevProduct => ({
-        ...prevProduct,
-        ...data,
-        id: data.id || prevProduct.id,
-        title: data.title || prevProduct.title,
-        price: data.price || prevProduct.price,
-        discounted_price: data.discounted_price,
-        photos: data.photos || prevProduct.photos,
-        available_sizes: data.available_sizes || prevProduct.available_sizes,
-        available_colors: data.available_colors || prevProduct.available_colors,
-        available_materials: data.available_materials || prevProduct.available_materials,
-      }));
+      // Добавляем базовый URL к фотографиям только если они относительные
+      if (data.photos && Array.isArray(data.photos)) {
+        data.photos = data.photos.map(photo => ({
+          ...photo,
+          photo: photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`
+        }));
+      }
+      
+      // Добавляем title к размерам
+      if (data.available_sizes && Array.isArray(data.available_sizes)) {
+        data.available_sizes = data.available_sizes.map(size => ({
+          ...size,
+          title: size.value
+        }));
+      }
+      
 
-      // Обновляем URL без перезагрузки страницы
+      
+      setProduct(data);
       if (data.id && data.id !== parseInt(resolvedParams.id)) {
         window.history.replaceState({}, '', `/product/${data.id}`);
       }
+      setLoading(false);
+
     } catch (error) {
-    } finally {
+      setError(error.message);
       setLoading(false);
     }
   };
@@ -181,7 +242,7 @@ export default function ProductPage({ params }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model_id: originalModelId || product.id,
+          model_id: modelId,
           size_id: sizeId,
           color_id: colorId,
           material_id: materialId,
@@ -195,9 +256,11 @@ export default function ProductPage({ params }) {
       const data = await response.json();
       
       // Проверяем, совпадают ли запрошенные и полученные опции
-      return data.sizes?.id === sizeId && 
-             data.color?.id === colorId && 
-             data.material?.id === materialId;
+      const sizeMatch = !sizeId || data.sizes?.id === sizeId;
+      const colorMatch = !colorId || data.color?.id === colorId;
+      const materialMatch = !materialId || data.material?.id === materialId;
+      
+      return sizeMatch && colorMatch && materialMatch;
     } catch (error) {
       return false;
     }
@@ -254,7 +317,64 @@ export default function ProductPage({ params }) {
   if (loading) {
     return (
       <main className={styles.page}>
-        <div className={styles.loading}>Загрузка товара...</div>
+        <div className={styles.product__skeleton}>
+          <div className={`${styles.skeleton} ${styles.product__skeleton_title}`}></div>
+          
+          <div className={styles.product__skeleton_content}>
+            <div className={styles.product__skeleton_gallery}>
+              <div className={styles.product__skeleton_thumbnails}>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_thumbnail}`}></div>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_thumbnail}`}></div>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_thumbnail}`}></div>
+              </div>
+              <div className={`${styles.skeleton} ${styles.product__skeleton_main_image}`}></div>
+            </div>
+            
+            <div className={styles.product__skeleton_info}>
+              <div className={`${styles.skeleton} ${styles.product__skeleton_price}`}></div>
+              
+              <div className={styles.product__skeleton_options}>
+                <div>
+                  <div className={`${styles.skeleton} ${styles.product__skeleton_option_title}`}></div>
+                  <div className={styles.product__skeleton_option_list}>
+                    <div className={`${styles.skeleton} ${styles.product__skeleton_size}`}></div>
+                    <div className={`${styles.skeleton} ${styles.product__skeleton_size}`}></div>
+                    <div className={`${styles.skeleton} ${styles.product__skeleton_size}`}></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className={`${styles.skeleton} ${styles.product__skeleton_option_title}`}></div>
+                  <div className={styles.product__skeleton_option_list}>
+                    <div className={`${styles.skeleton} ${styles.product__skeleton_color}`}></div>
+                    <div className={`${styles.skeleton} ${styles.product__skeleton_color}`}></div>
+                    <div className={`${styles.skeleton} ${styles.product__skeleton_color}`}></div>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className={`${styles.skeleton} ${styles.product__skeleton_option_title}`}></div>
+                  <div className={styles.product__skeleton_option_list}>
+                    <div className={`${styles.skeleton} ${styles.product__skeleton_material}`}></div>
+                    <div className={`${styles.skeleton} ${styles.product__skeleton_material}`}></div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className={styles.product__skeleton_details}>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_detail}`}></div>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_detail}`}></div>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_detail}`}></div>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_detail}`}></div>
+              </div>
+              
+              <div className={styles.product__skeleton_buttons}>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_cart_button}`}></div>
+                <div className={`${styles.skeleton} ${styles.product__skeleton_favorite_button}`}></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </main>
     );
   }
@@ -276,11 +396,25 @@ export default function ProductPage({ params }) {
   }
 
   const breadcrumbs = [
-    { text: 'Главная', href: '/' },
-    { text: 'Диваны', href: '/categories/sofas' },
-    { text: 'Все диваны', href: '/categories/sofas/all' },
-    { text: product.title, href: `/product/${resolvedParams.id}` }
+    { text: 'Главная', href: '/' }
   ];
+
+  if (product.category) {
+    breadcrumbs.push({
+      text: product.category.title,
+      href: `/categories/${product.category.slug}`
+    });
+  }
+
+  if (product.subcategory) {
+    breadcrumbs.push({
+      text: product.subcategory.title,
+      href: `/categories/${product.category?.slug}/${product.subcategory.slug}`
+    });
+  }
+
+  breadcrumbs.push({ text: product.title, href: `/product/${resolvedParams.id}` });
+
 
   const hasDiscount = product.discounted_price && product.price > product.discounted_price;
   const originalPrice = product.price?.toLocaleString('ru-RU');
@@ -320,7 +454,7 @@ export default function ProductPage({ params }) {
             <span className={styles.product__reviews}>0 Отзывов</span>
           </div>
           
-          <p className={styles.product__article}>Артикул: {product.article}</p>
+          <p className={styles.product__article}>Артикул: {product.generated_article}</p>
           
           <div className={styles.product__price}>
             {hasDiscount ? (
@@ -398,7 +532,7 @@ export default function ProductPage({ params }) {
             <span className={styles.product__reviews}>0 Отзывов</span>
           </div>
           
-          <p className={styles.product__article}>Артикул: {product.article}</p>
+          <p className={styles.product__article}>Артикул: {product.generated_article}</p>
           
           <div className={styles.product__price}>
             {hasDiscount ? (

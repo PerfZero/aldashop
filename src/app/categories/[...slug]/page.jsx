@@ -209,13 +209,19 @@ export default function CategoryPage() {
         }
 
         const currentSlug = slugArr[0];
+        console.log('Looking for category with slug:', currentSlug);
+        console.log('Available categories:', data.map(c => ({ id: c.id, slug: c.slug, title: c.title })));
+        
         const cat = data.find(c => c.slug === currentSlug);
         if (cat) {
+          console.log('Found category:', cat);
           setCategoryId(cat.id);
           setSubcategoryId(null);
           setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title });
           setCurrentSubcategory(null);
           return;
+        } else {
+          console.log('Category not found for slug:', currentSlug);
         }
 
         for (const c of data) {

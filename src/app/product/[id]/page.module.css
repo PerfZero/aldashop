@@ -60,6 +60,7 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
   max-width: 400px;
 }
 
@@ -163,16 +164,23 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  border: 1px solid #fff;
+  border: 2px solid #e0e0e0;
   cursor: pointer;
   transition: all 0.3s ease;
   padding: 0;
   background: none;
+  position: relative;
+}
+
+.product__color:hover {
+  border: 2px solid #9f7d5b;
+  transform: scale(1.1);
 }
 
 
 .product__color_active {
-  border: 1px solid #323433;
+  border: 2px solid #323433;
+  transform: scale(1.1);
 }
 
 .product__color_name {
@@ -202,11 +210,16 @@
     line-height: 150%;
     color: rgba(193, 175, 134, 0.8);
     border: 1px solid rgba(193, 175, 134, 0.8);
-padding: 0px 15px;
+    padding: 0px 15px;
+    background: none;
+    cursor: pointer;
+    height: 40px;
+    transition: all 0.3s ease;
+}
 
-  cursor: pointer;
-height: 40px;
-  transition: all 0.3s ease;
+.product__size:hover {
+    color: #9f7d5b;
+    border: 1px solid #9f7d5b;
 }
 
 .product__size_active {
@@ -216,6 +229,188 @@ height: 40px;
     line-height: 150%;
     color: #9f7d5b;
     border: 1px solid #9f7d5b;
+}
+
+.product__materials {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.product__materials_list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.product__material {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 150%;
+    color: rgba(193, 175, 134, 0.8);
+    border: 1px solid rgba(193, 175, 134, 0.8);
+    padding: 0px 15px;
+    background: none;
+    cursor: pointer;
+    height: 40px;
+    transition: all 0.3s ease;
+}
+
+.product__material:hover {
+    color: #9f7d5b;
+    border: 1px solid #9f7d5b;
+}
+
+.product__material_active {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 150%;
+    color: #9f7d5b;
+    border: 1px solid #9f7d5b;
+}
+
+.product__material_name {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 150%;
+    text-align: center;
+    color: #323433;
+}
+
+/* Skeleton styles */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.product__skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 32px 0;
+}
+
+.product__skeleton_content {
+    display: flex;
+    gap: 32px;
+}
+
+.product__skeleton_gallery {
+    flex: 1;
+    display: flex;
+    gap: 16px;
+}
+
+.product__skeleton_thumbnails {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.product__skeleton_thumbnail {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+}
+
+.product__skeleton_main_image {
+    width: 400px;
+    height: 400px;
+    border-radius: 8px;
+}
+
+.product__skeleton_info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.product__skeleton_title {
+    height: 32px;
+    border-radius: 4px;
+}
+
+.product__skeleton_price {
+    height: 28px;
+    width: 150px;
+    border-radius: 4px;
+}
+
+.product__skeleton_options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.product__skeleton_option_title {
+    height: 20px;
+    width: 100px;
+    border-radius: 4px;
+}
+
+.product__skeleton_option_list {
+    display: flex;
+    gap: 8px;
+}
+
+.product__skeleton_size {
+    width: 60px;
+    height: 40px;
+    border-radius: 4px;
+}
+
+.product__skeleton_color {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+}
+
+.product__skeleton_material {
+    width: 100px;
+    height: 40px;
+    border-radius: 4px;
+}
+
+.product__skeleton_details {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.product__skeleton_detail {
+    height: 20px;
+    border-radius: 4px;
+}
+
+.product__skeleton_buttons {
+    display: flex;
+    gap: 16px;
+}
+
+.product__skeleton_cart_button {
+    height: 48px;
+    flex: 1;
+    border-radius: 4px;
+}
+
+.product__skeleton_favorite_button {
+    width: 48px;
+    height: 48px;
+    border-radius: 4px;
 }
 
 .product__details {
@@ -446,9 +641,70 @@ cursor: pointer;
 .product__sizes_list{
   flex-wrap: wrap;
 }
+
+.product__materials_list{
+  flex-wrap: wrap;
+}
+
  .product__size{
   font-size: 14px;
  }
+
+ .product__material{
+  font-size: 14px;
+ }
+
+ .product__material_name{
+  font-size: 14px;
+ }
+
+ .product__skeleton {
+  padding: 16px;
+  gap: 20px;
+}
+
+.product__skeleton_content {
+  flex-direction: column;
+  gap: 20px;
+}
+
+.product__skeleton_gallery {
+  flex-direction: column-reverse;
+  gap: 12px;
+}
+
+.product__skeleton_thumbnails {
+  flex-direction: row;
+  gap: 8px;
+}
+
+.product__skeleton_thumbnail {
+  width: 60px;
+  height: 60px;
+}
+
+.product__skeleton_main_image {
+  width: 100%;
+  height: 300px;
+}
+
+.product__skeleton_info {
+  gap: 16px;
+}
+
+.product__skeleton_options {
+  gap: 12px;
+}
+
+.product__skeleton_size {
+  width: 50px;
+  height: 36px;
+}
+
+.product__skeleton_material {
+  width: 80px;
+  height: 36px;
+}
 
  .product__detail_label{
   font-size: 14px !important;
