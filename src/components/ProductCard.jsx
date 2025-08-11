@@ -10,22 +10,67 @@ import { useFavourites } from '../contexts/FavouritesContext';
 export default function ProductCard({ product }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
-  const [selectedSize, setSelectedSize] = useState(product.available_sizes?.[0]?.value || '');
-  const [selectedColor, setSelectedColor] = useState(product.available_colors?.[0] ? {
-    name: product.available_colors[0].title,
-    hex: `#${product.available_colors[0].code_hex}`
-  } : {});
-  const [selectedMaterial, setSelectedMaterial] = useState(product.available_materials?.[0]?.title || '');
-  const [currentProduct, setCurrentProduct] = useState(product);
+  const [selectedSize, setSelectedSize] = useState(() => {
+    if (product.product?.sizes) {
+      return `${product.product.sizes.width}x${product.product.sizes.height}x${product.product.sizes.depth}`;
+    }
+    return product.available_sizes?.[0]?.value || '';
+  });
+  
+  const [selectedColor, setSelectedColor] = useState(() => {
+    if (product.product?.color) {
+      return {
+        name: product.product.color.title,
+        hex: `#${product.product.color.code_hex}`
+      };
+    }
+    if (product.available_colors?.[0]) {
+      return {
+        name: product.available_colors[0].title,
+        hex: `#${product.available_colors[0].code_hex}`
+      };
+    }
+    return {};
+  });
+  const [selectedMaterial, setSelectedMaterial] = useState(() => {
+    const materialFromProduct = product.product?.material?.title;
+    if (materialFromProduct) {
+      return materialFromProduct;
+    }
+    return product.available_materials?.[0]?.title || '';
+  });
+  const [currentProduct, setCurrentProduct] = useState(() => {
+    const productData = product.product || {};
+    const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
+    const hoverPhoto = productData.photos?.find(p => !p.main_photo) || productData.photos?.[1];
+    
+    return {
+      id: productData.id || product.id,
+      modelId: product.id,
+      name: product.title,
+      price: productData.price || 0,
+      discountedPrice: productData.discounted_price,
+      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : '/placeholder.jpg',
+      hoverImage: hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null,
+      inStock: productData.in_stock !== undefined ? productData.in_stock : true,
+      isBestseller: productData.bestseller || false,
+      article: productData.generated_article || product.article || '',
+      available_sizes: product.available_sizes || [],
+      available_colors: product.available_colors || [],
+      available_materials: product.available_materials || []
+    };
+  });
   const [isLoading, setIsLoading] = useState(false);
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
+
+
   
   const fetchProductDetails = async (sizeId, colorId, materialId) => {
     setIsLoading(true);
     try {
       const requestBody = {
-        model_id: product.id,
+        model_id: currentProduct.modelId,
         size_id: sizeId,
         color_id: colorId,
         material_id: materialId,
@@ -57,20 +102,20 @@ export default function ProductCard({ product }) {
         const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
         const secondaryPhoto = productData.photos?.find(p => !p.main_photo) || productData.photos?.[1];
         
-         setCurrentProduct({
-          ...product,
-          id: productData.id || product.id, // Обновляем ID товара
-          name: productData.title || product.name,
-          price: productData.price || product.price,
+         setCurrentProduct(prev => ({
+          ...prev,
+          id: productData.id || prev.id,
+          name: productData.title || prev.name || product.title,
+          price: productData.price || prev.price,
           discountedPrice: productData.discounted_price,
-          image: mainPhoto?.photo || product.image,
-          hoverImage: secondaryPhoto?.photo || product.hoverImage,
+          image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : prev.image,
+          hoverImage: secondaryPhoto?.photo ? (secondaryPhoto.photo.startsWith('http') ? secondaryPhoto.photo : `https://aldalinde.ru${secondaryPhoto.photo}`) : prev.hoverImage,
           inStock: productData.in_stock,
-          available_sizes: productData.available_sizes || product.available_sizes,
-          available_colors: productData.available_colors || product.available_colors,
-          available_materials: productData.available_materials || product.available_materials,
-           article: productData.generated_article || productData.article || product.article,
-        });
+          available_sizes: productData.available_sizes || prev.available_sizes,
+          available_colors: productData.available_colors || prev.available_colors,
+          available_materials: productData.available_materials || prev.available_materials,
+          article: productData.generated_article || productData.article || prev.article,
+        }));
       }
     } catch (error) {
     } finally {
@@ -179,7 +224,7 @@ export default function ProductCard({ product }) {
           <div className={`${styles.card__image_container} ${isHovered ? styles.card__image_container_hover : ''}`}>
             <Image
               src={currentProduct.image}
-              alt={currentProduct.name}
+              alt={currentProduct.name || product.title || 'Товар'}
               width={398}
               height={320}
               priority
@@ -188,7 +233,7 @@ export default function ProductCard({ product }) {
             {currentProduct.hoverImage && (
               <Image
                 src={currentProduct.hoverImage}
-                alt={`${currentProduct.name} - вид 2`}
+                alt={`${currentProduct.name || product.title || 'Товар'} - вид 2`}
                 width={398}
                 height={320}
                 priority
@@ -230,7 +275,7 @@ export default function ProductCard({ product }) {
       
       <div className={styles.card__content}>
         <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link}>
-          <h3 className={styles.card__title}>{currentProduct.name}</h3>
+          <h3 className={styles.card__title}>{currentProduct.name || product.title || product.name}</h3>
         </Link>
         
         <p className={styles.card__article}>Артикул: {currentProduct.article}</p>
@@ -238,11 +283,11 @@ export default function ProductCard({ product }) {
         <div className={styles.card__price_container}>
           {hasDiscount ? (
             <>
-              <p className={styles.card__price_original}>{currentProduct.discountedPrice} ₽</p>
-              <p className={styles.card__price_discounted}>{currentProduct.price} ₽</p>
+              <p className={styles.card__price_original}>{currentProduct.discountedPrice?.toLocaleString('ru-RU')} ₽</p>
+              <p className={styles.card__price_discounted}>{currentProduct.price?.toLocaleString('ru-RU')} ₽</p>
             </>
           ) : (
-            <p className={styles.card__price}>{currentProduct.price} ₽</p>
+            <p className={styles.card__price}>{currentProduct.price?.toLocaleString('ru-RU')} ₽</p>
           )}
         </div>
         

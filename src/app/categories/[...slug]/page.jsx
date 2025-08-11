@@ -254,30 +254,7 @@ export default function CategoryPage() {
   ];
 
   const transformProduct = (product) => {
-    const mainPhoto = product.product?.photos?.find(photo => photo.main_photo) || product.product?.photos?.[0];
-    const secondaryPhoto = product.product?.photos?.find(photo => !photo.main_photo) || product.product?.photos?.[1];
-    
-    return {
-      id: product.id,
-      name: product.title,
-      article: product.product?.generated_article || product.article,
-      price: product.product?.price || '0',
-              image: mainPhoto?.photo ? `https://aldalinde.ru${mainPhoto.photo}` : '/sofa.png',
-        hoverImage: secondaryPhoto?.photo ? `https://aldalinde.ru${secondaryPhoto.photo}` : '/sofa.png',
-      isBestseller: product.is_bestseller,
-      discount: 0,
-      sizes: product.available_sizes?.map(size => size.value) || [],
-      materials: product.available_materials?.map(material => material.title) || [],
-      colors: product.available_colors?.map(color => ({
-        name: color.title || 'Цвет',
-        hex: color.code_hex ? `#${color.code_hex}` : '#000000'
-      })) || [],
-      description: product.description,
-      inStock: product.product?.in_stock || false,
-      available_sizes: product.available_sizes || [],
-      available_colors: product.available_colors || [],
-      available_materials: product.available_materials || []
-    };
+    return product;
   };
 
   return (
@@ -290,7 +267,7 @@ export default function CategoryPage() {
           <p className={styles.hero__description}>
             У нас вы найдете идеальные диваны для любого интерьера: от компактных 2-местных моделей до просторных угловых вариантов. Мягкие, как облако, или умеренно жесткие — выбирайте комфорт на каждый день!
           </p>
-          <img className={styles.hero__img} src="/category.png" alt="" />
+          <img className={styles.hero__img} src="/category.png" alt="Категория" />
         </div>
       </div>
 
