@@ -122,12 +122,12 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                       <label key={optionIndex} className={styles.checkboxLabel}>
                         <input
                           type="checkbox"
-                          checked={tempFilters[filter.slug]?.includes(option.id) || false}
+                          checked={tempFilters[filter.slug]?.includes(option.value) || false}
                           onChange={(e) => {
                             const currentValues = tempFilters[filter.slug] || [];
                             const newValues = e.target.checked
-                              ? [...currentValues, option.id]
-                              : currentValues.filter(val => val !== option.id);
+                              ? [...currentValues, option.value]
+                              : currentValues.filter(val => val !== option.value);
                             setTempFilters(prev => ({
                               ...prev,
                               [filter.slug]: newValues
@@ -135,7 +135,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                           }}
                           className={styles.checkboxInput}
                         />
-                        <span className={styles.checkboxText}>{option.title}</span>
+                        <span className={styles.checkboxText}>{option.label}</span>
                       </label>
                     ))}
                   </div>
@@ -391,26 +391,26 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                   </div>
                 )}
 
-                {filter.type === 'select' && filter.slug === 'colors' && (
+                {filter.type === 'colors' && filter.slug === 'colors' && (
                   <div className={styles.filter__colors}>
                     {filter.options?.map((color, colorIndex) => (
                       <button
                         key={colorIndex}
                         className={`${styles.colorOption} ${
-                          tempFilters[filter.slug]?.includes(color.id) ? styles.colorOptionActive : ''
+                          tempFilters[filter.slug]?.includes(color.value) ? styles.colorOptionActive : ''
                         }`}
-                        style={{ backgroundColor: `#${color.code_hex}` }}
+                        style={{ backgroundColor: color.hex }}
                         onClick={() => {
                           const currentValues = tempFilters[filter.slug] || [];
-                          const newValues = currentValues.includes(color.id)
-                            ? currentValues.filter(val => val !== color.id)
-                            : [...currentValues, color.id];
+                          const newValues = currentValues.includes(color.value)
+                            ? currentValues.filter(val => val !== color.value)
+                            : [...currentValues, color.value];
                           setTempFilters(prev => ({
                             ...prev,
                             [filter.slug]: newValues
                           }));
                         }}
-                        title={color.title}
+                        title={color.label}
                       />
                     ))}
                   </div>

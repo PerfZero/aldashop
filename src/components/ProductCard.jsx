@@ -57,7 +57,7 @@ export default function ProductCard({ product }) {
         const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
         const secondaryPhoto = productData.photos?.find(p => !p.main_photo) || productData.photos?.[1];
         
-        setCurrentProduct({
+         setCurrentProduct({
           ...product,
           id: productData.id || product.id, // Обновляем ID товара
           name: productData.title || product.name,
@@ -69,6 +69,7 @@ export default function ProductCard({ product }) {
           available_sizes: productData.available_sizes || product.available_sizes,
           available_colors: productData.available_colors || product.available_colors,
           available_materials: productData.available_materials || product.available_materials,
+           article: productData.generated_article || productData.article || product.article,
         });
       }
     } catch (error) {

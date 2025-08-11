@@ -3,13 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import styles from './SortSelect.module.css';
 
-const options = [
-  { value: 'recommended', label: 'Рекомендации' },
-  { value: 'price-asc', label: 'Ниже цена' },
-  { value: 'price-desc', label: 'Выше цена' }
-];
-
-export default function SortSelect({ value, onChange }) {
+export default function SortSelect({ value, onChange, options = [] }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -26,7 +20,11 @@ export default function SortSelect({ value, onChange }) {
     };
   }, []);
 
-  const currentOption = options.find(option => option.value === value) || options[0];
+  if (!options || options.length === 0) {
+    return null;
+  }
+
+  const currentOption = options.find(option => option.id === value) || options[0];
 
   return (
     <div className={styles.sortSelect} ref={dropdownRef}>
@@ -38,7 +36,7 @@ export default function SortSelect({ value, onChange }) {
           type="button"
           aria-expanded={isOpen}
         >
-          {currentOption.label}
+          {currentOption?.title}
           <svg 
             className={`${styles.sortSelect__arrow} ${isOpen ? styles.sortSelect__arrow_open : ''}`} 
             width="12" 
@@ -50,20 +48,19 @@ export default function SortSelect({ value, onChange }) {
             <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        
         {isOpen && (
           <div className={styles.sortSelect__dropdown}>
             {options.map(option => (
               <button
-                key={option.value}
-                className={`${styles.sortSelect__option} ${option.value === value ? styles.sortSelect__option_active : ''}`}
+                key={option.id}
+                className={`${styles.sortSelect__option} ${option.id === (currentOption?.id) ? styles.sortSelect__option_active : ''}`}
                 onClick={() => {
-                  onChange(option.value);
+                  onChange && onChange(option.id);
                   setIsOpen(false);
                 }}
                 type="button"
               >
-                {option.label}
+                {option.title}
               </button>
             ))}
           </div>

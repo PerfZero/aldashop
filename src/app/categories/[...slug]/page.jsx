@@ -12,7 +12,7 @@ import styles from './page.module.css';
 export default function CategoryPage() {
   const params = useParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
-  const [sortBy, setSortBy] = useState('recommended');
+  const [sortBy, setSortBy] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState([]);
   const [products, setProducts] = useState([]);
@@ -70,28 +70,72 @@ export default function CategoryPage() {
       const defaultMaxPrice = priceFilter?.max || 100000;
       
       const requestBody = {
-        sort: getSortValue(sortBy),
-        in_stock: appliedFilters.in_stock !== undefined ? appliedFilters.in_stock : true,
         page: page - 1,
-        limit: pagination.page_size,
-        material: appliedFilters.material || 0,
-        bestseller: appliedFilters.bestseller || false,
-        price: {
-          min: appliedFilters.price?.min || defaultMinPrice,
-          max: appliedFilters.price?.max || defaultMaxPrice
-        },
-        colors: appliedFilters.colors && appliedFilters.colors.length > 0 ? appliedFilters.colors.map(color => parseInt(color)) : [],
-        sizes: {
-          width: appliedFilters.sizes?.width || 0,
-          height: appliedFilters.sizes?.height || 0,
-          depth: appliedFilters.sizes?.depth || 0
-        },
-        search: appliedFilters.search || ""
+        limit: pagination.page_size
       };
+
       if (subcategoryId) {
         requestBody.subcategory_id = subcategoryId;
       } else if (categoryId) {
         requestBody.category_id = categoryId;
+      }
+
+      if (typeof sortBy === 'number') {
+        requestBody.sort = sortBy;
+      }
+
+      requestBody.in_stock = appliedFilters.in_stock === true;
+
+      if (Array.isArray(appliedFilters.material) && appliedFilters.material.length > 0) {
+        requestBody.material = appliedFilters.material;
+      }
+
+      if (appliedFilters.bestseller === true) {
+        requestBody.bestseller = true;
+      }
+
+      if (Array.isArray(appliedFilters.colors) && appliedFilters.colors.length > 0) {
+        requestBody.colors = appliedFilters.colors.map(color => parseInt(color));
+      }
+
+      if (
+        appliedFilters.sizes &&
+        (
+          (Number(appliedFilters.sizes.width) || 0) > 0 ||
+          (Number(appliedFilters.sizes.height) || 0) > 0 ||
+          (Number(appliedFilters.sizes.depth) || 0) > 0
+        )
+      ) {
+        requestBody.sizes = {
+          width: Number(appliedFilters.sizes.width) || 0,
+          height: Number(appliedFilters.sizes.height) || 0,
+          depth: Number(appliedFilters.sizes.depth) || 0
+        };
+      }
+
+      const selectedMinPrice = appliedFilters.price?.min;
+      const selectedMaxPrice = appliedFilters.price?.max;
+      if (
+        (typeof selectedMinPrice === 'number' && selectedMinPrice !== defaultMinPrice) ||
+        (typeof selectedMaxPrice === 'number' && selectedMaxPrice !== defaultMaxPrice)
+      ) {
+        requestBody.price = {
+          min: typeof selectedMinPrice === 'number' ? selectedMinPrice : defaultMinPrice,
+          max: typeof selectedMaxPrice === 'number' ? selectedMaxPrice : defaultMaxPrice
+        };
+      }
+
+      if (appliedFilters.search && appliedFilters.search.trim() !== "") {
+        requestBody.search = appliedFilters.search.trim();
+      }
+
+      const selectFilters = (filters || []).filter(f => f && f.type === 'select');
+      for (const f of selectFilters) {
+        if (!f.slug || f.slug === 'colors' || f.slug === 'sort') continue;
+        const value = appliedFilters?.[f.slug];
+        if (Array.isArray(value) && value.length > 0) {
+          requestBody[f.slug] = value;
+        }
       }
 
       
@@ -128,16 +172,7 @@ export default function CategoryPage() {
     }
   };
 
-  const getSortValue = (sortBy) => {
-    switch (sortBy) {
-      case 'price_asc': return 1;
-      case 'price_desc': return 2;
-      case 'name_asc': return 3;
-      case 'name_desc': return 4;
-      case 'popular': return 5;
-      default: return 0;
-    }
-  };
+  
 
   const handleFiltersApply = (newFilters) => {
     
@@ -225,7 +260,7 @@ export default function CategoryPage() {
     return {
       id: product.id,
       name: product.title,
-      article: product.article,
+      article: product.product?.generated_article || product.article,
       price: product.product?.price || '0',
               image: mainPhoto?.photo ? `https://aldalinde.ru${mainPhoto.photo}` : '/sofa.png',
         hoverImage: secondaryPhoto?.photo ? `https://aldalinde.ru${secondaryPhoto.photo}` : '/sofa.png',
@@ -267,7 +302,11 @@ export default function CategoryPage() {
           {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
         </button>
         
-        <SortSelect value={sortBy} onChange={setSortBy} />
+        <SortSelect 
+          value={sortBy} 
+          onChange={setSortBy} 
+          options={(filters.find(f => f.slug === 'sort')?.options) || []} 
+        />
       </div>
 
       <div className={styles.content}>

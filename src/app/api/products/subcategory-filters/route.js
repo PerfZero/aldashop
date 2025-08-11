@@ -1,42 +1,37 @@
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { category_id, subcategory_id } = body;
-    
-    const url = 'https://aldalinde.ru/api/products/subcategory-filters/';
-    const requestBody = {
-      subcategory_id: subcategory_id,
-      category_id: category_id
-    };
-    
-    const response = await fetch(url, {
+
+    console.log('[subcategory-filters] request', body);
+
+    const response = await fetch('https://aldalinde.ru/api/products/subcategory-filters/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'accept': 'application/json',
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      console.log('[subcategory-filters] error response', { status: response.status, body: errorText });
       return Response.json({ error: `Внешний API ошибка: ${response.status}` }, { status: response.status });
     }
 
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
+      console.log('[subcategory-filters] non-json response', { text });
       return Response.json({ error: 'Внешний API вернул не JSON' }, { status: 500 });
     }
-    
+
     const data = await response.json();
-    
-    if (data === 400 || data.error || data.message) {
-      return Response.json({ error: 'API Error', details: data }, { status: 400 });
-    }
+    console.log('[subcategory-filters] success response', { data });
     
     return Response.json(data);
   } catch (error) {
+    console.error('[subcategory-filters] internal error', error);
     return Response.json({ error: 'Внутренняя ошибка сервера' }, { status: 500 });
   }
 }
