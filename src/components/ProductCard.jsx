@@ -83,9 +83,11 @@ export default function ProductCard({ product }) {
     const colorObj = currentProduct.available_colors?.find(c => c.code_hex === selectedColor.hex?.replace('#', ''));
     const materialObj = currentProduct.available_materials?.find(m => m.title === selectedMaterial);
     
-    if (colorObj && materialObj) {
-      fetchProductDetails(size.id, colorObj.id, materialObj.id);
-    }
+    fetchProductDetails(
+      size.id, 
+      colorObj?.id || null, 
+      materialObj?.id || null
+    );
   };
 
   const handleColorChange = (color) => {
@@ -93,9 +95,11 @@ export default function ProductCard({ product }) {
     const sizeObj = currentProduct.available_sizes?.find(s => s.value === selectedSize);
     const materialObj = currentProduct.available_materials?.find(m => m.title === selectedMaterial);
     
-    if (sizeObj && materialObj) {
-      fetchProductDetails(sizeObj.id, color.id, materialObj.id);
-    }
+    fetchProductDetails(
+      sizeObj?.id || null, 
+      color.id, 
+      materialObj?.id || null
+    );
   };
 
   const handleMaterialChange = (material) => {
@@ -103,9 +107,11 @@ export default function ProductCard({ product }) {
     const sizeObj = currentProduct.available_sizes?.find(s => s.value === selectedSize);
     const colorObj = currentProduct.available_colors?.find(c => c.code_hex === selectedColor.hex?.replace('#', ''));
     
-    if (sizeObj && colorObj) {
-      fetchProductDetails(sizeObj.id, colorObj.id, material.id);
-    }
+    fetchProductDetails(
+      sizeObj?.id || null, 
+      colorObj?.id || null, 
+      material.id
+    );
   };
 
   const handleAddToCart = async (e) => {
