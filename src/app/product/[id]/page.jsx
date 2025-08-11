@@ -684,6 +684,20 @@ export default function ProductPage({ params }) {
         </div>
       </div>
       
+      {product.param && product.param.length > 0 && (
+        <div className={styles.product__params}>
+          <h2 className={styles.product__params_title}>Параметры</h2>
+          <div className={styles.product__params_list}>
+            {product.param.map((param, index) => (
+              <div key={index} className={styles.product__param}>
+                <span className={styles.product__param_key}>{param.key_param}</span>
+                <span className={styles.product__param_value}>{param.value_param}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
       {product.description && (
         <div className={styles.product__description}>
           <h2 className={styles.product__description_title}>Информация о товаре</h2>
