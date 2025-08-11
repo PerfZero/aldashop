@@ -79,6 +79,33 @@ export default function Header() {
 
   const rightMenuItems = ["Новинки", "Бестселлеры", "Распродажа"];
 
+  useEffect(() => {
+    if (!pathname || !categories || categories.length === 0) return;
+    const parts = pathname.split('/').filter(Boolean);
+    if (parts[0] !== 'categories') {
+      setActiveMenu(null);
+      return;
+    }
+    const firstSlug = parts[1];
+    if (!firstSlug) {
+      setActiveMenu(null);
+      return;
+    }
+    const catBySlug = categories.find(c => c.slug === firstSlug);
+    if (catBySlug) {
+      setActiveMenu(catBySlug.id);
+      return;
+    }
+    for (const c of categories) {
+      const sub = (c.subcategories || []).find(s => s.slug === firstSlug);
+      if (sub) {
+        setActiveMenu(c.id);
+        return;
+      }
+    }
+    setActiveMenu(null);
+  }, [pathname, categories]);
+
   // Закрытие поиска по клику вне окна
   useEffect(() => {
     if (!isSearchOpen) return;

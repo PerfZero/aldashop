@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Filters from '@/components/Filters';
@@ -8,7 +9,9 @@ import ProductCard from '@/components/ProductCard';
 import SortSelect from '@/components/SortSelect';
 import styles from './page.module.css';
 
-export default function CategoryPage({ params }) {
+export default function CategoryPage() {
+  const params = useParams();
+  const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
   const [sortBy, setSortBy] = useState('recommended');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState([]);
@@ -22,11 +25,21 @@ export default function CategoryPage({ params }) {
     page_size: 12,
     count: 0
   });
+  const [categoryId, setCategoryId] = useState(null);
+  const [subcategoryId, setSubcategoryId] = useState(null);
+  const [currentCategory, setCurrentCategory] = useState(null);
+  const [currentSubcategory, setCurrentSubcategory] = useState(null);
 
   const fetchFilters = async () => {
     try {
       setLoading(true);
-      const requestBody = { subcategory_id: 1, category_id: null };
+      if (!categoryId && !subcategoryId) return;
+      const requestBody = {};
+      if (subcategoryId) {
+        requestBody.subcategory_id = subcategoryId;
+      } else if (categoryId) {
+        requestBody.category_id = categoryId;
+      }
       const response = await fetch('/api/products/subcategory-filters', {
         method: 'POST',
         headers: {
@@ -57,8 +70,6 @@ export default function CategoryPage({ params }) {
       const defaultMaxPrice = priceFilter?.max || 100000;
       
       const requestBody = {
-        category_id: 1,
-        subcategory_id: null,
         sort: getSortValue(sortBy),
         in_stock: appliedFilters.in_stock !== undefined ? appliedFilters.in_stock : true,
         page: page - 1,
@@ -77,8 +88,13 @@ export default function CategoryPage({ params }) {
         },
         search: appliedFilters.search || ""
       };
+      if (subcategoryId) {
+        requestBody.subcategory_id = subcategoryId;
+      } else if (categoryId) {
+        requestBody.category_id = categoryId;
+      }
 
-      console.log('Отправляем фильтры:', requestBody);
+      
 
       const response = await fetch('/api/products/models-list', {
         method: 'POST',
@@ -124,7 +140,7 @@ export default function CategoryPage({ params }) {
   };
 
   const handleFiltersApply = (newFilters) => {
-    console.log('Применяем фильтры:', newFilters);
+    
     setAppliedFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
     fetchProducts(newFilters, 1);
@@ -137,17 +153,69 @@ export default function CategoryPage({ params }) {
   };
 
   useEffect(() => {
-    fetchFilters();
-  }, []);
+    const resolveIds = async () => {
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        const slugArr = Array.isArray(params?.slug) ? params.slug : params?.slug ? [params.slug] : [];
+        if (!slugArr || slugArr.length === 0) return;
+
+        if (slugArr.length >= 2) {
+          const [catSlug, subSlug] = slugArr;
+          const cat = data.find(c => c.slug === catSlug);
+          if (cat) {
+            const sub = (cat.subcategories || []).find(s => s.slug === subSlug && subSlug !== 'all');
+            setCategoryId(cat.id);
+            setSubcategoryId(sub ? sub.id : null);
+            setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title });
+            setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title } : null);
+            return;
+          }
+        }
+
+        const currentSlug = slugArr[0];
+        const cat = data.find(c => c.slug === currentSlug);
+        if (cat) {
+          setCategoryId(cat.id);
+          setSubcategoryId(null);
+          setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title });
+          setCurrentSubcategory(null);
+          return;
+        }
+
+        for (const c of data) {
+          const sub = (c.subcategories || []).find(s => s.slug === currentSlug);
+          if (sub) {
+            setCategoryId(c.id);
+            setSubcategoryId(sub.id);
+            setCurrentCategory({ id: c.id, slug: c.slug, title: c.title });
+            setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title });
+            return;
+          }
+        }
+      } catch (e) {}
+    };
+    resolveIds();
+  }, [slugDep]);
 
   useEffect(() => {
+    if (categoryId === null && subcategoryId === null) return;
+    fetchFilters();
+  }, [categoryId, subcategoryId]);
+
+  useEffect(() => {
+    if (categoryId === null && subcategoryId === null) return;
+    setProducts([]);
+    setPagination(prev => ({ ...prev, page: 1 }));
     fetchProducts(appliedFilters, 1);
-  }, [sortBy]);
+  }, [sortBy, categoryId, subcategoryId]);
 
   const breadcrumbs = [
     { text: 'Главная', href: '/' },
-    { text: 'Диваны', href: '/categories/sofas' },
-    { text: 'Все диваны', href: '/categories/sofas/all' }
+    ...(currentCategory ? [{ text: currentCategory.title, href: `/categories/${currentCategory.slug}` }] : []),
+    ...(currentSubcategory
+      ? [{ text: currentSubcategory.title, href: `/categories/${currentCategory?.slug}/${currentSubcategory.slug}` }]
+      : currentCategory ? [{ text: 'Все товары', href: `/categories/${currentCategory.slug}/all` }] : []),
   ];
 
   const transformProduct = (product) => {
