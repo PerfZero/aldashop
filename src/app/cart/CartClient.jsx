@@ -4,16 +4,24 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
+import AuthModal from '../../components/AuthModal';
 
 export default function CartClient() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, isLoading } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  
+  console.log('[CartClient] Auth state:', { isAuthenticated, authLoading });
+  console.log('[CartClient] LocalStorage tokens:', {
+    accessToken: localStorage.getItem('accessToken') ? 'exists' : 'not found',
+    refreshToken: localStorage.getItem('refreshToken') ? 'exists' : 'not found'
+  });
   
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [showPromoCodeInput, setShowPromoCodeInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [innStatus, setInnStatus] = useState(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -178,64 +186,54 @@ export default function CartClient() {
     }));
   };
 
-  const initMap = () => {
-    console.log('Начинаем инициализацию карты');
+  const handlePromoCodeSubmit = async () => {
+    if (!promoCode.trim()) return;
     
-    if (typeof window !== 'undefined' && window.ymaps) {
-      const mapElement = document.getElementById('map');
-      console.log('Элемент карты:', mapElement);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('/api/order/check-promo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ promo_code: promoCode })
+      });
       
-      if (!mapElement) {
-        console.error('Элемент карты не найден, повторная попытка через 500ms');
-        setTimeout(() => {
-          initMap();
-        }, 500);
-        return;
-      }
-      
-      if (mapElement && !mapComponents) {
-        try {
-          console.log('Создаем карту с центром:', mapCenter);
-          const map = new window.ymaps.Map('map', {
-            center: mapCenter,
-            zoom: 12,
-            controls: ['zoomControl', 'fullscreenControl', 'geolocationControl']
-          });
-          
-          map.events.add('click', handleMapClick);
-          setMapComponents({ map, ymaps: window.ymaps });
-          setIsMapLoading(false);
-          console.log('Карта успешно создана');
-        } catch (error) {
-          console.error('Ошибка создания карты:', error);
-          setIsMapLoading(false);
-        }
+      if (response.ok) {
+        const data = await response.json();
+        setDiscount(data.discount || 0);
+        setShowPromoCodeInput(false);
       } else {
-        console.log('Карта уже инициализирована');
+        alert('Неверный промокод');
       }
-    } else {
-      console.error('Яндекс карты не загружены');
-      setIsMapLoading(false);
+    } catch (error) {
+      alert('Ошибка при проверке промокода');
     }
   };
-  
-  const handleToggleChange = (name) => {
-    setFormData(prev => ({
-      ...prev,
-      [name]: !prev[name]
-    }));
-  };
-  
-  const handlePromoCodeSubmit = (e) => {
-    e.preventDefault();
 
-    if (promoCode.toUpperCase() === 'СКИДКА') {
-      setDiscount(5000);
+  const initMap = () => {
+    if (typeof window !== 'undefined' && window.ymaps) {
+      const map = new window.ymaps.Map('map', {
+        center: mapCenter,
+        zoom: 12,
+        controls: ['zoomControl']
+      });
+      
+      setMapComponents({ map, ymaps: window.ymaps });
+      setIsMapLoading(false);
+      
+      map.events.add('click', handleMapClick);
     }
   };
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
     
     const orderData = {
       email: formData.email,
@@ -394,34 +392,32 @@ export default function CartClient() {
                   <span>{item.dimensions || 'Не указаны'}</span>
                 </div>
                 
-                <div className={styles.quantityPrice}>
+                <div className={styles.quantityBlock}>
                   <div className={styles.quantityControls}>
-                    <div className={styles.quantityButtons}>
-                      <button 
-                        className={styles.minusButton} 
-                        onClick={async () => await updateQuantity(item.id, item.quantity - 1)}
-                        disabled={item.quantity <= 1}
-                      >
-                        <svg width="10" height="2" viewBox="0 0 10 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M9 1H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
-                        </svg>
-                      </button>
-                      <span className={styles.quantity}>{item.quantity}</span>
-                      <button 
-                        className={styles.plusButton} 
-                        onClick={async () => await updateQuantity(item.id, item.quantity + 1)}
-                      >
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M5 1V9M9 5H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
-                        </svg>
-                      </button>
-                    </div>
+                    <button 
+                      className={styles.minusButton} 
+                      onClick={async () => await updateQuantity(item.id, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                    >
+                      <svg width="10" height="2" viewBox="0 0 10 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 1H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
+                      </svg>
+                    </button>
+                    <span className={styles.quantity}>{item.quantity}</span>
+                    <button 
+                      className={styles.plusButton} 
+                      onClick={async () => await updateQuantity(item.id, item.quantity + 1)}
+                    >
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5 1V9M9 5H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
+                      </svg>
+                    </button>
                   </div>
-                  
-                  <div className={styles.priceBlock}>
-                    <span className={styles.price}>{item.price.toLocaleString()}</span>
-                    <span className={styles.currency}>₽</span>
-                  </div>
+                </div>
+                
+                <div className={styles.priceBlock}>
+                  <span className={styles.price}>{item.price.toLocaleString()}</span>
+                  <span className={styles.currency}>₽</span>
                 </div>
               </div>
               
@@ -462,33 +458,37 @@ export default function CartClient() {
             </div>
           </div>
           
-          {showPromoCodeInput ? (
-            <div className={styles.promoCodeForm}>
-              <div className={styles.inputContainer}>
-                <input 
-                  type="text" 
-                  className={styles.promoCodeInput} 
-                  placeholder=" "
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                />
-                <span className={styles.floatingLabel}>Введите промокод</span>
-              </div>
-              <button 
-                type="button" 
-                className={styles.promoCodeButton}
-                onClick={handlePromoCodeSubmit}
-              >
-                Активировать
-              </button>
-            </div>
-          ) : (
-            <div 
-              className={styles.promoCode}
-              onClick={() => setShowPromoCodeInput(true)}
-            >
-              <span>У меня есть промокод</span>
-            </div>
+          {isAuthenticated && (
+            <>
+              {showPromoCodeInput ? (
+                <div className={styles.promoCodeForm}>
+                  <div className={styles.inputContainer}>
+                    <input 
+                      type="text" 
+                      className={styles.promoCodeInput} 
+                      placeholder=" "
+                      value={promoCode}
+                      onChange={(e) => setPromoCode(e.target.value)}
+                    />
+                    <span className={styles.floatingLabel}>Введите промокод</span>
+                  </div>
+                  <button 
+                    type="button" 
+                    className={styles.promoCodeButton}
+                    onClick={handlePromoCodeSubmit}
+                  >
+                    Активировать
+                  </button>
+                </div>
+              ) : (
+                <div 
+                  className={styles.promoCode}
+                  onClick={() => setShowPromoCodeInput(true)}
+                >
+                  <span>У меня есть промокод</span>
+                </div>
+              )}
+            </>
           )}
           
           <div className={styles.summaryRow}>
@@ -509,13 +509,22 @@ export default function CartClient() {
           </div>
         </div>
         
-        <button type="submit" className={styles.confirmButton}>
-          Подтвердить заказ
+        <button 
+          type="button" 
+          className={styles.confirmButton}
+          onClick={handleSubmit}
+        >
+          {isAuthenticated ? 'Подтвердить заказ' : 'Войти для оформления заказа'}
           <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="white"/>
           </svg>
         </button>
       </div>
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </>
   );
 } 

@@ -6,6 +6,7 @@ import styles from './page.module.css';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
+import AuthModal from '../../components/AuthModal';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, updateQuantity, clearCart, isLoading } = useCart();
@@ -14,11 +15,12 @@ export default function CartPage() {
   const [discount, setDiscount] = useState(0);
   const [showPromoCodeInput, setShowPromoCodeInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
-  const [promoCodeStatus, setPromoCodeStatus] = useState(null); // null, 'loading', 'valid', 'invalid'
+  const [promoCodeStatus, setPromoCodeStatus] = useState(null);
   const [promoCodeError, setPromoCodeError] = useState('');
-  const [innStatus, setInnStatus] = useState(null); // null, 'valid', 'invalid'
+  const [innStatus, setInnStatus] = useState(null);
   const [autocompleteData, setAutocompleteData] = useState(null);
   const [isLoadingAutocomplete, setIsLoadingAutocomplete] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -38,7 +40,6 @@ export default function CartPage() {
     comment: '',
     coordinates: null,
     fullAddress: '',
-    // Поля для юридического лица
     legalFullName: '',
     legalKpp: '',
     legalOgrn: '',
@@ -84,14 +85,12 @@ export default function CartPage() {
             console.log('Полученные данные автодополнения:', data);
             setAutocompleteData(data);
             
-            // Обновляем адреса пунктов выдачи
             if (data.pickup_addresses && data.pickup_addresses.length > 0) {
               const pickupAddressesList = data.pickup_addresses.map(address => address.full_address);
               setPickupAddresses(pickupAddressesList);
               console.log('Обновлены адреса пунктов выдачи:', pickupAddressesList);
             }
             
-            // Автозаполнение полей профиля
             if (data.profile_fields) {
               console.log('Заполняем поля профиля:', data.profile_fields);
               setFormData(prev => {
@@ -125,7 +124,6 @@ export default function CartPage() {
   }, [isAuthenticated, getAuthHeaders]);
 
   useEffect(() => {
-    // Сбрасываем промокод при изменении корзины
     if (promoCodeStatus === 'valid') {
       setPromoCodeStatus(null);
       setPromoCodeError('');
@@ -134,7 +132,6 @@ export default function CartPage() {
   }, [cartItems]);
 
   useEffect(() => {
-    // Сброс статуса ИНН при изменении формы заказа от юр. лица
     if (!formData.isLegalEntity) {
       setInnStatus(null);
     }
@@ -152,12 +149,9 @@ export default function CartPage() {
       [name]: value
     }));
 
-    // Валидация ИНН (примитивная проверка для демонстрации)
     if (name === 'inn' && formData.isLegalEntity) {
-      // Очищаем от пробелов и других символов
       const innValue = value.replace(/\D/g, '');
       
-      // Простая проверка - для демонстрации считаем валидным ИНН 435343353453
       if (innValue === '435343353453') {
         setInnStatus('valid');
       } else if (innValue.length >= 10) {
@@ -230,7 +224,11 @@ export default function CartPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Формируем данные заказа согласно API документации
+    if (!isAuthenticated) {
+      setShowAuthModal(true);
+      return;
+    }
+    
     const orderData = {
       email: formData.email,
       message: formData.comment || null,
@@ -241,12 +239,10 @@ export default function CartPage() {
       phone: formData.phone
     };
 
-    // Добавляем промокод только если он валидный
     if (promoCodeStatus === 'valid' && promoCode) {
       orderData.promo_code = promoCode;
     }
 
-    // Добавляем адрес доставки, если не самовывоз
     if (formData.delivery === 'address') {
       orderData.delivery_address = {
         administrative_area: formData.region || 'Краснодарский край',
@@ -260,9 +256,7 @@ export default function CartPage() {
       };
     }
 
-    // Добавляем адрес пункта выдачи, если самовывоз
     if (formData.delivery === 'pickup') {
-      // Используем сохраненный ID или ищем в API данных
       let pickupId = formData.pickupAddressId;
       
       if (!pickupId && autocompleteData?.pickup_addresses) {
@@ -279,14 +273,12 @@ export default function CartPage() {
           id: pickupId
         };
       } else {
-        // Если не нашли ID, используем адрес как fallback
         orderData.pickup_address = {
           address: formData.pickupAddress
         };
       }
     }
 
-    // Добавляем данные юридического лица, если выбрано
     if (formData.isLegalEntity && formData.inn) {
       orderData.legal_person = {
         full_name: formData.legalFullName || formData.lastName || '',
@@ -433,10 +425,9 @@ export default function CartPage() {
 
   return (
     <div className={styles.container}>
-      
       <div className={styles.cartContent}>
         <div className={styles.cartLeft}>
-        <h1 className={styles.title}>Корзина</h1>
+          <h1 className={styles.title}>Корзина</h1>
 
           <div className={styles.cartItems}>
             {cartItems.map(item => (
@@ -469,20 +460,20 @@ export default function CartPage() {
                     <div className={styles.quantityPrice}>
                       <div className={styles.quantityControls}>
                         <div className={styles.quantityButtons}>
-                                                     <button 
-                             className={styles.minusButton} 
-                             onClick={async () => await updateQuantity(item.id, item.quantity - 1)}
-                             disabled={item.quantity <= 1}
-                           >
+                          <button 
+                            className={styles.minusButton} 
+                            onClick={async () => await updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                          >
                             <svg width="10" height="2" viewBox="0 0 10 2" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M9 1H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
                             </svg>
                           </button>
                           <span className={styles.quantity}>{item.quantity}</span>
-                                                     <button 
-                             className={styles.plusButton} 
-                             onClick={async () => await updateQuantity(item.id, item.quantity + 1)}
-                           >
+                          <button 
+                            className={styles.plusButton} 
+                            onClick={async () => await updateQuantity(item.id, item.quantity + 1)}
+                          >
                             <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M5 1V9M9 5H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
                             </svg>
@@ -497,10 +488,10 @@ export default function CartPage() {
                     </div>
                   </div>
                   
-                                     <button 
-                     className={styles.removeButton} 
-                     onClick={async () => await removeFromCart(item.id)}
-                   >
+                  <button 
+                    className={styles.removeButton} 
+                    onClick={async () => await removeFromCart(item.id)}
+                  >
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M13 1L1 13M1 1L13 13" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
                     </svg>
@@ -510,405 +501,405 @@ export default function CartPage() {
             ))}
           </div>
           
-          <form className={styles.checkoutForm} onSubmit={handleSubmit}>
-            <div className={styles.formSection}>
-              <h2 className={styles.sectionTitle}>
-                Покупатель
-                {isLoadingAutocomplete && <span className={styles.loadingIndicator}>Загрузка данных...</span>}
-              </h2>
-              <div className={styles.formContent}>
-                <div className={styles.switchField}>
-                  <label className={styles.switch}>
-                    <input 
-                      type="checkbox" 
-                      checked={formData.isLegalEntity}
-                      onChange={() => handleToggleChange('isLegalEntity')}
-                    />
-                    <span className={styles.slider}></span>
-                  </label>
-                  <span className={styles.switchLabel}>Заказ от юридического лица</span>
-                </div>
-                
-                <div className={styles.formRow}>
-                  <div className={styles.inputField}>
-                    <div className={styles.inputContainer}>
+          {isAuthenticated && (
+            <form className={styles.checkoutForm} onSubmit={handleSubmit}>
+              <div className={styles.formSection}>
+                <h2 className={styles.sectionTitle}>
+                  Покупатель
+                  {isLoadingAutocomplete && <span className={styles.loadingIndicator}>Загрузка данных...</span>}
+                </h2>
+                <div className={styles.formContent}>
+                  <div className={styles.switchField}>
+                    <label className={styles.switch}>
                       <input 
-                        type="text" 
-                        name="firstName" 
-                        placeholder=" " 
-                        required
-                        value={formData.firstName}
-                        onChange={handleInputChange}
+                        type="checkbox" 
+                        checked={formData.isLegalEntity}
+                        onChange={() => handleToggleChange('isLegalEntity')}
                       />
-                      <span className={styles.floatingLabel}>
-                        Имя <span className={styles.requiredStar}>*</span>
-                      </span>
-                    </div>
+                      <span className={styles.slider}></span>
+                    </label>
+                    <span className={styles.switchLabel}>Заказ от юридического лица</span>
                   </div>
                   
-                  <div className={formData.isLegalEntity ? `${styles.inputField} ${styles.innInput}` : styles.inputField}>
-                    <div className={styles.inputContainer}>
-                      <input 
-                        type="text" 
-                        name={formData.isLegalEntity ? "inn" : "lastName"} 
-                        placeholder=" " 
-                        required
-                        value={formData.isLegalEntity ? formData.inn || "" : formData.lastName}
-                        onChange={handleInputChange}
-                      />
-                      <span className={styles.floatingLabel}>
-                        {formData.isLegalEntity ? "Укажите ИНН ИП или организацию " : "Фамилия "}
-                        <span className={styles.requiredStar}>*</span>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                
-                {formData.isLegalEntity && innStatus === 'invalid' && (
-                  <div className={styles.innMessage}>
-                    <p className={styles.innInvalid}>
-                      Компания не найдена. Мы свяжемся с вами в рабочее время для уточнения данных. Вы можете продолжить оформление заказа.
-                    </p>
-                    <button 
-                      type="button" 
-                      className={styles.innConfirmButton}
-                      onClick={() => setInnStatus('confirmed')}
-                    >
-                      Подтвердить
-                    </button>
-                  </div>
-                )}
-                
-                {formData.isLegalEntity && innStatus === 'valid' && (
-                  <div className={styles.innMessage}>
-                    <p className={styles.innValid}>
-                      ИНН: {formData.inn}
-                    </p>
-                  </div>
-                )}
-
-                {autocompleteData?.legal_persons && autocompleteData.legal_persons.length > 0 && (
-                  <div className={styles.savedAddresses}>
-                    <h4>Сохраненные юридические лица</h4>
-                    {autocompleteData.legal_persons.map((legalPerson) => (
-                      <div 
-                        key={legalPerson.id}
-                        className={styles.savedAddress}
-                        onClick={() => {
-                          setFormData(prev => ({
-                            ...prev,
-                            inn: legalPerson.inn || prev.inn,
-                            isLegalEntity: true
-                          }));
-                          setInnStatus('valid');
-                        }}
-                      >
-                        {legalPerson.full_name} (ИНН: {legalPerson.inn})
+                  <div className={styles.formRow}>
+                    <div className={styles.inputField}>
+                      <div className={styles.inputContainer}>
+                        <input 
+                          type="text" 
+                          name="firstName" 
+                          placeholder=" " 
+                          required
+                          value={formData.firstName}
+                          onChange={handleInputChange}
+                        />
+                        <span className={styles.floatingLabel}>
+                          Имя <span className={styles.requiredStar}>*</span>
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
-                
-                <div className={styles.formRow}>
-                  <div className={styles.inputField}>
-                    <div className={styles.inputContainer}>
-                      <input 
-                        type="tel" 
-                        name="phone" 
-                        placeholder=" " 
-                        required
-                        value={formData.phone}
-                        onChange={handleInputChange}
-                      />
-                      <span className={styles.floatingLabel}>
-                        Телефон   
-                      </span>
+                    </div>
+                    
+                    <div className={formData.isLegalEntity ? `${styles.inputField} ${styles.innInput}` : styles.inputField}>
+                      <div className={styles.inputContainer}>
+                        <input 
+                          type="text" 
+                          name={formData.isLegalEntity ? "inn" : "lastName"} 
+                          placeholder=" " 
+                          required
+                          value={formData.isLegalEntity ? formData.inn || "" : formData.lastName}
+                          onChange={handleInputChange}
+                        />
+                        <span className={styles.floatingLabel}>
+                          {formData.isLegalEntity ? "Укажите ИНН ИП или организацию " : "Фамилия "}
+                          <span className={styles.requiredStar}>*</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
                   
-                  <div className={styles.inputField}>
-                    <div className={styles.inputContainer}>
-                      <input 
-                        type="email" 
-                        name="email" 
-                        placeholder=" " 
-                        required
-                        value={formData.email}
-                        onChange={handleInputChange}
-                      />
-                      <span className={styles.floatingLabel}>
-                        Электронная почта <span className={styles.requiredStar}>*</span>
-                      </span>
+                  {formData.isLegalEntity && innStatus === 'invalid' && (
+                    <div className={styles.innMessage}>
+                      <p className={styles.innInvalid}>
+                        Компания не найдена. Мы свяжемся с вами в рабочее время для уточнения данных. Вы можете продолжить оформление заказа.
+                      </p>
+                      <button 
+                        type="button" 
+                        className={styles.innConfirmButton}
+                        onClick={() => setInnStatus('confirmed')}
+                      >
+                        Подтвердить
+                      </button>
+                    </div>
+                  )}
+                  
+                  {formData.isLegalEntity && innStatus === 'valid' && (
+                    <div className={styles.innMessage}>
+                      <p className={styles.innValid}>
+                        ИНН: {formData.inn}
+                      </p>
+                    </div>
+                  )}
+
+                  {autocompleteData?.legal_persons && autocompleteData.legal_persons.length > 0 && (
+                    <div className={styles.savedAddresses}>
+                      <h4>Сохраненные юридические лица</h4>
+                      {autocompleteData.legal_persons.map((legalPerson) => (
+                        <div 
+                          key={legalPerson.id}
+                          className={styles.savedAddress}
+                          onClick={() => {
+                            setFormData(prev => ({
+                              ...prev,
+                              inn: legalPerson.inn || prev.inn,
+                              isLegalEntity: true
+                            }));
+                            setInnStatus('valid');
+                          }}
+                        >
+                          {legalPerson.full_name} (ИНН: {legalPerson.inn})
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  <div className={styles.formRow}>
+                    <div className={styles.inputField}>
+                      <div className={styles.inputContainer}>
+                        <input 
+                          type="tel" 
+                          name="phone" 
+                          placeholder=" " 
+                          required
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                        />
+                        <span className={styles.floatingLabel}>
+                          Телефон   
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className={styles.inputField}>
+                      <div className={styles.inputContainer}>
+                        <input 
+                          type="email" 
+                          name="email" 
+                          placeholder=" " 
+                          required
+                          value={formData.email}
+                          onChange={handleInputChange}
+                        />
+                        <span className={styles.floatingLabel}>
+                          Электронная почта <span className={styles.requiredStar}>*</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <div className={styles.formSection}>
-              <h2 className={styles.sectionTitle}>Адрес доставки</h2>
-              <div className={styles.formContent}>
-                <div className={styles.addressField}>
-                  <div className={styles.inputContainer}>
-                    <input 
-                      type="text" 
-                      name="city" 
-                      placeholder=" "
-                      value={formData.city}
-                      onChange={handleInputChange}
-                      className={styles.cityField}
-                    />
-                    <span className={styles.floatingLabel}>Населенный пункт <span className={styles.requiredStar}>*</span></span>
-                  </div>
-                </div>
-                
-                <div className={styles.deliveryOptions}>
-                  <div className={styles.radioField}>
-                    <label className={styles.radioOption}>
+              
+              <div className={styles.formSection}>
+                <h2 className={styles.sectionTitle}>Адрес доставки</h2>
+                <div className={styles.formContent}>
+                  <div className={styles.addressField}>
+                    <div className={styles.inputContainer}>
                       <input 
-                        type="radio" 
-                        name="delivery" 
-                        value="address"
-                        checked={formData.delivery === 'address'}
-                        onChange={handleRadioChange}
+                        type="text" 
+                        name="city" 
+                        placeholder=" "
+                        value={formData.city}
+                        onChange={handleInputChange}
+                        className={styles.cityField}
                       />
-                      <div className={styles.radioContent}>
-                        <span className={styles.radioCircle}></span>
-                        <div>
-                          <p className={styles.radioTitle}>Доставка до адреса</p>
-                          <p className={styles.radioDesc}>Введите адрес или выберите точку на карте</p>
-                        </div>
-                      </div>
-                    </label>
+                      <span className={styles.floatingLabel}>Населенный пункт <span className={styles.requiredStar}>*</span></span>
+                    </div>
                   </div>
                   
-                  <div className={styles.radioField}>
-                    <label className={styles.radioOption}>
-                      <input 
-                        type="radio" 
-                        name="delivery" 
-                        value="pickup"
-                        checked={formData.delivery === 'pickup'}
-                        onChange={handleRadioChange}
-                      />
-                      <div className={styles.radioContent}>
-                        <span className={styles.radioCircle}></span>
-                        <span className={styles.radioTitle}>Самовывоз из пункта выдачи</span>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  {formData.delivery === 'pickup' && (
-                    <div className={styles.addressField}>
-                      <div className={styles.customSelect}>
-                        <div 
-                          className={styles.selectHeader} 
-                          onClick={() => setIsPickupDropdownOpen(!isPickupDropdownOpen)}
-                        >
-                          <div className={styles.inputContainer}>
-                            <input 
-                              type="text" 
-                              name="pickupAddress" 
-                              placeholder=" "
-                              value={formData.pickupAddress}
-                              onChange={handleInputChange}
-                              className={styles.pickupAddressField}
-                              readOnly
-                            />
-                            <span className={styles.floatingLabel}>
-                              Адрес пункта выдачи <span className={styles.requiredStar}>*</span>
-                            </span>
-                          </div>
-                          <div className={styles.selectArrow}>
-                            <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M1 1L7 7L13 1" stroke="#C1AF86" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
+                  <div className={styles.deliveryOptions}>
+                    <div className={styles.radioField}>
+                      <label className={styles.radioOption}>
+                        <input 
+                          type="radio" 
+                          name="delivery" 
+                          value="address"
+                          checked={formData.delivery === 'address'}
+                          onChange={handleRadioChange}
+                        />
+                        <div className={styles.radioContent}>
+                          <span className={styles.radioCircle}></span>
+                          <div>
+                            <p className={styles.radioTitle}>Доставка до адреса</p>
+                            <p className={styles.radioDesc}>Введите адрес или выберите точку на карте</p>
                           </div>
                         </div>
-                        
-                        {isPickupDropdownOpen && (
-                          <div className={styles.selectOptions}>
-                            {autocompleteData?.pickup_addresses && autocompleteData.pickup_addresses.length > 0 ? (
-                              // Показываем адреса из API
-                              autocompleteData.pickup_addresses.map((address) => (
-                                <div 
-                                  key={address.id} 
-                                  className={styles.selectOption}
-                                  onClick={() => handleSelectPickupAddressFromAPI(address)}
-                                >
-                                  {address.full_address}
-                                </div>
-                              ))
-                            ) : (
-                              // Показываем статические адреса как fallback
-                              pickupAddresses.map((address, index) => (
-                                <div 
-                                  key={index} 
-                                  className={styles.selectOption}
-                                  onClick={() => handleSelectPickupAddress(address)}
-                                >
-                                  {address}
-                                </div>
-                              ))
-                            )}
+                      </label>
+                    </div>
+                    
+                    <div className={styles.radioField}>
+                      <label className={styles.radioOption}>
+                        <input 
+                          type="radio" 
+                          name="delivery" 
+                          value="pickup"
+                          checked={formData.delivery === 'pickup'}
+                          onChange={handleRadioChange}
+                        />
+                        <div className={styles.radioContent}>
+                          <span className={styles.radioCircle}></span>
+                          <span className={styles.radioTitle}>Самовывоз из пункта выдачи</span>
+                        </div>
+                      </label>
+                    </div>
+                    
+                    {formData.delivery === 'pickup' && (
+                      <div className={styles.addressField}>
+                        <div className={styles.customSelect}>
+                          <div 
+                            className={styles.selectHeader} 
+                            onClick={() => setIsPickupDropdownOpen(!isPickupDropdownOpen)}
+                          >
+                            <div className={styles.inputContainer}>
+                              <input 
+                                type="text" 
+                                name="pickupAddress" 
+                                placeholder=" "
+                                value={formData.pickupAddress}
+                                onChange={handleInputChange}
+                                className={styles.pickupAddressField}
+                                readOnly
+                              />
+                              <span className={styles.floatingLabel}>
+                                Адрес пункта выдачи <span className={styles.requiredStar}>*</span>
+                              </span>
+                            </div>
+                            <div className={styles.selectArrow}>
+                              <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M1 1L7 7L13 1" stroke="#C1AF86" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </div>
+                          </div>
+                          
+                          {isPickupDropdownOpen && (
+                            <div className={styles.selectOptions}>
+                              {autocompleteData?.pickup_addresses && autocompleteData.pickup_addresses.length > 0 ? (
+                                autocompleteData.pickup_addresses.map((address) => (
+                                  <div 
+                                    key={address.id} 
+                                    className={styles.selectOption}
+                                    onClick={() => handleSelectPickupAddressFromAPI(address)}
+                                  >
+                                    {address.full_address}
+                                  </div>
+                                ))
+                              ) : (
+                                pickupAddresses.map((address, index) => (
+                                  <div 
+                                    key={index} 
+                                    className={styles.selectOption}
+                                    onClick={() => handleSelectPickupAddress(address)}
+                                  >
+                                    {address}
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {formData.delivery === 'address' && (
+                      <div className={styles.addressToDelivery}>
+                        {autocompleteData?.delivery_addresses && autocompleteData.delivery_addresses.length > 0 && (
+                          <div className={styles.savedAddresses}>
+                            <h4>Сохраненные адреса</h4>
+                            {autocompleteData.delivery_addresses.map((address) => (
+                              <div 
+                                key={address.id}
+                                className={`${styles.savedAddress} ${selectedAddressId === address.id ? styles.selected : ''}`}
+                                onClick={() => handleSelectSavedAddress(address)}
+                              >
+                                {address.full_address}
+                              </div>
+                            ))}
                           </div>
                         )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {formData.delivery === 'address' && (
-                    <div className={styles.addressToDelivery}>
-                      {autocompleteData?.delivery_addresses && autocompleteData.delivery_addresses.length > 0 && (
-                        <div className={styles.savedAddresses}>
-                          <h4>Сохраненные адреса</h4>
-                          {autocompleteData.delivery_addresses.map((address) => (
-                            <div 
-                              key={address.id}
-                              className={`${styles.savedAddress} ${selectedAddressId === address.id ? styles.selected : ''}`}
-                              onClick={() => handleSelectSavedAddress(address)}
-                            >
-                              {address.full_address}
+                        <div className={styles.addressFields}>
+                          <div className={styles.addressField}>
+                            <div className={styles.inputContainer}>
+                              <input 
+                                type="text" 
+                                name="address" 
+                                placeholder=" "
+                                value={formData.address || formData.pickupAddress}
+                                onChange={handleInputChange}
+                                className={styles.addressInput}
+                                required
+                              />
+                              <span className={styles.floatingLabel}>
+                                Адрес пункта выдачи <span className={styles.requiredStar}>*</span>
+                              </span>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                      <div className={styles.addressFields}>
-                        <div className={styles.addressField}>
-                          <div className={styles.inputContainer}>
-                            <input 
-                              type="text" 
-                              name="address" 
-                              placeholder=" "
-                              value={formData.address || formData.pickupAddress}
-                              onChange={handleInputChange}
-                              className={styles.addressInput}
-                              required
-                            />
-                            <span className={styles.floatingLabel}>
-                              Адрес пункта выдачи <span className={styles.requiredStar}>*</span>
-                            </span>
+                          </div>
+                          
+                          <div className={styles.inputField}>
+                            <div className={styles.inputContainer}>
+                              <input 
+                                type="text" 
+                                name="apartment" 
+                                placeholder=" " 
+                                value={formData.apartment}
+                                onChange={handleInputChange}
+                                className={styles.apartmentField}
+                              />
+                              <span className={styles.floatingLabel}>Квартира</span>
+                            </div>
                           </div>
                         </div>
                         
-                        <div className={styles.inputField}>
-                          <div className={styles.inputContainer}>
-                            <input 
-                              type="text" 
-                              name="apartment" 
-                              placeholder=" " 
-                              value={formData.apartment}
-                              onChange={handleInputChange}
-                              className={styles.apartmentField}
-                            />
-                            <span className={styles.floatingLabel}>Квартира</span>
+                        <div className={styles.mapContainer}>
+                          <YMaps>
+                            <Map defaultState={{ center: [43.585472, 39.723098], zoom: 12 }} width="100%" height="300px" onClick={handleMapClick}>
+                              <Placemark geometry={[43.585472, 39.723098]} />
+                            </Map>
+                          </YMaps>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              <div className={styles.formSection}>
+                <h2 className={styles.sectionTitle}>Способ оплаты</h2>
+                <div className={styles.formContent}>
+                  <div className={styles.paymentOptions}>
+                    <div className={styles.radioField}>
+                      <label className={styles.radioOption}>
+                        <input 
+                          type="radio" 
+                          name="payment" 
+                          value="sbp"
+                          checked={formData.payment === 'sbp'}
+                          onChange={handleRadioChange}
+                        />
+                        <div className={styles.radioContent}>
+                          <span className={styles.radioCircle}></span>
+                          <div>
+                            <p className={styles.radioTitle}>Оплата через СБП</p>
+                            <p className={styles.radioDesc}>Оплата через банковское приложение, не нужно вводить данные карты</p>
                           </div>
                         </div>
-                      </div>
-                      
-                      <div className={styles.mapContainer}>
-                        <YMaps>
-                          <Map defaultState={{ center: [43.585472, 39.723098], zoom: 12 }} width="100%" height="300px" onClick={handleMapClick}>
-                            <Placemark geometry={[43.585472, 39.723098]} />
-                          </Map>
-                        </YMaps>
-                      </div>
+                      </label>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className={styles.formSection}>
-              <h2 className={styles.sectionTitle}>Способ оплаты</h2>
-              <div className={styles.formContent}>
-                <div className={styles.paymentOptions}>
-                  <div className={styles.radioField}>
-                    <label className={styles.radioOption}>
-                      <input 
-                        type="radio" 
-                        name="payment" 
-                        value="sbp"
-                        checked={formData.payment === 'sbp'}
-                        onChange={handleRadioChange}
-                      />
-                      <div className={styles.radioContent}>
-                        <span className={styles.radioCircle}></span>
-                        <div>
-                          <p className={styles.radioTitle}>Оплата через СБП</p>
-                          <p className={styles.radioDesc}>Оплата через банковское приложение, не нужно вводить данные карты</p>
+                    
+                    <div className={styles.radioField}>
+                      <label className={styles.radioOption}>
+                        <input 
+                          type="radio" 
+                          name="payment" 
+                          value="card"
+                          checked={formData.payment === 'card'}
+                          onChange={handleRadioChange}
+                        />
+                        <div className={styles.radioContent}>
+                          <span className={styles.radioCircle}></span>
+                          <div>
+                            <p className={styles.radioTitle}>Оплата картой на сайте</p>
+                            <p className={styles.radioDesc}>После подтверждения заказа вы попадете на форму оплаты</p>
+                          </div>
                         </div>
-                      </div>
-                    </label>
-                  </div>
-                  
-                  <div className={styles.radioField}>
-                    <label className={styles.radioOption}>
-                      <input 
-                        type="radio" 
-                        name="payment" 
-                        value="card"
-                        checked={formData.payment === 'card'}
-                        onChange={handleRadioChange}
-                      />
-                      <div className={styles.radioContent}>
-                        <span className={styles.radioCircle}></span>
-                        <div>
-                          <p className={styles.radioTitle}>Оплата картой на сайте</p>
-                          <p className={styles.radioDesc}>После подтверждения заказа вы попадете на форму оплаты</p>
-                        </div>
-                      </div>
-                    </label>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <div className={styles.commentField}>
-              <div className={styles.inputContainer}>
-                <textarea 
-                  name="comment" 
-                  placeholder=" " 
-                  value={formData.comment}
-                  onChange={handleInputChange}
-                ></textarea>
-                <span className={styles.floatingLabel}>Комментарий к заказу</span>
-              </div>
-            </div>
-            
-            <p className={styles.termsText}>
-              Делая заказ, Вы даете согласие на обработку персональных данных, принимаете <br />
-            <a href="">  правилами пользования</a>,  <a href=""> политику конфиденциальности </a> и <a href=""> договор оферты.</a>
-            </p>
-          
-          
-          
-          </form>
-        </div>
-        <div className={styles.orderSummary}>
-              <h2 className={styles.summaryTitle}>Информация о заказе</h2>
               
-              <div className={styles.summaryContent}>
-                <div className={styles.summaryRow}>
-                  <div className={styles.summaryRowTitle}>
-                    <span>{cartItems.length} {cartItems.length === 1 ? 'товар' : cartItems.length < 5 ? 'товара' : 'товаров'}</span>
-                    <div className={styles.summaryRowPrice}>
-                      <span>{cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
-                     ₽
-                    </div>
-                  </div>
+              <div className={styles.commentField}>
+                <div className={styles.inputContainer}>
+                  <textarea 
+                    name="comment" 
+                    placeholder=" " 
+                    value={formData.comment}
+                    onChange={handleInputChange}
+                  ></textarea>
+                  <span className={styles.floatingLabel}>Комментарий к заказу</span>
                 </div>
-                
-                <div className={styles.summaryRow}>
-                  <div className={styles.summaryRowTitle}>
-                    <span>Скидка</span>
-                    <div className={styles.summaryRowPrice}>
-                      <span>{discount.toLocaleString()}</span>
-                    ₽
-                    </div>
-                  </div>
+              </div>
+              
+              <p className={styles.termsText}>
+                Делая заказ, Вы даете согласие на обработку персональных данных, принимаете <br />
+                <a href="">  правилами пользования</a>,  <a href=""> политику конфиденциальности </a> и <a href=""> договор оферты.</a>
+              </p>
+            </form>
+          )}
+        </div>
+        
+        <div className={styles.orderSummary}>
+          <h2 className={styles.summaryTitle}>Информация о заказе</h2>
+          
+          <div className={styles.summaryContent}>
+            <div className={styles.summaryRow}>
+              <div className={styles.summaryRowTitle}>
+                <span>{cartItems.length} {cartItems.length === 1 ? 'товар' : cartItems.length < 5 ? 'товара' : 'товаров'}</span>
+                <div className={styles.summaryRowPrice}>
+                  <span>{cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0).toLocaleString()}</span>
+                 ₽
                 </div>
-                
+              </div>
+            </div>
+            
+            <div className={styles.summaryRow}>
+              <div className={styles.summaryRowTitle}>
+                <span>Скидка</span>
+                <div className={styles.summaryRowPrice}>
+                  <span>{discount.toLocaleString()}</span>
+                ₽
+                </div>
+              </div>
+            </div>
+            
+            {isAuthenticated && (
+              <>
                 {showPromoCodeInput ? (
                   <div className={styles.promoCodeForm}>
                     <div className={styles.inputContainer}>
@@ -955,33 +946,44 @@ export default function CartPage() {
                     <span>У меня есть промокод</span>
                   </div>
                 )}
-                
-                <div className={styles.summaryRow}>
-                  <div className={styles.summaryRowTitle}>
-                    <span>Доставка</span>
-                    <span>Сочи</span>
-                  </div>
-                </div>
-                
-                <div className={styles.summaryRow}>
-                  <div className={styles.summaryRowTitle}>
-                    <span>Итого</span>
-                    <div className={styles.summaryTotal}>
-                      <span>{totalPrice.toLocaleString()}</span>
-                      <span className={styles.currency}>₽</span>
-                    </div>
-                  </div>
+              </>
+            )}
+            
+            <div className={styles.summaryRow}>
+              <div className={styles.summaryRowTitle}>
+                <span>Доставка</span>
+                <span>Сочи</span>
+              </div>
+            </div>
+            
+            <div className={styles.summaryRow}>
+              <div className={styles.summaryRowTitle}>
+                <span>Итого</span>
+                <div className={styles.summaryTotal}>
+                  <span>{totalPrice.toLocaleString()}</span>
+                  <span className={styles.currency}>₽</span>
                 </div>
               </div>
-              
-              <button type="submit" className={styles.confirmButton} onClick={handleSubmit}>
-                Подтвердить заказ
-                <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="white"/>
-                </svg>
-              </button>
             </div>
+          </div>
+          
+          <button 
+            type="button" 
+            className={styles.confirmButton} 
+            onClick={handleSubmit}
+          >
+            {isAuthenticated ? 'Подтвердить заказ' : 'Войти для оформления заказа'}
+            <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="white"/>
+            </svg>
+          </button>
+        </div>
       </div>
+
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+      />
     </div>
   );
 } 

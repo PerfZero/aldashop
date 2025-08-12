@@ -42,6 +42,7 @@ export function FavouritesProvider({ children }) {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('[FavouritesContext] API response:', data);
         const favouritesList = (data.results || data).map(item => {
           const product = item.product;
           const mainPhoto = product.photos?.find(photo => photo.main_photo) || product.photos?.[0];
@@ -49,21 +50,38 @@ export function FavouritesProvider({ children }) {
           
           return {
             id: product.id,
+            title: product.title || `Товар ${product.id}`,
             name: product.title || `Товар ${product.id}`,
-            price: product.price,
-            discountedPrice: product.discounted_price,
-                    image: mainPhoto?.photo ? `https://aldalinde.ru${mainPhoto.photo}` : '/sofa.png',
-        hoverImage: secondaryPhoto?.photo ? `https://aldalinde.ru${secondaryPhoto.photo}` : null,
-            article: product.article || `ART${product.id}`,
-            inStock: product.in_stock,
-            isBestseller: product.bestseller,
-            available_sizes: product.available_sizes || [],
-            available_colors: product.available_colors || [],
-            available_materials: product.available_materials || [],
-            description: product.description,
-            weight: product.weight,
-            delivery: product.delivery,
-            production_time: product.production_time,
+            price: product.price || 0,
+            discountedPrice: product.discounted_price || null,
+            image: mainPhoto?.photo ? `https://aldalinde.ru${mainPhoto.photo}` : '/placeholder.jpg',
+            hoverImage: secondaryPhoto?.photo ? `https://aldalinde.ru${secondaryPhoto.photo}` : null,
+            article: product.generated_article || `ART${product.id}`,
+            inStock: product.in_stock || false,
+            isBestseller: product.bestseller || false,
+            color: product.color?.title || null,
+            material: product.material?.title || null,
+            dimensions: product.sizes ? `${product.sizes.width}×${product.sizes.height}×${product.sizes.depth} см` : null,
+            weight: product.weight || null,
+            delivery: product.delivery || null,
+            production_time: product.production_time || null,
+            date_create: item.date_create || null,
+            product: {
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              discounted_price: product.discounted_price,
+              photos: product.photos,
+              in_stock: product.in_stock,
+              bestseller: product.bestseller,
+              generated_article: product.generated_article,
+              color: product.color,
+              material: product.material,
+              sizes: product.sizes,
+              weight: product.weight,
+              delivery: product.delivery,
+              production_time: product.production_time
+            }
           };
         }) || [];
         setFavourites(favouritesList);
@@ -92,6 +110,17 @@ export function FavouritesProvider({ children }) {
       localStorage.setItem('favourites', JSON.stringify(favourites));
     }
   }, [favourites, isAuthenticated]);
+
+  // Очищаем localStorage при авторизации (данные уже слиты с сервером)
+  useEffect(() => {
+    if (isAuthenticated && typeof window !== 'undefined') {
+      const favouritesData = localStorage.getItem('favourites');
+      if (favouritesData) {
+        console.log('[FavouritesContext] User authenticated, clearing localStorage favourites data');
+        localStorage.removeItem('favourites');
+      }
+    }
+  }, [isAuthenticated]);
 
   const addToFavourites = async (product) => {
     if (isAuthenticated) {
@@ -144,18 +173,36 @@ export function FavouritesProvider({ children }) {
           toast.error('Товар уже в избранном');
           return prev;
         }
-        const newFavourites = [...prev, {
-          id: product.id,
-          name: product.name || `Товар ${product.id}`,
-          price: product.price,
-          image: product.image || '/sofa.png',
-          article: product.article || `ART${product.id}`,
-          inStock: product.inStock,
-          isBestseller: product.isBestseller,
-          color: product.color,
-          material: product.material,
-          dimensions: product.dimensions,
-        }];
+                 const newFavourites = [...prev, {
+           id: product.id,
+           title: product.name || product.title || `Товар ${product.id}`,
+           name: product.name || product.title || `Товар ${product.id}`,
+           price: product.price || 0,
+           discountedPrice: product.discountedPrice || product.discounted_price || null,
+           image: product.image || '/placeholder.jpg',
+           article: product.article || product.generated_article || `ART${product.id}`,
+           inStock: product.inStock || product.in_stock || false,
+           isBestseller: product.isBestseller || product.bestseller || false,
+           color: product.color || null,
+           material: product.material || null,
+           dimensions: product.dimensions || null,
+           product: {
+             id: product.id,
+             title: product.name || product.title,
+             price: product.price,
+             discounted_price: product.discountedPrice || product.discounted_price,
+             photos: product.photos || [],
+             in_stock: product.inStock || product.in_stock,
+             bestseller: product.isBestseller || product.bestseller,
+             generated_article: product.article || product.generated_article,
+             color: product.color,
+             material: product.material,
+             sizes: product.sizes,
+             weight: product.weight,
+             delivery: product.delivery,
+             production_time: product.production_time
+           }
+         }];
         toast.success('Товар добавлен в избранное!');
         return newFavourites;
       });

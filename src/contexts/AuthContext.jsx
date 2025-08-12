@@ -13,19 +13,25 @@ export function AuthProvider({ children }) {
     const initializeAuth = async () => {
       const accessToken = localStorage.getItem('accessToken');
       
+      console.log('[AuthContext] Initializing auth, accessToken:', accessToken ? 'exists' : 'not found');
+      
       if (accessToken) {
         try {
+          console.log('[AuthContext] Checking token validity...');
           const response = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
             },
           });
 
+          console.log('[AuthContext] Profile response status:', response.status);
+
           if (response.ok) {
             const userData = await response.json();
+            console.log('[AuthContext] User data received:', userData.user_data?.email);
             setUser(userData.user_data);
             setIsAuthenticated(true);
-          } else {
+          
             const refreshTokenValue = localStorage.getItem('refreshToken');
             
             if (refreshTokenValue) {
@@ -58,11 +64,18 @@ export function AuthProvider({ children }) {
               localStorage.removeItem('accessToken');
               localStorage.removeItem('refreshToken');
             }
+          } else {
+            console.log('[AuthContext] Token invalid, removing tokens');
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
           }
         } catch (error) {
+          console.log('[AuthContext] Error checking token:', error);
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
         }
+      } else {
+        console.log('[AuthContext] No access token found, user not authenticated');
       }
       
       setIsLoading(false);
@@ -70,6 +83,69 @@ export function AuthProvider({ children }) {
 
     initializeAuth();
   }, []);
+
+  const mergeSessionData = async (accessToken) => {
+    try {
+      // Проверяем, есть ли данные в localStorage для слияния
+      const cartData = localStorage.getItem('cart');
+      const favouritesData = localStorage.getItem('favourites');
+      
+      if (!cartData && !favouritesData) {
+        console.log('[AuthContext] No session data to merge');
+        return { success: true };
+      }
+
+      console.log('[AuthContext] Merging session data...');
+      
+      // Подготавливаем данные для отправки
+      const requestBody = {};
+      
+      if (cartData) {
+        try {
+          const parsedCart = JSON.parse(cartData);
+          requestBody.cart = parsedCart;
+        } catch (error) {
+          console.error('[AuthContext] Error parsing cart data:', error);
+        }
+      }
+      
+      if (favouritesData) {
+        try {
+          const parsedFavourites = JSON.parse(favouritesData);
+          requestBody.favourites = parsedFavourites;
+        } catch (error) {
+          console.error('[AuthContext] Error parsing favourites data:', error);
+        }
+      }
+      
+      console.log('[AuthContext] Request body for merge:', requestBody);
+      
+      const response = await fetch('/api/user/merge-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('[AuthContext] Session data merged successfully:', data);
+        // Очищаем localStorage после успешного слияния
+        localStorage.removeItem('cart');
+        localStorage.removeItem('favourites');
+        return { success: true };
+      } else {
+        console.log('[AuthContext] Failed to merge session data:', data);
+        return { success: false, error: data.error };
+      }
+    } catch (error) {
+      console.error('[AuthContext] Error merging session data:', error);
+      return { success: false, error: error.message };
+    }
+  };
 
   const login = async (email, password) => {
     try {
@@ -101,6 +177,9 @@ export function AuthProvider({ children }) {
         setUser(userData.user_data);
       }
       
+      // Сливаем данные сессии с аккаунтом пользователя
+      await mergeSessionData(data.access);
+      
       setIsAuthenticated(true);
       return { success: true };
     } catch (error) {
@@ -124,7 +203,53 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || 'Ошибка регистрации');
       }
 
-      return { success: true, data };
+      // После успешной регистрации автоматически входим в систему
+      const loginResult = await login(email, password);
+      if (loginResult.success) {
+        return { success: true, data };
+      } else {
+        return { success: false, error: 'Регистрация прошла успешно, но не удалось войти в систему' };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const socialLogin = async (provider, accessToken) => {
+    try {
+      const response = await fetch(`/api/auth/social/${provider}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ access_token: accessToken }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Ошибка социальной авторизации');
+      }
+
+      localStorage.setItem('accessToken', data.access);
+      localStorage.setItem('refreshToken', data.refresh);
+      
+      const userResponse = await fetch('/api/user/profile', {
+        headers: {
+          'Authorization': `Bearer ${data.access}`,
+        },
+      });
+
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setUser(userData.user_data);
+      }
+      
+      // Сливаем данные сессии с аккаунтом пользователя
+      await mergeSessionData(data.access);
+      
+      setIsAuthenticated(true);
+      return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
     }
@@ -268,6 +393,7 @@ export function AuthProvider({ children }) {
     isLoading,
     login,
     register,
+    socialLogin,
     logout,
     resetPassword,
     changePassword,

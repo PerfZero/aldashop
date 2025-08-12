@@ -17,14 +17,9 @@ export function CartProvider({ children }) {
      // Загружаем данные корзины из API или localStorage
    useEffect(() => {
      const loadCart = async () => {
-       setIsLoading(true);
-       
-       // Очищаем localStorage от тестовых данных
-       if (typeof window !== 'undefined') {
-         localStorage.removeItem('cart');
-       }
-       
-       try {
+             setIsLoading(true);
+      
+      try {
         // Если пользователь авторизован, загружаем корзину из API
         if (isAuthenticated) {
           let headers = getAuthHeaders();
@@ -48,11 +43,11 @@ export function CartProvider({ children }) {
             // Преобразуем данные из API в формат корзины
             const apiCartItems = (data.results || data).map(item => ({
               id: item.product.id,
-              name: `Товар ${item.product.id}`,
+              name: item.product.title || `Товар ${item.product.id}`,
               price: item.product.price,
               image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
               quantity: item.quantity,
-              article: `ART${item.product.id}`,
+              article: item.product.generated_article || `ART${item.product.id}`,
               inStock: item.product.in_stock,
               isBestseller: item.product.bestseller,
               color: item.product.color?.title,
@@ -92,12 +87,23 @@ export function CartProvider({ children }) {
     loadCart();
   }, [isAuthenticated, getAuthHeaders, refreshToken]);
 
-           // Сохраняем корзину в localStorage только для неавторизованных пользователей
-    useEffect(() => {
-      if (isLoaded && !isAuthenticated && typeof window !== 'undefined') {
-        localStorage.setItem('cart', JSON.stringify(cartItems));
+             // Сохраняем корзину в localStorage только для неавторизованных пользователей
+  useEffect(() => {
+    if (isLoaded && !isAuthenticated && typeof window !== 'undefined') {
+      localStorage.setItem('cart', JSON.stringify(cartItems));
+    }
+  }, [cartItems, isLoaded, isAuthenticated]);
+
+  // Очищаем localStorage при авторизации (данные уже слиты с сервером)
+  useEffect(() => {
+    if (isAuthenticated && typeof window !== 'undefined') {
+      const cartData = localStorage.getItem('cart');
+      if (cartData) {
+        console.log('[CartContext] User authenticated, clearing localStorage cart data');
+        localStorage.removeItem('cart');
       }
-    }, [cartItems, isLoaded, isAuthenticated]);
+    }
+  }, [isAuthenticated]);
 
   // Добавление товара в корзину
   const addToCart = async (product) => {
@@ -157,11 +163,11 @@ export function CartProvider({ children }) {
             const data = await cartResponse.json();
             const apiCartItems = (data.results || data).map(item => ({
               id: item.product.id,
-              name: `Товар ${item.product.id}`,
+              name: item.product.title || `Товар ${item.product.id}`,
               price: item.product.price,
-              image: item.product.photos?.[0]?.photo ? `http://62.181.44.89${item.product.photos[0].photo}` : '/sofa.png',
+              image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
               quantity: item.quantity,
-              article: `ART${item.product.id}`,
+              article: item.product.generated_article || `ART${item.product.id}`,
               inStock: item.product.in_stock,
               isBestseller: item.product.bestseller,
               color: item.product.color?.title,
@@ -240,11 +246,11 @@ export function CartProvider({ children }) {
             const data = await cartResponse.json();
             const apiCartItems = (data.results || data).map(item => ({
               id: item.product.id,
-              name: `Товар ${item.product.id}`,
+              name: item.product.title || `Товар ${item.product.id}`,
               price: item.product.price,
               image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
               quantity: item.quantity,
-              article: `ART${item.product.id}`,
+              article: item.product.generated_article || `ART${item.product.id}`,
               inStock: item.product.in_stock,
               isBestseller: item.product.bestseller,
               color: item.product.color?.title,
@@ -366,11 +372,11 @@ export function CartProvider({ children }) {
           const data = await cartResponse.json();
           const apiCartItems = (data.results || data).map(item => ({
             id: item.product.id,
-            name: `Товар ${item.product.id}`,
+            name: item.product.title || `Товар ${item.product.id}`,
             price: item.product.price,
             image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
             quantity: item.quantity,
-            article: `ART${item.product.id}`,
+            article: item.product.generated_article || `ART${item.product.id}`,
             inStock: item.product.in_stock,
             isBestseller: item.product.bestseller,
             color: item.product.color?.title,
