@@ -49,12 +49,15 @@ export default function CategoryPage() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch filters');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[fetchFilters] API error:', errorData);
+        throw new Error(errorData.error || 'Failed to fetch filters');
       }
       const data = await response.json();
       setFilters(Array.isArray(data) ? data : []);
     } catch (error) {
-      setError('Ошибка загрузки фильтров');
+      console.error('[fetchFilters] Error:', error);
+      setError(`Ошибка загрузки фильтров: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -140,6 +143,8 @@ export default function CategoryPage() {
 
       
 
+      console.log('[fetchProducts] request body:', JSON.stringify(requestBody, null, 2));
+      
       const response = await fetch('/api/products/models-list', {
         method: 'POST',
         headers: {
@@ -149,7 +154,9 @@ export default function CategoryPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch products');
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        console.error('[fetchProducts] API error:', errorData);
+        throw new Error(errorData.error || 'Failed to fetch products');
       }
 
       const data = await response.json();
@@ -166,7 +173,8 @@ export default function CategoryPage() {
         count: data.count || 0
       }));
     } catch (error) {
-      setError('Ошибка загрузки товаров');
+      console.error('[fetchProducts] Error:', error);
+      setError(`Ошибка загрузки товаров: ${error.message}`);
     } finally {
       setProductsLoading(false);
     }

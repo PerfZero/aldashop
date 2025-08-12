@@ -116,18 +116,19 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
             
             {expandedFilters[filter.slug] && (
               <>
-                {filter.type === 'select' && filter.options && filter.slug !== 'colors' && (
+                {filter.type === 'select' && filter.options && filter.slug !== 'colors' && filter.slug !== 'in_stock' && filter.slug !== 'designer' && (
                   <div className={styles.filter__options}>
                     {filter.options.map((option, optionIndex) => (
                       <label key={optionIndex} className={styles.checkboxLabel}>
                         <input
                           type="checkbox"
-                          checked={tempFilters[filter.slug]?.includes(option.id) || false}
+                          checked={tempFilters[filter.slug]?.includes(option.id || option.title) || false}
                           onChange={(e) => {
                             const currentValues = tempFilters[filter.slug] || [];
+                            const optionValue = option.id || option.title;
                             const newValues = e.target.checked
-                              ? [...currentValues, option.id]
-                              : currentValues.filter(val => val !== option.id);
+                              ? [...currentValues, optionValue]
+                              : currentValues.filter(val => val !== optionValue);
                             setTempFilters(prev => ({
                               ...prev,
                               [filter.slug]: newValues
@@ -141,7 +142,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                   </div>
                 )}
 
-                {filter.type === 'select' && (filter.slug === 'in_stock' || filter.slug === 'designer') && (
+                {filter.type === 'checkbox' && (
                   <div className={styles.filter__checkbox}>
                     <label className={styles.checkboxLabel}>
                       <input
