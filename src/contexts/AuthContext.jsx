@@ -97,28 +97,7 @@ export function AuthProvider({ children }) {
 
       console.log('[AuthContext] Merging session data...');
       
-      // Подготавливаем данные для отправки
-      const requestBody = {};
-      
-      if (cartData) {
-        try {
-          const parsedCart = JSON.parse(cartData);
-          requestBody.cart = parsedCart;
-        } catch (error) {
-          console.error('[AuthContext] Error parsing cart data:', error);
-        }
-      }
-      
-      if (favouritesData) {
-        try {
-          const parsedFavourites = JSON.parse(favouritesData);
-          requestBody.favourites = parsedFavourites;
-        } catch (error) {
-          console.error('[AuthContext] Error parsing favourites data:', error);
-        }
-      }
-      
-      console.log('[AuthContext] Request body for merge:', requestBody);
+      console.log('[AuthContext] Making merge request with token only');
       
       const response = await fetch('/api/user/merge-data', {
         method: 'POST',
@@ -126,7 +105,6 @@ export function AuthProvider({ children }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();

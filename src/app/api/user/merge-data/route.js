@@ -6,15 +6,7 @@ export async function POST(request) {
       return Response.json({ error: 'No authorization header' }, { status: 401 });
     }
 
-    let body = {};
-    try {
-      body = await request.json();
-    } catch (error) {
-      console.log('[merge-data] Empty or invalid request body, using empty object');
-      body = {};
-    }
-    
-    console.log('[merge-data] request body:', JSON.stringify(body, null, 2));
+    console.log('[merge-data] Making request with token only');
 
     const response = await fetch('https://aldalinde.ru/api/user/merge-data/', {
       method: 'POST',
@@ -23,7 +15,6 @@ export async function POST(request) {
         'accept': 'application/json',
         'Authorization': authHeader,
       },
-      body: JSON.stringify(body),
     });
 
     console.log('[merge-data] response status:', response.status);

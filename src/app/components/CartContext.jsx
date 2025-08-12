@@ -201,14 +201,27 @@ export function CartProvider({ children }) {
     }
   };
 
-  // Удаление товара из корзины
-  const removeFromCart = async (productId, removeAll = true) => {
+  // Удаление товара из корзины (уменьшение количества или полное удаление)
+  const removeFromCart = async (productId, removeAll = false) => {
+    console.log('[CartContext] removeFromCart called:', { productId, removeAll });
+    
     if (isAuthenticated) {
       try {
         let headers = getAuthHeaders();
-        const url = removeAll 
-          ? `/api/user/cart/${productId}?all=true`
+        
+        // Определяем логику удаления
+        let shouldRemoveAll = removeAll;
+        if (!removeAll) {
+          // При обычном клике на крестик удаляем весь товар
+          shouldRemoveAll = true;
+        }
+        
+        const url = shouldRemoveAll 
+          ? `/api/user/cart/${productId}/?all=true`
           : `/api/user/cart/${productId}`;
+        
+        console.log('[CartContext] Making DELETE request to:', url);
+        console.log('[CartContext] shouldRemoveAll:', shouldRemoveAll);
           
         let response = await fetch(url, {
           method: 'DELETE',
@@ -258,7 +271,12 @@ export function CartProvider({ children }) {
               dimensions: item.product.sizes ? `${item.product.sizes.width}×${item.product.sizes.height}×${item.product.sizes.depth} см` : null,
             })) || [];
             setCartItems(apiCartItems);
-            toast.success('Товар удален из корзины');
+            
+            if (shouldRemoveAll) {
+              toast.success('Товар удален из корзины');
+            } else {
+              toast.success('Количество уменьшено');
+            }
           }
         } else {
           toast.error('Ошибка при удалении товара');
@@ -267,9 +285,30 @@ export function CartProvider({ children }) {
         toast.error('Ошибка при удалении товара');
       }
     } else {
-      setCartItems(prevItems => prevItems.filter(item => item.id !== productId));
+      // Для неавторизованных пользователей
+      setCartItems(prevItems => {
+        const currentItem = prevItems.find(item => item.id === productId);
+        if (!currentItem) return prevItems;
+        
+        // При обычном клике на крестик удаляем весь товар
+        if (!removeAll || removeAll) {
+          return prevItems.filter(item => item.id !== productId);
+        } else {
+          return prevItems.map(item => 
+            item.id === productId 
+              ? { ...item, quantity: item.quantity - 1 }
+              : item
+          );
+        }
+      });
+      
       toast.success('Товар удален из корзины');
     }
+  };
+
+  // Полное удаление товара из корзины
+  const removeAllFromCart = async (productId) => {
+    return removeFromCart(productId, true);
   };
 
   // Обновление количества товара
@@ -411,6 +450,7 @@ export function CartProvider({ children }) {
     cartItems,
     addToCart,
     removeFromCart,
+    removeAllFromCart,
     updateQuantity,
     clearCart,
     isLoading

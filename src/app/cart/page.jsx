@@ -9,7 +9,7 @@ import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
 import AuthModal from '../../components/AuthModal';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, updateQuantity, clearCart, isLoading } = useCart();
+  const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart, isLoading } = useCart();
   const { isAuthenticated, getAuthHeaders } = useAuth();
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
@@ -361,6 +361,13 @@ export default function CartPage() {
     setShowSavedAddresses(false);
   };
 
+  const handleRemoveClick = (item) => {
+    // Удаляем весь товар
+    removeFromCart(item.id);
+  };
+
+
+
   const handleMapClick = (event) => {
     const coords = event.get('coords');
     console.log('Координаты клика:', coords);
@@ -490,7 +497,8 @@ export default function CartPage() {
                   
                   <button 
                     className={styles.removeButton} 
-                    onClick={async () => await removeFromCart(item.id)}
+                    onClick={() => handleRemoveClick(item)}
+                    title="Удалить товар"
                   >
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                       <path d="M13 1L1 13M1 1L13 13" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>

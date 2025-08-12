@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import AuthModal from '../../components/AuthModal';
 
 export default function CartClient() {
-  const { cartItems, removeFromCart, updateQuantity, clearCart, isLoading } = useCart();
+  const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart, isLoading } = useCart();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   
   console.log('[CartClient] Auth state:', { isAuthenticated, authLoading });
@@ -47,6 +47,8 @@ export default function CartClient() {
   const [isPickupDropdownOpen, setIsPickupDropdownOpen] = useState(false);
   const [mapComponents, setMapComponents] = useState(null);
   const [isMapLoading, setIsMapLoading] = useState(true);
+  const [showRemoveAllModal, setShowRemoveAllModal] = useState(false);
+  const [itemToRemove, setItemToRemove] = useState(null);
 
   useEffect(() => {
     calculateTotal();
@@ -343,6 +345,25 @@ export default function CartClient() {
     }));
   };
 
+  const handleRemoveClick = (item, event) => {
+    if (event.ctrlKey || event.metaKey) {
+      // Ctrl+Click или Cmd+Click для полного удаления
+      setItemToRemove(item);
+      setShowRemoveAllModal(true);
+    } else {
+      // Обычный клик для уменьшения количества
+      removeFromCart(item.id);
+    }
+  };
+
+  const handleRemoveAll = async () => {
+    if (itemToRemove) {
+      await removeAllFromCart(itemToRemove.id);
+      setShowRemoveAllModal(false);
+      setItemToRemove(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className={styles.empty}>
@@ -423,7 +444,8 @@ export default function CartClient() {
               
               <button 
                 className={styles.removeButton} 
-                onClick={async () => await removeFromCart(item.id)}
+                onClick={(event) => handleRemoveClick(item, event)}
+                title="Удалить товар (Ctrl+Click для полного удаления)"
               >
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M13 1L1 13M1 1L13 13" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
@@ -525,6 +547,32 @@ export default function CartClient() {
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
       />
+
+      {showRemoveAllModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modal}>
+            <h3>Удалить товар полностью?</h3>
+            <p>Товар "{itemToRemove?.name}" будет полностью удален из корзины.</p>
+            <div className={styles.modalButtons}>
+              <button 
+                className={styles.modalButtonCancel}
+                onClick={() => {
+                  setShowRemoveAllModal(false);
+                  setItemToRemove(null);
+                }}
+              >
+                Отмена
+              </button>
+              <button 
+                className={styles.modalButtonConfirm}
+                onClick={handleRemoveAll}
+              >
+                Удалить
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 } 
