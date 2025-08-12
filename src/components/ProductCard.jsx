@@ -349,17 +349,19 @@ export default function ProductCard({ product }) {
         )}
         
         <button className={`${styles.card__button} ${isAdded ? styles.added : ''}`} onClick={handleAddToCart}>
-          <span className={styles.card__button_text}>В корзину</span>
-          <span className={styles.card__button_arrow}>
-            <svg width="31" height="13" viewBox="0 0 31 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M30.5303 7.03033C30.8232 6.73744 30.8232 6.26256 30.5303 5.96967L25.7574 1.1967C25.4645 0.903806 24.9896 0.903806 24.6967 1.1967C24.4038 1.48959 24.4038 1.96447 24.6967 2.25736L28.9393 6.5L24.6967 10.7426C24.4038 11.0355 24.4038 11.5104 24.6967 11.8033C24.9896 12.0962 25.4645 12.0962 25.7574 11.8033L30.5303 7.03033ZM0 7.25H30V5.75H0V7.25Z" fill="#C1A286" />
-            </svg>
-          </span>
           {!isAdded ? (
-            <img className={styles.card__button_icon} src="/cards.svg" alt="Добавить в корзину" />
+            <>
+              <span className={styles.card__button_text}>В корзину</span>
+              <span className={styles.card__button_arrow}>
+                <svg width="31" height="13" viewBox="0 0 31 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M30.5303 7.03033C30.8232 6.73744 30.8232 6.26256 30.5303 5.96967L25.7574 1.1967C25.4645 0.903806 24.9896 0.903806 24.6967 1.1967C24.4038 1.48959 24.4038 1.96447 24.6967 2.25736L28.9393 6.5L24.6967 10.7426C24.4038 11.0355 24.4038 11.5104 24.6967 11.8033C24.9896 12.0962 25.4645 12.0962 25.7574 11.8033L30.5303 7.03033ZM0 7.25H30V5.75H0V7.25Z" fill="#C1A286" />
+                </svg>
+              </span>
+              <img className={styles.card__button_icon} src="/cards.svg" alt="Добавить в корзину" />
+            </>
           ) : (
-            <svg className={styles.card__button_check} width="14" height="11" viewBox="0 0 14 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1 5.5L5 9.5L13 1.5" stroke="#C1A286" strokeWidth="1" strokeLinecap="round" />
+            <svg className={styles.card__button_check} width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4.5 10.5L8.5 14.5L16.5 6.5" stroke="#C1A286" stroke-width="2" />
             </svg>
           )}
         </button>

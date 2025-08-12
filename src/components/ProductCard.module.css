@@ -64,6 +64,13 @@
   opacity: 0;
 }
 
+.card__button_check{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50% , -50%);
+}
+
 .card__image_container_hover .card__image_main {
   opacity: 0;
 }
@@ -349,9 +356,14 @@
   margin-left: 8px;
   vertical-align: middle;
 }
-.card__button_icon,
-.card__button_check {
+.card__button_icon {
   display: none;
+}
+
+.card__button_check {
+  display: block;
+  width: 21px;
+  height: 21px;
 }
 
 .card__cart_icon {
