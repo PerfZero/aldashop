@@ -60,7 +60,7 @@ color: #fff;
 }
 
 .controls {
-max-width: 1280px;
+max-width: 1440px;
 margin: 30px auto;
 padding: 0 20px;
 display: flex;
@@ -103,7 +103,7 @@ padding-left: 30px;
 }
 
 .content {
-max-width: 1280px;
+max-width: 1440px;
 margin: 0 auto;
 gap: 20px;
 display: flex;
@@ -114,7 +114,7 @@ padding: 0 20px;
 .products {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 

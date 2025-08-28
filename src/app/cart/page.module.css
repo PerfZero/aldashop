@@ -583,7 +583,7 @@ color: #a45b38;
   }
   
 
-  @media (max-width: 1280px) {
+  @media (max-width: 1440px) {
     .cartContent {
       flex-direction: column;
     }

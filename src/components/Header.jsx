@@ -37,10 +37,40 @@ export default function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/categories');
+        // Выбираем URL в зависимости от окружения
+        const isDevelopment = process.env.NODE_ENV === 'development';
+        const apiUrl = isDevelopment 
+          ? process.env.NEXT_PUBLIC_API_URL_DEV 
+          : process.env.NEXT_PUBLIC_API_URL_PROD || '/api';
+        
+        const response = await fetch(`https://aldalinde.ru/api/products/category-list`, {
+          method: 'GET',
+          headers: {
+            'accept': 'application/json',
+          },
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
-        setCategories(data);
+        
+        if (data.error) {
+          console.error('API error:', data.error);
+          setCategories([]);
+          return;
+        }
+        
+        if (Array.isArray(data)) {
+          setCategories(data);
+        } else if (data.results && Array.isArray(data.results)) {
+          setCategories(data.results);
+        } else {
+          console.error('Unexpected data format:', data);
+          setCategories([]);
+        }
       } catch (error) {
+        console.error('Ошибка при загрузке категорий:', error);
+        setCategories([]);
       }
     };
 

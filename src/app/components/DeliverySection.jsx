@@ -6,26 +6,26 @@ import { useRef, useState } from 'react';
 import styles from '../page.module.css';
 
 // Компонент секции доставки с свайпер-слайдером
-export default function DeliverySection() {
+export default function DeliverySection({ mainPageData }) {
   const [activeSlide, setActiveSlide] = useState(0);
   const sliderRef = useRef(null);
   
-  // Данные для слайдера
+  // Данные для слайдера из API или fallback
   const slides = [
     {
       icon: "/delivery_1.svg",
-      title: "Самовывоз:",
-      text: "Вы можете забрать заказ самостоятельно из нашего склада или розничного магазина. Это бесплатно!"
+      title: mainPageData?.delivery_image_block_title1 || "Самовывоз:",
+      text: mainPageData?.delivery_image_block_text1 || "Вы можете забрать заказ самостоятельно из нашего склада или розничного магазина. Это бесплатно!"
     },
     {
         icon: "/delivery_2.svg",
-      title: "Курьерская доставка:",
-      text: "Мы доставляем заказы по всей России. Стоимость и сроки зависят от региона и выбранного способа доставки."
+      title: mainPageData?.delivery_image_block_title2 || "Курьерская доставка:",
+      text: mainPageData?.delivery_image_block_text2 || "Мы доставляем заказы по всей России. Стоимость и сроки зависят от региона и выбранного способа доставки."
     },
     {
         icon: "/delivery_3.svg",
-      title: "Сборка мебели:",
-      text: "Предоставляем услугу сборки мебели опытными мастерами — быстро и качественно."
+      title: mainPageData?.delivery_image_block_title3 || "Сборка мебели:",
+      text: mainPageData?.delivery_image_block_text3 || "Предоставляем услугу сборки мебели опытными мастерами — быстро и качественно."
     },
     {
       icon: "/icons/express.png",
@@ -71,11 +71,11 @@ export default function DeliverySection() {
     <section className={styles.delivery}>
       <div className={styles.delivery__container}>
         <div className={styles.delivery__header}>
-          <h2 className={styles.delivery__title}>Доставка</h2>
+          <h2 className={styles.delivery__title}>{mainPageData?.delivery_title || "Доставка"}</h2>
           <p className={styles.delivery__text}>
-            Мы сделаем всё возможное, чтобы доставка вашей мебели прошла гладко и без стресса. 
-            Наш опытный персонал обеспечит аккуратную транспортировку, поможет поднять покупку 
-            на этаж и, если потребуется, профессионально соберёт её.
+            {mainPageData?.delivery_text1 || "Мы сделаем всё возможное, чтобы доставка вашей мебели прошла гладко и без стресса."}
+            {mainPageData?.delivery_text2 && ` ${mainPageData.delivery_text2}`}
+            {mainPageData?.delivery_text3 && ` ${mainPageData.delivery_text3}`}
           </p>
         </div>
 

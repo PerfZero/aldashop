@@ -2,6 +2,8 @@ export async function DELETE(request, { params }) {
   try {
     const { productId } = params;
     const authHeader = request.headers.get('authorization');
+    const { searchParams } = new URL(request.url);
+    const all = searchParams.get('all');
 
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -10,7 +12,11 @@ export async function DELETE(request, { params }) {
       });
     }
 
-    const response = await fetch(`https://aldalinde.ru/api/user/cart/${productId}/`, {
+    const url = all === 'true' 
+      ? `https://aldalinde.ru/api/user/cart/${productId}/?all=true`
+      : `https://aldalinde.ru/api/user/cart/${productId}/`;
+
+    const response = await fetch(url, {
       method: 'DELETE',
       headers: {
         'Authorization': authHeader,

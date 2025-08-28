@@ -129,7 +129,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 5px;
+  justify-content: center;
 }
 
 .card__price_original {
@@ -155,6 +156,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  text-align: center;
 }
 
 .card__title_link {
@@ -162,161 +164,74 @@
   font-weight: 500;
   font-size: 18px;
   line-height: 135%;
-  margin-bottom: 5px;
+  margin-bottom: 10px;
   color: #323433;
   text-decoration: none;
+  text-align: center;
 }
 
-.card__article {
+.card__description {
   font-family: "Montserrat", sans-serif;
   font-weight: 400;
   font-size: 14px;
   line-height: 140%;
-  color: #323433;
+  color: #666;
+  margin-bottom: 5px;
+  text-align: center;
 }
 
 .card__price {
   font-family: "Tenor Sans", sans-serif;
   font-weight: 400;
   font-size: 20px;
-
   color: #323433;
-  margin: 15px 0;
-}
-
-.card__sizes {
-  margin: 10px 0;
-}
-
-.card__materials {
-  margin: 10px 0;
-}
-
-.card__options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.card__option {
-  font-family: "Montserrat", sans-serif;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 150%;
-  padding: 6px 12px;
-  border: 1px solid #e0e0e0;
-  background: #fff;
-  color: #323433;
-  border-radius: 20px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  margin: 5px 0;
   text-align: center;
-  min-width: 60px;
-}
-
-.card__option:hover {
-  border-color: #c1a286;
-  background: #f8f6f4;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(193, 162, 134, 0.2);
-}
-
-.card__option_selected {
-  border-color: #c1a286;
-  background: #c1a286;
-  color: #fff;
-}
-
-.card__option_selected:hover {
-  background: #a45b38;
-  border-color: #a45b38;
-}
-
-.card__option:disabled,
-.card__color:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.card__option:disabled:hover,
-.card__color:disabled:hover {
-  transform: none;
-  box-shadow: none;
-  border-color: #e0e0e0;
-  background: #fff;
-}
-
-.card__option_selected:disabled {
-  opacity: 0.8;
-  background: #c1a286;
-  color: #fff;
-}
-
-.card__color_selected:disabled {
-  opacity: 0.8;
-  border-color: #c1a286;
-}
-
-.card__section_title {
-  font-family: "Montserrat", sans-serif;
-  font-weight: 500;
-  font-size: 16px;
-  flex-wrap: wrap;
-  display: flex;
-  gap: 5px;
-  margin-bottom: 5px;
-  line-height: 150%;
-
-  color: #323433;
-}
-
-.card__sizes_list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.card__size,
-.card__material {
-  font-family: "Montserrat", sans-serif;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 150%;
-  flex-shrink: 0;
-  text-align: center;
-  color: #323433;
 }
 
 .card__colors {
-  margin: 5px 0 25px;
+  margin: 5px 0 5px;
+  display: flex;
+  justify-content: center;
 }
 
 .card__colors_preview {
   display: flex;
   gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .card__color {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 1px solid #ddd;
+  border: 2px solid #ddd;
   transition: transform 0.2s ease;
+  cursor: pointer;
 }
 
 .card__color:hover {
   transform: scale(1.1);
 }
 
+.card__color_selected {
+  border-color: #c1a286;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #c1a286;
+}
+
 .card__color_more {
   font-family: "Montserrat", sans-serif;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 14px;
   line-height: 150%;
   text-align: center;
   color: #999a99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
 }
 
 .card__button {
@@ -419,7 +334,7 @@
     font-size: 14px;
   }
 
-  .card__article {
+  .card__description {
     font-size: 12px;
     margin-top: 4px;
   }
@@ -450,48 +365,13 @@
     stroke: #a45b38;
   }
 
-  .card__section_title {
-    font-size: 12px;
-  }
-
-  .card__sizes,
-  .card__materials {
-    margin: 5px 0;
-  }
-
-  .card__options {
-    gap: 4px;
-    margin-top: 4px;
-  }
-
-  .card__option {
-    font-size: 11px;
-    padding: 4px 8px;
-    min-width: 50px;
-  }
-
-  .card__size,
-  .card__material {
-    font-size: 12px;
-  }
-
   .card__color {
-    width: 22px;
-    height: 22px;
-  }
-
-  .card__color_selected::after {
-    width: 6px;
-    height: 6px;
+    width: 20px;
+    height: 20px;
   }
 
   .card__price_original {
     font-size: 12px;
-  }
-
-  .card__color {
-    width: 20px;
-    height: 20px;
   }
 
   .card__color_more {
@@ -509,13 +389,12 @@
   .card__button {
     width: 100%;
     padding: 11px 0;
-
     margin-top: auto;
     justify-content: center;
     align-items: center;
     background: none;
-  
   }
+  
   .card__button span {
     display: none;
   }
@@ -528,6 +407,7 @@
   .card__button_arrow {
     display: none;
   }
+  
   .card__button_icon,
   .card__button_check {
     display: block;

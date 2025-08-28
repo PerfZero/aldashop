@@ -10,13 +10,6 @@ import { useFavourites } from '../contexts/FavouritesContext';
 export default function ProductCard({ product }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
-  const [selectedSize, setSelectedSize] = useState(() => {
-    if (product.product?.sizes) {
-      return `${product.product.sizes.width}x${product.product.sizes.height}x${product.product.sizes.depth}`;
-    }
-    return product.available_sizes?.[0]?.value || '';
-  });
-  
   const [selectedColor, setSelectedColor] = useState(() => {
     if (product.product?.color) {
       return {
@@ -32,13 +25,6 @@ export default function ProductCard({ product }) {
     }
     return {};
   });
-  const [selectedMaterial, setSelectedMaterial] = useState(() => {
-    const materialFromProduct = product.product?.material?.title;
-    if (materialFromProduct) {
-      return materialFromProduct;
-    }
-    return product.available_materials?.[0]?.title || '';
-  });
   const [currentProduct, setCurrentProduct] = useState(() => {
     const productData = product.product || {};
     const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
@@ -48,115 +34,22 @@ export default function ProductCard({ product }) {
       id: productData.id || product.id,
       modelId: product.id,
       name: product.title,
+      description: productData.short_description || product.description || 'Съемные чехлы, можно стирать в стиральной машине',
       price: productData.price || 0,
       discountedPrice: productData.discounted_price,
       image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : '/placeholder.jpg',
       hoverImage: hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null,
       inStock: productData.in_stock !== undefined ? productData.in_stock : true,
       isBestseller: productData.bestseller || false,
-      article: productData.generated_article || product.article || '',
-      available_sizes: product.available_sizes || [],
-      available_colors: product.available_colors || [],
-      available_materials: product.available_materials || []
+      available_colors: product.available_colors || []
     };
   });
   const [isLoading, setIsLoading] = useState(false);
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
 
-
-  
-  const fetchProductDetails = async (sizeId, colorId, materialId) => {
-    setIsLoading(true);
-    try {
-      const requestBody = {
-        model_id: currentProduct.modelId,
-        size_id: sizeId,
-        color_id: colorId,
-        material_id: materialId,
-      };
-      
-
-      
-      const response = await fetch('/api/products/product-detail/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (data.error) {
-        return;
-      }
-      
-      if (data) {
-        const productData = data;
-        const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
-        const secondaryPhoto = productData.photos?.find(p => !p.main_photo) || productData.photos?.[1];
-        
-         setCurrentProduct(prev => ({
-          ...prev,
-          id: productData.id || prev.id,
-          name: productData.title || prev.name || product.title,
-          price: productData.price || prev.price,
-          discountedPrice: productData.discounted_price,
-          image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : prev.image,
-          hoverImage: secondaryPhoto?.photo ? (secondaryPhoto.photo.startsWith('http') ? secondaryPhoto.photo : `https://aldalinde.ru${secondaryPhoto.photo}`) : prev.hoverImage,
-          inStock: productData.in_stock,
-          available_sizes: productData.available_sizes || prev.available_sizes,
-          available_colors: productData.available_colors || prev.available_colors,
-          available_materials: productData.available_materials || prev.available_materials,
-          article: productData.generated_article || productData.article || prev.article,
-        }));
-      }
-    } catch (error) {
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSizeChange = (size) => {
-    setSelectedSize(size.value);
-    const colorObj = currentProduct.available_colors?.find(c => c.code_hex === selectedColor.hex?.replace('#', ''));
-    const materialObj = currentProduct.available_materials?.find(m => m.title === selectedMaterial);
-    
-    fetchProductDetails(
-      size.id, 
-      colorObj?.id || null, 
-      materialObj?.id || null
-    );
-  };
-
   const handleColorChange = (color) => {
     setSelectedColor({ name: color.title || 'Цвет', hex: `#${color.code_hex}` });
-    const sizeObj = currentProduct.available_sizes?.find(s => s.value === selectedSize);
-    const materialObj = currentProduct.available_materials?.find(m => m.title === selectedMaterial);
-    
-    fetchProductDetails(
-      sizeObj?.id || null, 
-      color.id, 
-      materialObj?.id || null
-    );
-  };
-
-  const handleMaterialChange = (material) => {
-    setSelectedMaterial(material.title);
-    const sizeObj = currentProduct.available_sizes?.find(s => s.value === selectedSize);
-    const colorObj = currentProduct.available_colors?.find(c => c.code_hex === selectedColor.hex?.replace('#', ''));
-    
-    fetchProductDetails(
-      sizeObj?.id || null, 
-      colorObj?.id || null, 
-      material.id
-    );
   };
 
   const handleAddToCart = async (e) => {
@@ -171,10 +64,6 @@ export default function ProductCard({ product }) {
       price: price,
       image: currentProduct.image,
       color: selectedColor.name || 'Стандартный',
-      material: selectedMaterial || 'Не указан',
-      dimensions: selectedSize || 'Стандарт',
-      rating: 4,
-      reviews: 0,
       quantity: 1
     };
     
@@ -196,8 +85,6 @@ export default function ProductCard({ product }) {
       price: currentProduct.discountedPrice || currentProduct.price,
       image: currentProduct.image,
       color: selectedColor.name || 'Стандартный',
-      material: selectedMaterial || 'Не указан',
-      dimensions: selectedSize || 'Стандарт',
       inStock: currentProduct.inStock,
       isBestseller: currentProduct.isBestseller,
     };
@@ -206,8 +93,6 @@ export default function ProductCard({ product }) {
   };
 
   const hasDiscount = currentProduct.discountedPrice && currentProduct.discountedPrice !== null && currentProduct.price > currentProduct.discountedPrice;
-  const originalPrice = currentProduct.price?.toLocaleString('ru-RU');
-  const discountedPrice = currentProduct.discountedPrice?.toLocaleString('ru-RU');
 
   return (
     <div className={styles.card}>
@@ -278,7 +163,7 @@ export default function ProductCard({ product }) {
           <h3 className={styles.card__title}>{currentProduct.name || product.title || product.name}</h3>
         </Link>
         
-        <p className={styles.card__article}>Артикул: {currentProduct.article}</p>
+        <p className={styles.card__description}>{currentProduct.description}</p>
         
         <div className={styles.card__price_container}>
           {hasDiscount ? (
@@ -291,47 +176,10 @@ export default function ProductCard({ product }) {
           )}
         </div>
         
-        {currentProduct.available_sizes && currentProduct.available_sizes.length > 0 && (
-          <div className={styles.card__sizes}>
-            <h4 className={styles.card__section_title}>Размеры:</h4>
-            <div className={styles.card__options}>
-              {currentProduct.available_sizes.map((size) => (
-                <button
-                  key={size.id}
-                  className={`${styles.card__option} ${selectedSize === size.value ? styles.card__option_selected : ''}`}
-                  onClick={() => handleSizeChange(size)}
-                  disabled={isLoading}
-                >
-                  {size.value}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {currentProduct.available_materials && currentProduct.available_materials.length > 0 && (
-          <div className={styles.card__materials}>
-            <h4 className={styles.card__section_title}>Материалы:</h4>
-            <div className={styles.card__options}>
-              {currentProduct.available_materials.map((material) => (
-                <button
-                  key={material.id}
-                  className={`${styles.card__option} ${selectedMaterial === material.title ? styles.card__option_selected : ''}`}
-                  onClick={() => handleMaterialChange(material)}
-                  disabled={isLoading}
-                >
-                  {material.title}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-        
         {currentProduct.available_colors && currentProduct.available_colors.length > 0 && (
           <div className={styles.card__colors}>
-            <h4 className={styles.card__section_title}>Цвета:</h4>
             <div className={styles.card__colors_preview}>
-              {currentProduct.available_colors.slice(0, 4).map((color) => (
+              {currentProduct.available_colors.slice(0, 6).map((color) => (
                 <button
                   key={color.id}
                   className={`${styles.card__color} ${selectedColor.hex === `#${color.code_hex}` ? styles.card__color_selected : ''}`}
@@ -341,30 +189,14 @@ export default function ProductCard({ product }) {
                   title={color.title || 'Цвет'}
                 />
               ))}
-              {currentProduct.available_colors.length > 4 && (
-                <div className={styles.card__color_more}>+{currentProduct.available_colors.length - 4}</div>
+              {currentProduct.available_colors.length > 6 && (
+                <div className={styles.card__color_more}>+{currentProduct.available_colors.length - 6}</div>
               )}
             </div>
           </div>
         )}
         
-        <button className={`${styles.card__button} ${isAdded ? styles.added : ''}`} onClick={handleAddToCart}>
-          {!isAdded ? (
-            <>
-              <span className={styles.card__button_text}>В корзину</span>
-              <span className={styles.card__button_arrow}>
-                <svg width="31" height="13" viewBox="0 0 31 13" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M30.5303 7.03033C30.8232 6.73744 30.8232 6.26256 30.5303 5.96967L25.7574 1.1967C25.4645 0.903806 24.9896 0.903806 24.6967 1.1967C24.4038 1.48959 24.4038 1.96447 24.6967 2.25736L28.9393 6.5L24.6967 10.7426C24.4038 11.0355 24.4038 11.5104 24.6967 11.8033C24.9896 12.0962 25.4645 12.0962 25.7574 11.8033L30.5303 7.03033ZM0 7.25H30V5.75H0V7.25Z" fill="#C1A286" />
-                </svg>
-              </span>
-              <img className={styles.card__button_icon} src="/cards.svg" alt="Добавить в корзину" />
-            </>
-          ) : (
-            <svg className={styles.card__button_check} width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M4.5 10.5L8.5 14.5L16.5 6.5" stroke="#C1A286" stroke-width="2" />
-            </svg>
-          )}
-        </button>
+
       </div>
     </div>
   );

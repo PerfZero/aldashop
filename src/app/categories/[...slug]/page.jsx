@@ -210,8 +210,8 @@ export default function CategoryPage() {
             const sub = (cat.subcategories || []).find(s => s.slug === subSlug && subSlug !== 'all');
             setCategoryId(cat.id);
             setSubcategoryId(sub ? sub.id : null);
-            setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title });
-            setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title } : null);
+            setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description });
+            setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title, description: sub.description } : null);
             return;
           }
         }
@@ -225,7 +225,7 @@ export default function CategoryPage() {
           console.log('Found category:', cat);
           setCategoryId(cat.id);
           setSubcategoryId(null);
-          setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title });
+          setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description });
           setCurrentSubcategory(null);
           return;
         } else {
@@ -237,8 +237,8 @@ export default function CategoryPage() {
           if (sub) {
             setCategoryId(c.id);
             setSubcategoryId(sub.id);
-            setCurrentCategory({ id: c.id, slug: c.slug, title: c.title });
-            setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title });
+            setCurrentCategory({ id: c.id, slug: c.slug, title: c.title, description: c.description });
+            setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title, description: sub.description });
             return;
           }
         }
@@ -277,9 +277,9 @@ export default function CategoryPage() {
       
       <div className={styles.hero}>
         <div className={styles.hero__content}>
-          <h1 className={styles.hero__title}>Диваны</h1>
+          <h1 className={styles.hero__title}>{currentSubcategory?.title || currentCategory?.title || 'Категория'}</h1>
           <p className={styles.hero__description}>
-            У нас вы найдете идеальные диваны для любого интерьера: от компактных 2-местных моделей до просторных угловых вариантов. Мягкие, как облако, или умеренно жесткие — выбирайте комфорт на каждый день!
+            {currentSubcategory?.description || currentCategory?.description || 'Описание категории'}
           </p>
           <img className={styles.hero__img} src="/category.png" alt="Категория" />
         </div>
