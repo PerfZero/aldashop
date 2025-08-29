@@ -2,33 +2,11 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import styles from './page.module.css';
 import DeliverySection from './components/DeliverySection';
 import EmailVerificationModal from '../components/EmailVerificationModal';
 import ResetPasswordModal from '../components/ResetPasswordModal';
-
-
-function SearchParamsHandler({ onEmailModal, onResetModal, onParams }) {
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const key = searchParams.get('key');
-    const uidb64 = searchParams.get('uidb64');
-    const token = searchParams.get('token');
-
-    if (key) {
-      onEmailModal(true);
-    } else if (uidb64 && token) {
-      onResetModal(true);
-    }
-
-    onParams({ key, uidb64, token });
-  }, [searchParams, onEmailModal, onResetModal, onParams]);
-
-  return null;
-}
 
 function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setShowResetModal, searchParams }) {
   const [mainPageData, setMainPageData] = useState(null);
@@ -369,22 +347,30 @@ export default function Home() {
   const [showResetModal, setShowResetModal] = useState(false);
   const [params, setParams] = useState({});
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const key = urlParams.get('key');
+      const uidb64 = urlParams.get('uidb64');
+      const token = urlParams.get('token');
+
+      if (key) {
+        setShowEmailModal(true);
+      } else if (uidb64 && token) {
+        setShowResetModal(true);
+      }
+
+      setParams({ key, uidb64, token });
+    }
+  }, []);
+
   return (
-    <>
-      <Suspense fallback={<div>Загрузка...</div>}>
-        <SearchParamsHandler 
-          onEmailModal={setShowEmailModal} 
-          onResetModal={setShowResetModal}
-          onParams={setParams}
-        />
-      </Suspense>
-      <HomeContent 
-        showEmailModal={showEmailModal}
-        setShowEmailModal={setShowEmailModal}
-        showResetModal={showResetModal}
-        setShowResetModal={setShowResetModal}
-        searchParams={params}
-      />
-    </>
+    <HomeContent 
+      showEmailModal={showEmailModal}
+      setShowEmailModal={setShowEmailModal}
+      showResetModal={showResetModal}
+      setShowResetModal={setShowResetModal}
+      searchParams={params}
+    />
   );
 }
