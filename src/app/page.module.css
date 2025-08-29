@@ -124,6 +124,13 @@ color: #323433;
   position: absolute;
 }
 
+.section__links{
+
+  display: flex;
+  width: 100%;
+
+}
+
 .section:nth-child(2) img{
   height: 850px;
 }
