@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import styles from './page.module.css';
 import DeliverySection from './components/DeliverySection';
 import EmailVerificationModal from '../components/EmailVerificationModal';
@@ -365,12 +365,14 @@ export default function Home() {
   }, []);
 
   return (
-    <HomeContent 
-      showEmailModal={showEmailModal}
-      setShowEmailModal={setShowEmailModal}
-      showResetModal={showResetModal}
-      setShowResetModal={setShowResetModal}
-      searchParams={params}
-    />
+    <Suspense fallback={<div className={styles.loadingScreen}></div>}>
+      <HomeContent 
+        showEmailModal={showEmailModal}
+        setShowEmailModal={setShowEmailModal}
+        showResetModal={showResetModal}
+        setShowResetModal={setShowResetModal}
+        searchParams={params}
+      />
+    </Suspense>
   );
 }
