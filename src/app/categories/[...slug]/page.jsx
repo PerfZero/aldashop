@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
 import Image from 'next/image';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Filters from '@/components/Filters';
@@ -29,6 +30,57 @@ export default function CategoryPage() {
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [currentSubcategory, setCurrentSubcategory] = useState(null);
+
+  const [priceMin, setPriceMin] = useQueryParam('price_min', NumberParam);
+  const [priceMax, setPriceMax] = useQueryParam('price_max', NumberParam);
+  const [inStock, setInStock] = useQueryParam('in_stock', withDefault(StringParam, ''));
+  const [sort, setSort] = useQueryParam('sort', NumberParam);
+  const [material, setMaterial] = useQueryParam('material', StringParam);
+  const [colors, setColors] = useQueryParam('colors', StringParam);
+  const [bestseller, setBestseller] = useQueryParam('bestseller', withDefault(StringParam, ''));
+  
+  const [dynamicFilters, setDynamicFilters] = useState({});
+
+  const updateUrlWithDynamicFilters = (filters) => {
+    const url = new URL(window.location.href);
+    
+    Object.keys(url.searchParams).forEach(key => {
+      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller'].includes(key)) {
+        url.searchParams.delete(key);
+      }
+    });
+
+    Object.keys(filters).forEach(key => {
+      const value = filters[key];
+      if (Array.isArray(value) && value.length > 0) {
+        url.searchParams.set(key, value.join(','));
+      } else if (value !== undefined && value !== null && value !== '') {
+        url.searchParams.set(key, value.toString());
+      }
+    });
+
+    window.history.replaceState({}, '', url.toString());
+  };
+
+  const parseDynamicFiltersFromUrl = () => {
+    const url = new URL(window.location.href);
+    const dynamicFilters = {};
+    
+    Object.keys(url.searchParams).forEach(key => {
+      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller'].includes(key)) {
+        const value = url.searchParams.get(key);
+        if (value && value.includes(',')) {
+          dynamicFilters[key] = value.split(',').map(v => parseInt(v));
+        } else if (value) {
+          dynamicFilters[key] = [parseInt(value)];
+        }
+      }
+    });
+    
+    return dynamicFilters;
+  };
+
+
 
   const fetchFilters = async () => {
     try {
@@ -183,9 +235,35 @@ export default function CategoryPage() {
   
 
   const handleFiltersApply = (newFilters) => {
-    
+    console.log('Применяем фильтры:', newFilters);
     setAppliedFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
+    
+    setPriceMin(newFilters.price?.min);
+    setPriceMax(newFilters.price?.max);
+    setInStock(newFilters.in_stock ? 'true' : '');
+    setSort(newFilters.sort);
+    setMaterial(newFilters.material?.[0]);
+    setColors(newFilters.colors?.join(','));
+    setBestseller(newFilters.bestseller ? 'true' : '');
+    
+    const dynamicFilterData = {};
+    Object.keys(newFilters).forEach(key => {
+      if (!['price', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'sizes', 'search'].includes(key)) {
+        dynamicFilterData[key] = newFilters[key];
+      }
+    });
+    setDynamicFilters(dynamicFilterData);
+    updateUrlWithDynamicFilters(dynamicFilterData);
+    
+    console.log('URL параметры после обновления:');
+    console.log('priceMin:', newFilters.price?.min);
+    console.log('priceMax:', newFilters.price?.max);
+    console.log('inStock:', newFilters.in_stock ? 'true' : '');
+    console.log('material:', newFilters.material?.[0]);
+    console.log('colors:', newFilters.colors?.join(','));
+    console.log('dynamicFilters:', dynamicFilterData);
+    
     fetchProducts(newFilters, 1);
   };
 
@@ -259,6 +337,54 @@ export default function CategoryPage() {
     fetchProducts(appliedFilters, 1);
   }, [sortBy, categoryId, subcategoryId]);
 
+  useEffect(() => {
+    const urlDynamicFilters = parseDynamicFiltersFromUrl();
+    console.log('Динамические фильтры из URL:', urlDynamicFilters);
+    setDynamicFilters(urlDynamicFilters);
+  }, []);
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const urlDynamicFilters = parseDynamicFiltersFromUrl();
+      setDynamicFilters(urlDynamicFilters);
+    };
+
+    window.addEventListener('popstate', handleUrlChange);
+    return () => window.removeEventListener('popstate', handleUrlChange);
+  }, []);
+
+  useEffect(() => {
+    console.log('URL параметры изменились:', { priceMin, priceMax, inStock, sort, material, colors, bestseller, dynamicFilters });
+    
+    if (filters.length > 0) {
+      const urlFilters = {
+        price: priceMin || priceMax ? { min: priceMin, max: priceMax } : undefined,
+        in_stock: inStock === 'true',
+        sort: sort,
+        material: material ? [material] : undefined,
+        colors: colors ? colors.split(',').map(c => parseInt(c)) : undefined,
+        bestseller: bestseller === 'true',
+        ...dynamicFilters
+      };
+      
+      const hasFilters = Object.values(urlFilters).some(value => 
+        value !== undefined && value !== false && (!Array.isArray(value) || value.length > 0)
+      );
+      
+      console.log('Собранные фильтры из URL:', urlFilters);
+      console.log('Есть ли фильтры:', hasFilters);
+      
+      if (hasFilters) {
+        setAppliedFilters(urlFilters);
+        fetchProducts(urlFilters, 1);
+      } else if (Object.keys(dynamicFilters).length === 0 && !priceMin && !priceMax && !inStock && !sort && !material && !colors && !bestseller) {
+        setAppliedFilters({});
+      }
+    }
+  }, [filters, priceMin, priceMax, inStock, sort, material, colors, bestseller, dynamicFilters]);
+
+
+
   const breadcrumbs = [
     { text: 'Главная', href: '/' },
     ...(currentCategory ? [{ text: currentCategory.title, href: `/categories/${currentCategory.slug}` }] : []),
@@ -308,6 +434,7 @@ export default function CategoryPage() {
           loading={loading}
           error={error}
           onApply={handleFiltersApply}
+          appliedFilters={appliedFilters}
         />
         <div className={styles.products}>
           {productsLoading && products.length === 0 ? (

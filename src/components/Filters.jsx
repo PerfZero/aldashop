@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import styles from './Filters.module.css';
 
-export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply }) {
-  const [inStockDelivery, setInStockDelivery] = useState(false);
-  const [tempFilters, setTempFilters] = useState({});
+export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {} }) {
+  const [inStockDelivery, setInStockDelivery] = useState(appliedFilters.in_stock || false);
+  const [tempFilters, setTempFilters] = useState(appliedFilters);
   const [expandedFilters, setExpandedFilters] = useState({});
 
   const filteredFilters = filters.filter(filter => filter.slug !== 'sort');
+
+  useEffect(() => {
+    setInStockDelivery(appliedFilters.in_stock || false);
+    setTempFilters(appliedFilters);
+  }, [appliedFilters]);
 
   const toggleFilter = (filterSlug) => {
     setExpandedFilters(prev => ({
@@ -21,9 +26,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
     setTempFilters({});
     setInStockDelivery(false);
     
-    const resetFilters = {
-      in_stock: false
-    };
+    const resetFilters = {};
     
     if (onApply) {
       onApply(resetFilters);
@@ -36,9 +39,12 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
 
   const handleApply = () => {
     const finalFilters = {
-      ...tempFilters,
-      in_stock: inStockDelivery
+      ...tempFilters
     };
+    
+    if (inStockDelivery) {
+      finalFilters.in_stock = true;
+    }
     
     if (onApply) {
       onApply(finalFilters);

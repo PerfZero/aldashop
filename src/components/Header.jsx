@@ -37,13 +37,7 @@ export default function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // Выбираем URL в зависимости от окружения
-        const isDevelopment = process.env.NODE_ENV === 'development';
-        const apiUrl = isDevelopment 
-          ? process.env.NEXT_PUBLIC_API_URL_DEV 
-          : process.env.NEXT_PUBLIC_API_URL_PROD || '/api';
-        
-        const response = await fetch(`https://aldalinde.ru/api/products/category-list`, {
+        const response = await fetch(`/api/categories`, {
           method: 'GET',
           headers: {
             'accept': 'application/json',

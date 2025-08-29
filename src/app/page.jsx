@@ -300,17 +300,7 @@ function HomeContent() {
                     <span className={styles.about__stat_number}>{mainPageData?.numbers_block_val3 || '300+'}</span>
                     <span className={styles.about__stat_text}>{mainPageData?.numbers_block_title3 || 'товаров'}</span>
                   </div>
-                  {/* Отладка */}
-                  <div style={{fontSize: '12px', color: 'red', marginTop: '10px'}}>
-                    Debug: {JSON.stringify({
-                      val1: mainPageData?.numbers_block_val1,
-                      title1: mainPageData?.numbers_block_title1,
-                      val2: mainPageData?.numbers_block_val2,
-                      title2: mainPageData?.numbers_block_title2,
-                      val3: mainPageData?.numbers_block_val3,
-                      title3: mainPageData?.numbers_block_title3
-                    })}
-                  </div>
+
                 </div>
               </div>
             </div>
@@ -319,7 +309,7 @@ function HomeContent() {
 
         <DeliverySection mainPageData={mainPageData} />
 
-        <section className={styles.payment}>
+        <section id="payment" className={styles.payment}>
           <div className={styles.payment__container}>
             <h2 className={styles.payment__title}>{mainPageData?.payment_title || 'Как оплатить заказ?'}</h2>
             <div className={styles.payment__row}>

@@ -59,8 +59,8 @@ const Footer = () => {
         <div className={styles.footerSection}>
           <h3>Доставка и оплата</h3>
           <nav className={styles.footerNav}>
-            <Link href="/delivery">Доставка</Link>
-            <Link href="/payment">Варианты оплаты</Link>
+            <Link href="/#delivery">Доставка</Link>
+            <Link href="/#payment">Варианты оплаты</Link>
           </nav>
         </div>
 
@@ -126,7 +126,6 @@ const Footer = () => {
         <nav className={styles.bottomNav}>
           <Link href="/terms">Правила пользования</Link>
           <Link href="/privacy">Политика конфиденциальности</Link>
-          <Link href="/cookies">Настройки файлов cookie</Link>
         </nav>
       </div>
     </footer>

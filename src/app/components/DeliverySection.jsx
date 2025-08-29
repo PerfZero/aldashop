@@ -23,7 +23,7 @@ export default function DeliverySection({ mainPageData }) {
   };
 
   return (
-    <section className={styles.delivery}>
+    <section id="delivery" className={styles.delivery}>
       <div className={styles.delivery__container}>
         <div className={styles.delivery__header}>
           <h2 className={styles.delivery__title}>{mainPageData?.delivery_title || "Доставка"}</h2>
