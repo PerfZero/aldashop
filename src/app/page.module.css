@@ -124,6 +124,32 @@ color: #323433;
   position: absolute;
 }
 
+.section:nth-child(2) img{
+  height: 850px;
+}
+
+.section:nth-child(4) img{
+  height: 850px;
+}
+
+.section__link{
+  max-width: 1720px;
+  margin: 0 auto;
+  
+}
+
+.section__row h2{
+  color:#fff;
+}
+
+.section__container:hover h2{
+  color:#A45B38;
+}
+
+.section__container:hover .section__row h2{
+  color:#fff;
+}
+
 
 .about__image img{
   height: 353px;
@@ -239,12 +265,12 @@ position: relative;
 
 
 .section:nth-child(2) .section__content{
-  max-width: 400px;
+  max-width: 500px;
 }
 
 
 .section:nth-child(4) .section__content{
-  max-width: 400px;
+  max-width: 500px;
 }
 
 
