@@ -10,12 +10,8 @@ import EmailVerificationModal from '../components/EmailVerificationModal';
 import ResetPasswordModal from '../components/ResetPasswordModal';
 
 
-function HomeContent() {
+function SearchParamsHandler({ onEmailModal, onResetModal }) {
   const searchParams = useSearchParams();
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [showResetModal, setShowResetModal] = useState(false);
-  const [mainPageData, setMainPageData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const key = searchParams.get('key');
@@ -23,11 +19,18 @@ function HomeContent() {
     const token = searchParams.get('token');
 
     if (key) {
-      setShowEmailModal(true);
+      onEmailModal(true);
     } else if (uidb64 && token) {
-      setShowResetModal(true);
+      onResetModal(true);
     }
-  }, [searchParams]);
+  }, [searchParams, onEmailModal, onResetModal]);
+
+  return null;
+}
+
+function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setShowResetModal }) {
+  const [mainPageData, setMainPageData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchMainPageData = async () => {
@@ -357,9 +360,23 @@ function HomeContent() {
 }
 
 export default function Home() {
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showResetModal, setShowResetModal] = useState(false);
+
   return (
-    <Suspense fallback={<div>Загрузка...</div>}>
-      <HomeContent />
-    </Suspense>
+    <>
+      <Suspense fallback={<div>Загрузка...</div>}>
+        <SearchParamsHandler 
+          onEmailModal={setShowEmailModal} 
+          onResetModal={setShowResetModal} 
+        />
+      </Suspense>
+      <HomeContent 
+        showEmailModal={showEmailModal}
+        setShowEmailModal={setShowEmailModal}
+        showResetModal={showResetModal}
+        setShowResetModal={setShowResetModal}
+      />
+    </>
   );
 }
