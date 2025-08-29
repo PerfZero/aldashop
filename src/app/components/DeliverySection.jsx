@@ -41,7 +41,7 @@ export default function DeliverySection({ mainPageData }) {
           </button>
           
           <div className={styles.delivery__progress}>
-            <div className={styles.delivery__progress_bar} style={{width: `${((activeTextIndex + 1) / deliveryTexts.length) * 100}%`}}></div>
+            <div className={styles.delivery__progress_indicator} style={{left: `${(activeTextIndex / (deliveryTexts.length - 1)) * 100}%`}}></div>
           </div>
           
           <button className={styles.delivery__arrow} onClick={nextText}>

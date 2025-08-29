@@ -15,6 +15,7 @@ function HomeContent() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const [mainPageData, setMainPageData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const key = searchParams.get('key');
@@ -31,6 +32,7 @@ function HomeContent() {
   useEffect(() => {
     const fetchMainPageData = async () => {
       try {
+        setIsLoading(true);
         const response = await fetch('/api/main-page-info');
         if (!response.ok) {
           throw new Error('Ошибка загрузки данных');
@@ -39,11 +41,17 @@ function HomeContent() {
         setMainPageData(data);
       } catch (error) {
         console.error('Ошибка загрузки данных главной страницы:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchMainPageData();
   }, []);
+
+  if (isLoading) {
+    return <div className={styles.loadingScreen}></div>;
+  }
 
   return (
     <div className={styles.page}>
@@ -61,7 +69,9 @@ function HomeContent() {
           style={{
             backgroundImage: mainPageData?.main_image ? `url(${mainPageData.main_image})` : 'url("/main.png")',
             backgroundSize: 'cover',
-            backgroundPosition: 'center'
+            backgroundPosition: 'center',
+            backgroundBlendMode: 'overlay',
+            backgroundColor: 'rgba(0, 0, 0, 0.2)'
           }}
         >
           <div className={styles.promo_container}>
@@ -286,7 +296,21 @@ function HomeContent() {
                     <span className={styles.about__stat_number}>{mainPageData?.numbers_block_val2 || '45 000+'}</span>
                     <span className={styles.about__stat_text}>{mainPageData?.numbers_block_title2 || 'довольных покупателей'}</span>
                   </div>
-                 
+                  <div className={styles.about__stat}>
+                    <span className={styles.about__stat_number}>{mainPageData?.numbers_block_val3 || '300+'}</span>
+                    <span className={styles.about__stat_text}>{mainPageData?.numbers_block_title3 || 'товаров'}</span>
+                  </div>
+                  {/* Отладка */}
+                  <div style={{fontSize: '12px', color: 'red', marginTop: '10px'}}>
+                    Debug: {JSON.stringify({
+                      val1: mainPageData?.numbers_block_val1,
+                      title1: mainPageData?.numbers_block_title1,
+                      val2: mainPageData?.numbers_block_val2,
+                      title2: mainPageData?.numbers_block_title2,
+                      val3: mainPageData?.numbers_block_val3,
+                      title3: mainPageData?.numbers_block_title3
+                    })}
+                  </div>
                 </div>
               </div>
             </div>
