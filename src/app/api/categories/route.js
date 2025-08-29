@@ -18,7 +18,7 @@ export async function GET() {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      return Response.json({ error: 'Внешний API вернул не JSON' }, { status: 500 });
+      return Response.json({ error: 'Внешний API 1вернул не JSON' }, { status: 500 });
     }
 
     const data = await response.json();
