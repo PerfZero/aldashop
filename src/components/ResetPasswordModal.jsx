@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import styles from './ResetPasswordModal.module.css';
 
-export default function ResetPasswordModal({ isOpen, onClose }) {
-  const searchParams = useSearchParams();
+export default function ResetPasswordModal({ isOpen, onClose, uidb64, token }) {
   const [status, setStatus] = useState('form');
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -14,9 +12,6 @@ export default function ResetPasswordModal({ isOpen, onClose }) {
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-
-  const uidb64 = searchParams.get('uidb64');
-  const token = searchParams.get('token');
 
   useEffect(() => {
     if (!uidb64 || !token) {

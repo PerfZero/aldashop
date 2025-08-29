@@ -10,7 +10,7 @@ import EmailVerificationModal from '../components/EmailVerificationModal';
 import ResetPasswordModal from '../components/ResetPasswordModal';
 
 
-function SearchParamsHandler({ onEmailModal, onResetModal }) {
+function SearchParamsHandler({ onEmailModal, onResetModal, onParams }) {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -23,12 +23,14 @@ function SearchParamsHandler({ onEmailModal, onResetModal }) {
     } else if (uidb64 && token) {
       onResetModal(true);
     }
-  }, [searchParams, onEmailModal, onResetModal]);
+
+    onParams({ key, uidb64, token });
+  }, [searchParams, onEmailModal, onResetModal, onParams]);
 
   return null;
 }
 
-function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setShowResetModal }) {
+function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setShowResetModal, searchParams }) {
   const [mainPageData, setMainPageData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -60,11 +62,14 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
     <div className={styles.page}>
       <EmailVerificationModal 
         isOpen={showEmailModal} 
-        onClose={() => setShowEmailModal(false)} 
+        onClose={() => setShowEmailModal(false)}
+        key={searchParams?.key}
       />
       <ResetPasswordModal 
         isOpen={showResetModal} 
-        onClose={() => setShowResetModal(false)} 
+        onClose={() => setShowResetModal(false)}
+        uidb64={searchParams?.uidb64}
+        token={searchParams?.token}
       />
       <main className={styles.main}>
         <section 
@@ -362,13 +367,15 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
 export default function Home() {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
+  const [params, setParams] = useState({});
 
   return (
     <>
       <Suspense fallback={<div>Загрузка...</div>}>
         <SearchParamsHandler 
           onEmailModal={setShowEmailModal} 
-          onResetModal={setShowResetModal} 
+          onResetModal={setShowResetModal}
+          onParams={setParams}
         />
       </Suspense>
       <HomeContent 
@@ -376,6 +383,7 @@ export default function Home() {
         setShowEmailModal={setShowEmailModal}
         showResetModal={showResetModal}
         setShowResetModal={setShowResetModal}
+        searchParams={params}
       />
     </>
   );

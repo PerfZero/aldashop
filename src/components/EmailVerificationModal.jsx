@@ -1,21 +1,17 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
 import styles from './EmailVerificationModal.module.css';
 
-export default function EmailVerificationModal({ isOpen, onClose }) {
-  const searchParams = useSearchParams();
+export default function EmailVerificationModal({ isOpen, onClose, key }) {
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    const key = searchParams.get('key');
-    
     if (key) {
       verifyEmail(key);
     }
-  }, [searchParams]);
+  }, [key]);
 
   const verifyEmail = async (key) => {
     try {
