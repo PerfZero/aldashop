@@ -60,7 +60,7 @@ color: #fff;
 }
 
 .controls {
-max-width: 1440px;
+max-width: 1728px;
 margin: 30px auto;
 padding: 0 20px;
 display: flex;
@@ -103,7 +103,7 @@ padding-left: 30px;
 }
 
 .content {
-max-width: 1440px;
+max-width: 1728px;
 margin: 0 auto;
 gap: 20px;
 display: flex;
