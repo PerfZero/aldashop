@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams } from 'next/navigation';
 import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
 import Image from 'next/image';
@@ -10,7 +10,7 @@ import ProductCard from '@/components/ProductCard';
 import SortSelect from '@/components/SortSelect';
 import styles from './page.module.css';
 
-export default function CategoryPage() {
+function CategoryPageContent() {
   const params = useParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
   const [sortBy, setSortBy] = useState(null);
@@ -464,5 +464,13 @@ export default function CategoryPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function CategoryPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CategoryPageContent />
+    </Suspense>
   );
 }
