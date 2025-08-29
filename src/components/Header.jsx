@@ -37,12 +37,7 @@ export default function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch(`/api/categories`, {
-          method: 'GET',
-          headers: {
-            'accept': 'application/json',
-          },
-        });
+        const response = await fetch(`/api/categories`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
