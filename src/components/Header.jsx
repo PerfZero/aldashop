@@ -500,8 +500,29 @@ export default function Header() {
                   }
                 }
 
+                const getFlagType = (item) => {
+                  switch (item) {
+                    case "Новинки":
+                      return "new_products_flag_category";
+                    case "Бестселлеры":
+                      return "bestseller_flag_category";
+                    case "Распродажа":
+                      return "sale_flag_category";
+                    default:
+                      return "new_products_flag_category";
+                  }
+                };
+
+                const flagType = getFlagType(item);
+                const currentCategory = categories.find(cat => cat.id === isDropdownOpen);
+                const categoryId = currentCategory ? currentCategory.id : null;
+
                 return (
-                  <div key={index} className={styles.dropdown__rightItem}>
+                  <Link
+                    key={index}
+                    href={`/categories?flag_type=${flagType}&category_id=${categoryId}`}
+                    className={styles.dropdown__rightItem}
+                  >
                     <img
                       src={imageSrc}
                       alt={item}
@@ -510,10 +531,7 @@ export default function Header() {
                         e.target.src = `/images/${item.toLowerCase()}.png`;
                       }}
                     />
-                    <Link
-                      href={`/categories/trending/${item.toLowerCase().replace(/\s+/g, "-")}`}
-                      className={styles.dropdown__rightLink}
-                    >
+                    <div className={styles.dropdown__rightLink}>
                       {item}
                       <svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
@@ -521,8 +539,8 @@ export default function Header() {
                           fill="#C1A286"
                         />
                       </svg>
-                    </Link>
-                  </div>
+                    </div>
+                  </Link>
                 );
               })}
             </div>

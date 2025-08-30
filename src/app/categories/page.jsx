@@ -1,18 +1,19 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
-import Image from 'next/image';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Filters from '@/components/Filters';
 import ProductCard from '@/components/ProductCard';
 import SortSelect from '@/components/SortSelect';
-import styles from './page.module.css';
+import styles from './[...slug]/page.module.css';
 
-function CategoryPageContent() {
-  const params = useParams();
-  const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
+function CategoriesPageContent() {
+  const searchParams = useSearchParams();
+  const flagType = searchParams.get('flag_type');
+  const categoryId = searchParams.get('category_id');
+  
   const [sortBy, setSortBy] = useState(null);
   const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState([]);
@@ -26,10 +27,7 @@ function CategoryPageContent() {
     page_size: 12,
     count: 0
   });
-  const [categoryId, setCategoryId] = useState(null);
-  const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
-  const [currentSubcategory, setCurrentSubcategory] = useState(null);
 
   const [priceMin, setPriceMin] = useQueryParam('price_min', NumberParam);
   const [priceMax, setPriceMax] = useQueryParam('price_max', NumberParam);
@@ -41,11 +39,24 @@ function CategoryPageContent() {
   
   const [dynamicFilters, setDynamicFilters] = useState({});
 
+  const getFlagTitle = (flagType) => {
+    switch (flagType) {
+      case 'new_products_flag_category':
+        return 'Новинки';
+      case 'bestseller_flag_category':
+        return 'Бестселлеры';
+      case 'sale_flag_category':
+        return 'Распродажа';
+      default:
+        return 'Товары';
+    }
+  };
+
   const updateUrlWithDynamicFilters = (filters) => {
     const url = new URL(window.location.href);
     
     Object.keys(url.searchParams).forEach(key => {
-      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller'].includes(key)) {
+      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'flag_type', 'category_id'].includes(key)) {
         url.searchParams.delete(key);
       }
     });
@@ -67,7 +78,7 @@ function CategoryPageContent() {
     const dynamicFilters = {};
     
     Object.keys(url.searchParams).forEach(key => {
-      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller'].includes(key)) {
+      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'flag_type', 'category_id'].includes(key)) {
         const value = url.searchParams.get(key);
         if (value && value.includes(',')) {
           dynamicFilters[key] = value.split(',').map(v => parseInt(v));
@@ -80,18 +91,17 @@ function CategoryPageContent() {
     return dynamicFilters;
   };
 
-
-
   const fetchFilters = async () => {
     try {
       setLoading(true);
-      if (!categoryId && !subcategoryId) return;
+      
       const requestBody = {};
-      if (subcategoryId) {
-        requestBody.subcategory_id = subcategoryId;
-      } else if (categoryId) {
-        requestBody.category_id = categoryId;
+      if (categoryId) {
+        requestBody.category_id = parseInt(categoryId);
+      } else {
+        requestBody.subcategory_id = null;
       }
+      
       const response = await fetch('/api/products/subcategory-filters', {
         method: 'POST',
         headers: {
@@ -120,19 +130,17 @@ function CategoryPageContent() {
       setProductsLoading(true);
       
       const priceFilter = filters.find(f => f.slug === 'price');
-      const sizesFilter = filters.find(f => f.slug === 'sizes');
       const defaultMinPrice = priceFilter?.min || 0;
       const defaultMaxPrice = priceFilter?.max || 100000;
       
       const requestBody = {
         page: page - 1,
-        limit: pagination.page_size
+        limit: pagination.page_size,
+        flag_type: flagType
       };
 
-      if (subcategoryId) {
-        requestBody.subcategory_id = subcategoryId;
-      } else if (categoryId) {
-        requestBody.category_id = categoryId;
+      if (categoryId) {
+        requestBody.category_id = parseInt(categoryId);
       }
 
       if (typeof sortBy === 'number') {
@@ -193,8 +201,6 @@ function CategoryPageContent() {
         }
       }
 
-      
-
       console.log('[fetchProducts] request body:', JSON.stringify(requestBody, null, 2));
       
       const response = await fetch('/api/products/models-list', {
@@ -232,8 +238,6 @@ function CategoryPageContent() {
     }
   };
 
-  
-
   const handleFiltersApply = (newFilters) => {
     console.log('Применяем фильтры:', newFilters);
     setAppliedFilters(newFilters);
@@ -256,14 +260,6 @@ function CategoryPageContent() {
     setDynamicFilters(dynamicFilterData);
     updateUrlWithDynamicFilters(dynamicFilterData);
     
-    console.log('URL параметры после обновления:');
-    console.log('priceMin:', newFilters.price?.min);
-    console.log('priceMax:', newFilters.price?.max);
-    console.log('inStock:', newFilters.in_stock ? 'true' : '');
-    console.log('material:', newFilters.material?.[0]);
-    console.log('colors:', newFilters.colors?.join(','));
-    console.log('dynamicFilters:', dynamicFilterData);
-    
     fetchProducts(newFilters, 1);
   };
 
@@ -274,68 +270,34 @@ function CategoryPageContent() {
   };
 
   useEffect(() => {
-    const resolveIds = async () => {
+    const fetchCategoryInfo = async () => {
+      if (!categoryId) return;
+      
       try {
-        const res = await fetch('/api/categories');
-        const data = await res.json();
-        const slugArr = Array.isArray(params?.slug) ? params.slug : params?.slug ? [params.slug] : [];
-        if (!slugArr || slugArr.length === 0) return;
-
-        if (slugArr.length >= 2) {
-          const [catSlug, subSlug] = slugArr;
-          const cat = data.find(c => c.slug === catSlug);
-          if (cat) {
-            const sub = (cat.subcategories || []).find(s => s.slug === subSlug && subSlug !== 'all');
-            setCategoryId(cat.id);
-            setSubcategoryId(sub ? sub.id : null);
-            setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description });
-            setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title, description: sub.description } : null);
-            return;
-          }
+        const response = await fetch('/api/categories');
+        const categories = await response.json();
+        const category = categories.find(c => c.id === parseInt(categoryId));
+        if (category) {
+          setCurrentCategory(category);
         }
-
-        const currentSlug = slugArr[0];
-        console.log('Looking for category with slug:', currentSlug);
-        console.log('Available categories:', data.map(c => ({ id: c.id, slug: c.slug, title: c.title })));
-        
-        const cat = data.find(c => c.slug === currentSlug);
-        if (cat) {
-          console.log('Found category:', cat);
-          setCategoryId(cat.id);
-          setSubcategoryId(null);
-          setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description });
-          setCurrentSubcategory(null);
-          return;
-        } else {
-          console.log('Category not found for slug:', currentSlug);
-        }
-
-        for (const c of data) {
-          const sub = (c.subcategories || []).find(s => s.slug === currentSlug);
-          if (sub) {
-            setCategoryId(c.id);
-            setSubcategoryId(sub.id);
-            setCurrentCategory({ id: c.id, slug: c.slug, title: c.title, description: c.description });
-            setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title, description: sub.description });
-            return;
-          }
-        }
-      } catch (e) {}
+      } catch (error) {
+        console.error('Ошибка загрузки информации о категории:', error);
+      }
     };
-    resolveIds();
-  }, [slugDep]);
+
+    fetchCategoryInfo();
+  }, [categoryId]);
 
   useEffect(() => {
-    if (categoryId === null && subcategoryId === null) return;
     fetchFilters();
-  }, [categoryId, subcategoryId]);
+  }, [categoryId]);
 
   useEffect(() => {
-    if (categoryId === null && subcategoryId === null) return;
+    if (!flagType) return;
     setProducts([]);
     setPagination(prev => ({ ...prev, page: 1 }));
     fetchProducts(appliedFilters, 1);
-  }, [sortBy, categoryId, subcategoryId]);
+  }, [sortBy, categoryId, flagType]);
 
   useEffect(() => {
     const urlDynamicFilters = parseDynamicFiltersFromUrl();
@@ -383,19 +345,25 @@ function CategoryPageContent() {
     }
   }, [filters, priceMin, priceMax, inStock, sort, material, colors, bestseller, dynamicFilters]);
 
-
-
   const breadcrumbs = [
     { text: 'Главная', href: '/' },
     ...(currentCategory ? [{ text: currentCategory.title, href: `/categories/${currentCategory.slug}` }] : []),
-    ...(currentSubcategory
-      ? [{ text: currentSubcategory.title, href: `/categories/${currentCategory?.slug}/${currentSubcategory.slug}` }]
-      : currentCategory ? [{ text: 'Все товары', href: `/categories/${currentCategory.slug}/all` }] : []),
+    { text: getFlagTitle(flagType), href: '#' },
   ];
 
   const transformProduct = (product) => {
     return product;
   };
+
+  if (!flagType) {
+    return (
+      <main className={styles.page}>
+        <div className={styles.noProducts}>
+          Неверные параметры запроса
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className={styles.page}>
@@ -403,9 +371,12 @@ function CategoryPageContent() {
       
       <div className={styles.hero}>
         <div className={styles.hero__content}>
-          <h1 className={styles.hero__title}>{currentSubcategory?.title || currentCategory?.title || 'Категория'}</h1>
+          <h1 className={styles.hero__title}>
+            {getFlagTitle(flagType)}
+            {currentCategory && ` - ${currentCategory.title}`}
+          </h1>
           <p className={styles.hero__description}>
-            {currentSubcategory?.description || currentCategory?.description || 'Описание категории'}
+            {currentCategory?.description || 'Описание категории'}
           </p>
           <img className={styles.hero__img} src="/category.png" alt="Категория" />
         </div>
@@ -467,10 +438,10 @@ function CategoryPageContent() {
   );
 }
 
-export default function CategoryPage() {
+export default function CategoriesPage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <CategoryPageContent />
+      <CategoriesPageContent />
     </Suspense>
   );
 }
