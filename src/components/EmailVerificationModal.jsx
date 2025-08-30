@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import styles from './EmailVerificationModal.module.css';
 
-export default function EmailVerificationModal({ isOpen, onClose, key }) {
+export default function EmailVerificationModal({ isOpen, onClose, verificationKey }) {
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    if (key) {
-      verifyEmail(key);
+    if (verificationKey) {
+      verifyEmail(verificationKey);
     }
-  }, [key]);
+  }, [verificationKey]);
 
   const verifyEmail = async (key) => {
     try {

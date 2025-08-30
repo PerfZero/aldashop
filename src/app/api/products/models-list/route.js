@@ -1,41 +1,43 @@
-export async function GET() {
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const categoryId = searchParams.get('category_id');
+  const subcategoryId = searchParams.get('subcategory_id');
+
   try {
-    const response = await fetch('https://aldalinde.ru/api/products/models-list/', {
+    let url = `${process.env.NEXT_PUBLIC_API_URL}/products/models-list/`;
+    const params = new URLSearchParams();
+
+    if (categoryId && categoryId !== 'null') {
+      params.append('category_id', categoryId);
+    }
+
+    if (subcategoryId && subcategoryId !== 'null') {
+      params.append('subcategory_id', subcategoryId);
+    }
+
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'accept': 'application/json',
+        'Content-Type': 'application/json',
       },
     });
 
-    console.log('[models-list] GET response status:', response.status);
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log('[models-list] GET error response body:', errorText);
-      
-      return Response.json({ 
-        error: `Внешний API ошибка: ${response.status}`,
-        details: errorText
-      }, { status: response.status });
-    }
-
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      console.log('[models-list] GET non-json response:', text);
-      return Response.json({ error: 'Внешний API вернул не JSON' }, { status: 500 });
-    }
-
     const data = await response.json();
-    console.log('[models-list] GET success response:', { count: data.count, resultsLength: data.results?.length });
-    
-    return Response.json(data);
+
+    if (response.ok) {
+      return Response.json(data);
+    } else {
+      return Response.json(data, { status: response.status });
+    }
   } catch (error) {
-    console.error('[models-list] GET internal error:', error);
-    return Response.json({ 
-      error: 'Внутренняя ошибка сервера',
-      details: error.message
-    }, { status: 500 });
+    return Response.json(
+      { detail: 'Произошла ошибка при получении списка моделей' },
+      { status: 500 }
+    );
   }
 }
 
@@ -44,6 +46,8 @@ export async function POST(request) {
     const body = await request.json();
     
     console.log('[models-list] request body:', JSON.stringify(body, null, 2));
+    console.log('[models-list] category_id:', body.category_id);
+    console.log('[models-list] subcategory_id:', body.subcategory_id);
     
     const response = await fetch('https://aldalinde.ru/api/products/models-list/', {
       method: 'POST',

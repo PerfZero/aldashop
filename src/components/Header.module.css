@@ -67,7 +67,6 @@
 }
 
 .header__navItem:hover .header__navLink {
-  border-bottom: 1px solid #a45b38;
   color: #a45b38;
 }
 
@@ -479,7 +478,7 @@ color: #323433;
   }
   .header__iconsDesktop {
     display: flex;
-    gap: 1rem;
+    gap: 20px;
   }
   .header__icon--cart {
     display: inline-flex;
@@ -493,21 +492,16 @@ color: #323433;
 .header__icons {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 20px;
 }
 
 .header__icon {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0.5rem;
   position: relative;
 }
 
-.header__icon svg {
-  width: 24px;
-  height: 24px;
-}
 
 /* Добавьте эти стили в ваш Header.module.css */
 
@@ -666,8 +660,13 @@ font-family: "Montserrat", sans-serif;
 }
 
 .header__icon:hover path {
-  fill: #a45b38;
+  stroke: #a45b38;
 }
+
+.header__icon:hover circle {
+  stroke: #a45b38;
+}
+
 
 .header__icon:first-child:hover path {
   stroke: #a45b38;

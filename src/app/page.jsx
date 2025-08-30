@@ -41,7 +41,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
       <EmailVerificationModal 
         isOpen={showEmailModal} 
         onClose={() => setShowEmailModal(false)}
-        key={searchParams?.key}
+        verificationKey={searchParams?.key}
       />
       <ResetPasswordModal 
         isOpen={showResetModal} 

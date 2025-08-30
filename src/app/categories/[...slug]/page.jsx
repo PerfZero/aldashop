@@ -87,10 +87,12 @@ function CategoryPageContent() {
       setLoading(true);
       if (!categoryId && !subcategoryId) return;
       const requestBody = {};
+      if (categoryId) {
+        requestBody.category_id = categoryId;
+      }
+      
       if (subcategoryId) {
         requestBody.subcategory_id = subcategoryId;
-      } else if (categoryId) {
-        requestBody.category_id = categoryId;
       }
       const response = await fetch('/api/products/subcategory-filters', {
         method: 'POST',
@@ -129,10 +131,12 @@ function CategoryPageContent() {
         limit: pagination.page_size
       };
 
+      if (categoryId) {
+        requestBody.category_id = categoryId;
+      }
+      
       if (subcategoryId) {
         requestBody.subcategory_id = subcategoryId;
-      } else if (categoryId) {
-        requestBody.category_id = categoryId;
       }
 
       if (typeof sortBy === 'number') {
@@ -278,45 +282,61 @@ function CategoryPageContent() {
       try {
         const res = await fetch('/api/categories');
         const data = await res.json();
+        
+        const sortedData = data.sort((a, b) => {
+          const aDisplayId = a.display_id || 999;
+          const bDisplayId = b.display_id || 999;
+          return aDisplayId - bDisplayId;
+        }).map(category => ({
+          ...category,
+          subcategories: category.subcategories?.sort((a, b) => {
+            const aDisplayId = a.display_id || 999;
+            const bDisplayId = b.display_id || 999;
+            return aDisplayId - bDisplayId;
+          }) || []
+        }));
         const slugArr = Array.isArray(params?.slug) ? params.slug : params?.slug ? [params.slug] : [];
         if (!slugArr || slugArr.length === 0) return;
 
         if (slugArr.length >= 2) {
           const [catSlug, subSlug] = slugArr;
-          const cat = data.find(c => c.slug === catSlug);
+          const cat = sortedData.find(c => c.slug === catSlug);
           if (cat) {
             const sub = (cat.subcategories || []).find(s => s.slug === subSlug && subSlug !== 'all');
             setCategoryId(cat.id);
             setSubcategoryId(sub ? sub.id : null);
-            setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description });
-            setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title, description: sub.description } : null);
+            setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
+            setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title, description: sub.description, photo_cover: sub.photo_cover } : null);
             return;
           }
         }
 
         const currentSlug = slugArr[0];
         console.log('Looking for category with slug:', currentSlug);
-        console.log('Available categories:', data.map(c => ({ id: c.id, slug: c.slug, title: c.title })));
+        console.log('Available categories:', sortedData.map(c => ({ id: c.id, slug: c.slug, title: c.title })));
         
-        const cat = data.find(c => c.slug === currentSlug);
+        const cat = sortedData.find(c => c.slug === currentSlug);
         if (cat) {
           console.log('Found category:', cat);
           setCategoryId(cat.id);
           setSubcategoryId(null);
-          setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description });
+          setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
           setCurrentSubcategory(null);
           return;
         } else {
           console.log('Category not found for slug:', currentSlug);
         }
 
-        for (const c of data) {
+        console.log('Searching for subcategory with slug:', currentSlug);
+        for (const c of sortedData) {
+          console.log('Checking category:', c.title, 'subcategories:', c.subcategories?.map(s => s.slug));
           const sub = (c.subcategories || []).find(s => s.slug === currentSlug);
           if (sub) {
+            console.log('Found subcategory:', sub);
             setCategoryId(c.id);
             setSubcategoryId(sub.id);
-            setCurrentCategory({ id: c.id, slug: c.slug, title: c.title, description: c.description });
-            setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title, description: sub.description });
+            setCurrentCategory({ id: c.id, slug: c.slug, title: c.title, description: c.description, photo_cover: c.photo_cover });
+            setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title, description: sub.description, photo_cover: sub.photo_cover });
             return;
           }
         }
@@ -407,7 +427,15 @@ function CategoryPageContent() {
           <p className={styles.hero__description}>
             {currentSubcategory?.description || currentCategory?.description || 'Описание категории'}
           </p>
-          <img className={styles.hero__img} src="/category.png" alt="Категория" />
+          <img 
+            className={`${styles.hero__img} ${((currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null)) ? styles.photo_cover : ''}`} 
+            src={(currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null) ? (currentSubcategory?.photo_cover?.startsWith('http') ? (currentSubcategory?.photo_cover || currentCategory?.photo_cover) : `https://aldalinde.ru${currentSubcategory?.photo_cover || currentCategory?.photo_cover}`) : "/category.png"} 
+            alt={currentSubcategory?.title || currentCategory?.title || 'Категория'} 
+            onError={(e) => {
+              console.log('Ошибка загрузки изображения:', e.target.src);
+              e.target.src = "/category.png";
+            }}
+          />
         </div>
       </div>
 
