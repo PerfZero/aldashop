@@ -299,11 +299,10 @@ export default function Header() {
                   {categories.find(cat => cat.id === mobileExpandedCategory)?.subcategories?.length > 0 ? (
                     <div className={styles.mobileMenu__dropdownLinks}>
                       {categories.find(cat => cat.id === mobileExpandedCategory)?.subcategories.map((subcategory) => {
-                        const category = categories.find(cat => cat.id === mobileExpandedCategory);
                         let imageSrc = "/images/sofa.png";
                         
-                        if (category) {
-                          imageSrc = `https://aldalinde.ru${category.photo_new_products}`;
+                        if (subcategory.photo_cover) {
+                          imageSrc = `https://aldalinde.ru${subcategory.photo_cover}`;
                         }
 
                         return (

@@ -837,15 +837,15 @@ font-family: "Montserrat", sans-serif;
 
 .header__favouritesCount {
   position: absolute;
-  top: 2px;
-  right: -0px;
+  top: -5px;
+  right: -5px;
   background-color: #A45B38;
   color: white;
-  font-size: 12px;
+  font-size: 10px;
   font-weight: bold;
   border-radius: 50%;
-  min-width: 18px;
-  height: 18px;
+  min-width: 14px;
+  height: 14px;
   display: flex;
   align-items: center;
   justify-content: center;

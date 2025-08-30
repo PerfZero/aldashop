@@ -83,11 +83,8 @@
   position: absolute;
   top: 16px;
   right: 16px;
-  background: white;
   border: none;
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
+
   display: flex;
   align-items: center;
   justify-content: center;
@@ -95,17 +92,11 @@
   opacity: 0;
   transform: translateY(-10px);
   transition: all 0.3s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   z-index: 2;
 }
 
 .card:hover .card__favorite {
   opacity: 1;
-  transform: translateY(0);
-}
-
-.card__favorite:hover {
-  background: #f5f5f5;
 }
 
 .card__favorite svg {
@@ -123,6 +114,27 @@
 
 .card__favorite_active svg {
   transform: scale(1.1);
+}
+
+.card__favorite svg path {
+  transition: all 0.3s ease;
+  stroke: #323433;
+  fill: none;
+}
+
+.card__favorite:hover svg path {
+  stroke: #a45b38;
+  fill: none;
+}
+
+.card__favorite_active svg path {
+  stroke: #a45b38;
+  fill: #a45b38;
+}
+
+.card__favorite_active:hover svg path {
+  stroke: #a45b38;
+  fill: #a45b38;
 }
 
 .card__price_container {
@@ -362,12 +374,8 @@
   }
 
   .card__favorite svg {
-    width: 20px;
-    height: 20px;
-  }
-
-  .card__favorite path {
-    stroke: #a45b38;
+    width: 35px;
+    height: 35px;
   }
 
   .card__color {
