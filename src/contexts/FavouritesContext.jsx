@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import toast from 'react-hot-toast';
+
 
 const FavouritesContext = createContext();
 
@@ -156,21 +156,16 @@ export function FavouritesProvider({ children }) {
 
         if (response.ok) {
           await loadFavourites();
-          toast.success('Товар добавлен в избранное!');
         } else if (response.status === 400) {
-          toast.error('Товар уже в избранном');
         } else {
-          toast.error('Ошибка при добавлении в избранное');
         }
       } catch (error) {
-        toast.error('Ошибка при добавлении в избранное');
       }
     } else {
       // Для неавторизованных пользователей работаем с localStorage
       setFavourites(prev => {
         const isAlreadyFavourite = prev.some(item => item.id === product.id);
         if (isAlreadyFavourite) {
-          toast.error('Товар уже в избранном');
           return prev;
         }
                  const newFavourites = [...prev, {
@@ -203,7 +198,6 @@ export function FavouritesProvider({ children }) {
              production_time: product.production_time
            }
          }];
-        toast.success('Товар добавлен в избранное!');
         return newFavourites;
       });
     }
@@ -231,17 +225,13 @@ export function FavouritesProvider({ children }) {
 
         if (response.ok || response.status === 204) {
           await loadFavourites();
-          toast.success('Товар удален из избранного');
         } else {
-          toast.error('Ошибка при удалении из избранного');
         }
       } catch (error) {
-        toast.error('Ошибка при удалении из избранного');
       }
     } else {
       // Для неавторизованных пользователей работаем с localStorage
       setFavourites(prev => prev.filter(item => item.id !== productId));
-      toast.success('Товар удален из избранного');
     }
   };
 

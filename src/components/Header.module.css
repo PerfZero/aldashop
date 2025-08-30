@@ -785,12 +785,18 @@ font-family: "Montserrat", sans-serif;
   height: 218px;
 }
 
+.dropdown__rightItem:hover .dropdown__rightLink {
+  color: #fff;
+  background-color: #a45b38;
+}
+
 .dropdown__image {
   width: 100%;
   height: 169px;
 
   object-fit: cover;
   border: 1px solid #c1a286;
+  border-bottom: none;
 }
 
 .dropdown__rightLink {
@@ -803,7 +809,7 @@ font-family: "Montserrat", sans-serif;
   justify-content: space-between;
   align-items: center;
   color: #c1a286;
-  padding: 10px 15px;
+  padding: 12px 15px;
   text-decoration: none;
   transition: color 0.2s;
 }

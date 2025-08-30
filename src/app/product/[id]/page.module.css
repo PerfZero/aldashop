@@ -586,17 +586,22 @@ cursor: pointer;
 
 .product__favorite_button svg path{
   transition: all 0.3s ease;
+  stroke: #323433;
+  fill: none;
 }
 
 .product__favorite_button:hover svg path{
-  fill: #a45b38;
+  stroke: #a45b38;
+  fill: none;
 }
 
 .product__favorite_button_active svg path {
-  fill: #C1AF86;
+  stroke: #a45b38;
+  fill: #a45b38;
 }
 
 .product__favorite_button_active:hover svg path {
+  stroke: #a45b38;
   fill: #a45b38;
 }
 

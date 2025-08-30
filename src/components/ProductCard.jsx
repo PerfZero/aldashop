@@ -131,12 +131,8 @@ export default function ProductCard({ product }) {
             onClick={handleToggleFavourite}
             aria-label={isFavourite(currentProduct.id) ? 'Удалить из избранного' : 'Добавить в избранное'}
           >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path 
-                d="M12 21.35L10.55 20.03C5.4 15.36 2 12.28 2 8.5C2 5.42 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.09C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.42 22 8.5C22 12.28 18.6 15.36 13.45 20.04L12 21.35Z" 
-                fill={isFavourite(currentProduct.id) ? "#C1AF86" : "white"} 
-                stroke="#C1AF86"
-              />
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M3.80638 6.20641C4.70651 5.30655 5.92719 4.80104 7.19998 4.80104C8.47276 4.80104 9.69344 5.30655 10.5936 6.20641L12 7.61161L13.4064 6.20641C13.8492 5.74796 14.3788 5.38229 14.9644 5.13072C15.5501 4.87916 16.1799 4.74675 16.8172 4.74121C17.4546 4.73567 18.0866 4.85712 18.6766 5.09847C19.2665 5.33982 19.8024 5.69623 20.2531 6.14691C20.7038 6.5976 21.0602 7.13353 21.3015 7.72343C21.5429 8.31333 21.6643 8.9454 21.6588 9.58274C21.6532 10.2201 21.5208 10.8499 21.2693 11.4356C21.0177 12.0212 20.652 12.5508 20.1936 12.9936L12 21.1884L3.80638 12.9936C2.90651 12.0935 2.401 10.8728 2.401 9.60001C2.401 8.32722 2.90651 7.10654 3.80638 6.20641V6.20641Z" stroke="#323433" stroke-width="1.5" stroke-linejoin="round"/>
             </svg>
           </button>
           
@@ -160,7 +156,12 @@ export default function ProductCard({ product }) {
       
       <div className={styles.card__content}>
         <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link}>
-          <h3 className={styles.card__title}>{currentProduct.name || product.title || product.name}</h3>
+          <h3 className={styles.card__title}>
+            {currentProduct.name || product.title || product.name}
+            {selectedColor.name && (
+              <span className={styles.card__title_color}>  {selectedColor.name}</span>
+            )}
+          </h3>
         </Link>
         
         <p className={styles.card__description}>{currentProduct.description}</p>

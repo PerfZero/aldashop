@@ -5,7 +5,7 @@ import Footer from '../components/Footer';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider } from '../contexts/AuthContext';
 import { FavouritesProvider } from '../contexts/FavouritesContext';
-import { Toaster } from 'react-hot-toast';
+
 import QueryParamProviderWrapper from '../components/QueryParamProvider';
 import './globals.css';
 
@@ -31,16 +31,7 @@ export default function RootLayout({ children }) {
                   {children}
                 </main>
                 <Footer />
-                <Toaster 
-                  position="top-right"
-                  toastOptions={{
-                    duration: 3000,
-                    style: {
-                      background: '#4CAF50',
-                      color: '#fff',
-                    },
-                  }}
-                />
+
               </FavouritesProvider>
             </CartProvider>
           </AuthProvider>

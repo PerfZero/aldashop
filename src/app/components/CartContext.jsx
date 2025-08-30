@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useState, useContext, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import toast from 'react-hot-toast';
+
 
 // Создаем контекст
 const CartContext = createContext();
@@ -175,7 +175,6 @@ export function CartProvider({ children }) {
               dimensions: item.product.sizes ? `${item.product.sizes.width}×${item.product.sizes.height}×${item.product.sizes.depth} см` : null,
             })) || [];
             setCartItems(apiCartItems);
-            toast.success('Товар добавлен в корзину!');
           }
         } else {
         }
@@ -197,7 +196,6 @@ export function CartProvider({ children }) {
           return [...prevItems, { ...product, quantity: 1 }];
         }
       });
-      toast.success('Товар добавлен в корзину!');
     }
   };
 
@@ -272,17 +270,11 @@ export function CartProvider({ children }) {
             })) || [];
             setCartItems(apiCartItems);
             
-            if (shouldRemoveAll) {
-              toast.success('Товар удален из корзины');
-            } else {
-              toast.success('Количество уменьшено');
-            }
+
           }
         } else {
-          toast.error('Ошибка при удалении товара');
         }
       } catch (error) {
-        toast.error('Ошибка при удалении товара');
       }
     } else {
       // Для неавторизованных пользователей
@@ -301,8 +293,6 @@ export function CartProvider({ children }) {
           );
         }
       });
-      
-      toast.success('Товар удален из корзины');
     }
   };
 
@@ -423,10 +413,8 @@ export function CartProvider({ children }) {
             dimensions: item.product.sizes ? `${item.product.sizes.width}×${item.product.sizes.height}×${item.product.sizes.depth} см` : null,
           })) || [];
           setCartItems(apiCartItems);
-          toast.success('Количество обновлено');
         }
       } catch (error) {
-        toast.error('Ошибка при обновлении количества');
       }
     } else {
       // Для неавторизованных пользователей работаем с локальным состоянием
