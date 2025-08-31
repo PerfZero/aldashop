@@ -151,10 +151,20 @@ align-items: flex-start;
   .hero__content{
     padding: 0 16px;
   }
+
   
   
 
   .hero__description {
     font-size: 14px;
   }
+}
+
+
+@media screen and (max-width: 1440px) {
+
+  .products{
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
 }
