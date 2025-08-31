@@ -1,6 +1,7 @@
 .filters {
   width: 248px;
   overflow: hidden;
+  display: block;
 }
 
 /* Filters.module.css */

@@ -429,7 +429,7 @@ export default function ProductPage({ params }) {
           <h1 className={styles.product__title}>
             {product.title} 
             {product.bestseller && (
-              <div className={styles.product__bestseller}>Бестселлер</div>
+              <div className={styles.product__bestseller}>Bestseller</div>
             )}
           </h1>
           
@@ -453,8 +453,6 @@ export default function ProductPage({ params }) {
             </div>
             <span className={styles.product__reviews}>0 Отзывов</span>
           </div>
-          
-          <p className={styles.product__article}>Артикул: {product.generated_article}</p>
           
           <div className={styles.product__price}>
             {hasDiscount ? (
@@ -506,7 +504,7 @@ export default function ProductPage({ params }) {
             <h1 className={styles.product__title}>
               {product.title} 
               {product.bestseller && (
-                <div className={styles.product__bestseller}>Бестселлер</div>
+                <div className={styles.product__bestseller}>Bestseller</div>
               )}
             </h1>
           </div>

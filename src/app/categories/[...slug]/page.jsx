@@ -14,7 +14,7 @@ function CategoryPageContent() {
   const params = useParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
   const [sortBy, setSortBy] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,6 +40,20 @@ function CategoryPageContent() {
   const [bestseller, setBestseller] = useQueryParam('bestseller', withDefault(StringParam, ''));
   
   const [dynamicFilters, setDynamicFilters] = useState({});
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setShowFilters(true);
+      } else {
+        setShowFilters(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const updateUrlWithDynamicFilters = (filters) => {
     const url = new URL(window.location.href);

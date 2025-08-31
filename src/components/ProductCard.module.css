@@ -53,6 +53,10 @@
   transition: height 0.3s ease;
 }
 
+.card:hover .card__title_link{
+  color: #a45b38;
+}
+
 .card__image_filters_open {
   height: 345px;
 }
@@ -372,6 +376,7 @@
     padding: 0px 9px;
     top: 8px;
     right: 8px;
+    width: fit-content;
   }
 
   .card:hover {

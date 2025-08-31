@@ -468,16 +468,16 @@ export default function Header() {
                 if (category) {
                   switch (item) {
                     case "Новинки":
-                      imageSrc = `https://aldalinde.ru${category.photo_new_products}`;
+                      imageSrc = category.photo_new_products ? `https://aldalinde.ru${category.photo_new_products}` : "/Images/новинки.png";
                       break;
                     case "Бестселлеры":
-                      imageSrc = `https://aldalinde.ru${category.photo_bestsellers}`;
+                      imageSrc = category.photo_bestsellers ? `https://aldalinde.ru${category.photo_bestsellers}` : "/Images/бестселлеры.png";
                       break;
                     case "Распродажа":
-                      imageSrc = `https://aldalinde.ru${category.photo_sale}`;
+                      imageSrc = category.photo_sale ? `https://aldalinde.ru${category.photo_sale}` : "/Images/распродажа.png";
                       break;
                     default:
-                      imageSrc = `/images/${item.toLowerCase()}.png`;
+                      imageSrc = `/Images/${item.toLowerCase()}.png`;
                   }
                 }
 
@@ -509,7 +509,7 @@ export default function Header() {
                       alt={item}
                       className={styles.dropdown__image}
                       onError={(e) => {
-                        e.target.src = `/images/${item.toLowerCase()}.png`;
+                        e.target.src = `/Images/${item.toLowerCase()}.png`;
                       }}
                     />
                     <div className={styles.dropdown__rightLink}>

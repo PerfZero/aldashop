@@ -172,7 +172,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
   return (
     <div className={styles.card}>
       {currentProduct.isBestseller && (
-        <div className={styles.card__bestseller}>Бестселлер</div>
+        <div className={styles.card__bestseller}>Bestseller</div>
       )}
       {hasDiscount && (
         <div className={styles.card__sale}>Sale</div>

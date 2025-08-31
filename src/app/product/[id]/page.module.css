@@ -7,17 +7,11 @@
 .product {
   display: flex;
 
-  gap: 20px;
+  gap: 50px;
   justify-content: space-between;
   margin-top: 30px;
 }
 
-
-.product__gallery {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-}
 
 .product__thumbnails {
   display: flex;
@@ -46,8 +40,11 @@
 }
 
 .product__main_image {
-  flex: 1;
   overflow: hidden;
+  height: 1053px;
+  max-width: 1053px;
+  width: 100%;
+  flex: 1 1 1053px;
 }
 
 .product__main_image img {
@@ -60,9 +57,17 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100%;
-  max-width: 580px;
+flex: 0 2 600px; 
+ width: 100%;
+
 }
+
+.product__gallery {
+  display: flex;
+  gap: 10px;
+flex: 0 1 1053px ;
+}
+
 
 
 

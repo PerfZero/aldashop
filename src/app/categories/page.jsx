@@ -15,7 +15,7 @@ function CategoriesPageContent() {
   const categoryId = searchParams.get('category_id');
   
   const [sortBy, setSortBy] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +38,20 @@ function CategoriesPageContent() {
   const [bestseller, setBestseller] = useQueryParam('bestseller', withDefault(StringParam, ''));
   
   const [dynamicFilters, setDynamicFilters] = useState({});
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) {
+        setShowFilters(true);
+      } else {
+        setShowFilters(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const getFlagTitle = (flagType) => {
     switch (flagType) {
@@ -376,9 +390,43 @@ function CategoriesPageContent() {
             {currentCategory && ` - ${currentCategory.title}`}
           </h1>
           <p className={styles.hero__description}>
-            {currentCategory?.description || 'Описание категории'}
+            {(() => {
+              if (!currentCategory) return 'Описание категории';
+              
+              switch (flagType) {
+                case 'new_products_flag_category':
+                  return `Новинки в категории "${currentCategory.title}"`;
+                case 'bestseller_flag_category':
+                  return `Бестселлеры в категории "${currentCategory.title}"`;
+                case 'sale_flag_category':
+                  return `Распродажа в категории "${currentCategory.title}"`;
+                default:
+                  return currentCategory.description || 'Описание категории';
+              }
+            })()} 
           </p>
-          <img className={styles.hero__img} src="/category.png" alt="Категория" />
+          <img 
+            className={styles.hero__img} 
+            src={(() => {
+              if (!currentCategory) return "/category.png";
+              
+              switch (flagType) {
+                case 'new_products_flag_category':
+                  return currentCategory.photo_new_products ? `https://aldalinde.ru${currentCategory.photo_new_products}` : "/Images/новинки.png";
+                case 'bestseller_flag_category':
+                  return currentCategory.photo_bestsellers ? `https://aldalinde.ru${currentCategory.photo_bestsellers}` : "/Images/бестселлеры.png";
+                case 'sale_flag_category':
+                  return currentCategory.photo_sale ? `https://aldalinde.ru${currentCategory.photo_sale}` : "/Images/распродажа.png";
+                default:
+                  return "/category.png";
+              }
+            })()} 
+            alt={getFlagTitle(flagType)} 
+            onError={(e) => {
+              console.log('Ошибка загрузки изображения:', e.target.src);
+              e.target.src = "/category.png";
+            }}
+          />
         </div>
       </div>
 
