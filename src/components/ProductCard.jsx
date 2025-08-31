@@ -7,7 +7,7 @@ import styles from './ProductCard.module.css';
 import { useCart } from '../app/components/CartContext';
 import { useFavourites } from '../contexts/FavouritesContext';
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, filtersOpen = false }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const [selectedColor, setSelectedColor] = useState(() => {
@@ -40,7 +40,7 @@ export default function ProductCard({ product }) {
       image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : '/placeholder.jpg',
       hoverImage: hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null,
       inStock: productData.in_stock !== undefined ? productData.in_stock : true,
-      isBestseller: productData.bestseller || false,
+      isBestseller: productData.bestseller || product.is_bestseller || false,
       available_colors: product.available_colors || []
     };
   });
@@ -48,8 +48,78 @@ export default function ProductCard({ product }) {
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
 
-  const handleColorChange = (color) => {
+  const handleColorChange = async (color) => {
     setSelectedColor({ name: color.title || 'Цвет', hex: `#${color.code_hex}` });
+    
+    const productId = product.product?.id || product.id;
+    if (!productId) {
+      console.log('Нет product_id для запроса');
+      return;
+    }
+    
+    setIsLoading(true);
+    try {
+      const requestBody = {
+        model_id: product.product?.id || product.id,
+        color_id: color.id,
+      };
+      
+      console.log('Отправляем запрос на смену цвета:', requestBody, 'Product ID:', productId);
+      
+      const response = await fetch('/api/products/product-detail/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('Ответ сервера:', response.status);
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Полученные данные:', data);
+        
+        if (data && data.id) {
+          const mainPhoto = data.photos?.find(p => p.main_photo) || data.photos?.[0];
+          const hoverPhoto = data.photos?.find(p => !p.main_photo) || data.photos?.[1];
+          
+          setCurrentProduct(prev => {
+            const newImage = mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : prev.image;
+            const newHoverImage = hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : prev.hoverImage;
+            
+            const newProduct = {
+              ...prev,
+              id: data.id,
+              price: data.price || 0,
+              discountedPrice: data.discounted_price,
+              image: newImage,
+              hoverImage: newHoverImage,
+              inStock: data.in_stock !== undefined ? data.in_stock : prev.inStock,
+            };
+            
+            console.log('Товар обновлен:', data.id, data.price, 'Старый ID:', prev.id, 'Новый ID:', newProduct.id);
+            console.log('Изображения:', { oldImage: prev.image, newImage, oldHover: prev.hoverImage, newHover: newHoverImage });
+            
+            if (prev.id === newProduct.id && prev.price === newProduct.price && prev.image === newImage) {
+              console.log('Данные не изменились, пропускаем обновление');
+              return prev;
+            }
+            
+            return newProduct;
+          });
+        } else {
+          console.log('Получены пустые данные или нет ID');
+        }
+      } else {
+        const errorText = await response.text();
+        console.error('Ошибка ответа сервера:', response.status, errorText);
+      }
+    } catch (error) {
+      console.error('Ошибка при смене цвета:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleAddToCart = async (e) => {
@@ -57,9 +127,10 @@ export default function ProductCard({ product }) {
     e.stopPropagation();
     
     const price = currentProduct.discountedPrice || currentProduct.price;
+    const productId = product.product?.id || currentProduct.id;
     
     const productToAdd = {
-      id: currentProduct.id,
+      id: productId,
       name: currentProduct.name,
       price: price,
       image: currentProduct.image,
@@ -67,6 +138,7 @@ export default function ProductCard({ product }) {
       quantity: 1
     };
     
+    console.log('Добавляем в корзину:', productToAdd);
     await addToCart(productToAdd);
     setIsAdded(true);
     
@@ -79,8 +151,10 @@ export default function ProductCard({ product }) {
     e.preventDefault();
     e.stopPropagation();
     
+    const productId = product.product?.id || currentProduct.id;
+    
     const productToToggle = {
-      id: currentProduct.id,
+      id: productId,
       name: currentProduct.name,
       price: currentProduct.discountedPrice || currentProduct.price,
       image: currentProduct.image,
@@ -89,20 +163,24 @@ export default function ProductCard({ product }) {
       isBestseller: currentProduct.isBestseller,
     };
     
+    console.log('Переключаем избранное:', productToToggle);
     await toggleFavourite(productToToggle);
   };
 
-  const hasDiscount = currentProduct.discountedPrice && currentProduct.discountedPrice !== null && currentProduct.price > currentProduct.discountedPrice;
+  const hasDiscount = currentProduct.discountedPrice && currentProduct.discountedPrice !== null && currentProduct.discountedPrice > currentProduct.price;
 
   return (
     <div className={styles.card}>
       {currentProduct.isBestseller && (
         <div className={styles.card__bestseller}>Бестселлер</div>
       )}
+      {hasDiscount && (
+        <div className={styles.card__sale}>Sale</div>
+      )}
       
-      <Link href={`/product/${currentProduct.id}`} className={styles.card__link}>
+      <Link href={`/product/${product.product?.id || currentProduct.id}`} className={styles.card__link}>
         <div 
-          className={styles.card__image}
+          className={`${styles.card__image} ${filtersOpen ? styles.card__image_filters_open : ''}`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
@@ -155,7 +233,7 @@ export default function ProductCard({ product }) {
       </Link>
       
       <div className={styles.card__content}>
-        <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link}>
+        <Link href={`/product/${product.product?.id || currentProduct.id}`} className={styles.card__title_link}>
           <h3 className={styles.card__title}>
             {currentProduct.name || product.title || product.name}
             {selectedColor.name && (
@@ -169,8 +247,8 @@ export default function ProductCard({ product }) {
         <div className={styles.card__price_container}>
           {hasDiscount ? (
             <>
-              <p className={styles.card__price_original}>{currentProduct.discountedPrice?.toLocaleString('ru-RU')} ₽</p>
-              <p className={styles.card__price_discounted}>{currentProduct.price?.toLocaleString('ru-RU')} ₽</p>
+              <p className={styles.card__price_discounted}>{currentProduct.discountedPrice?.toLocaleString('ru-RU')} ₽</p>
+              <p className={styles.card__price_original}>{currentProduct.price?.toLocaleString('ru-RU')} ₽</p>
             </>
           ) : (
             <p className={styles.card__price}>{currentProduct.price?.toLocaleString('ru-RU')} ₽</p>
@@ -183,9 +261,14 @@ export default function ProductCard({ product }) {
               {currentProduct.available_colors.slice(0, 6).map((color) => (
                 <button
                   key={color.id}
-                  className={`${styles.card__color} ${selectedColor.hex === `#${color.code_hex}` ? styles.card__color_selected : ''}`}
+                  className={`${styles.card__color} ${selectedColor.hex === `#${color.code_hex}` ? styles.card__color_selected : ''} ${isLoading ? styles.card__color_loading : ''}`}
                   style={{ backgroundColor: `#${color.code_hex}` }}
-                  onClick={() => handleColorChange(color)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Клик по цвету:', color);
+                    handleColorChange(color);
+                  }}
                   disabled={isLoading}
                   title={color.title || 'Цвет'}
                 />

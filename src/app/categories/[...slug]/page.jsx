@@ -464,13 +464,13 @@ function CategoryPageContent() {
           onApply={handleFiltersApply}
           appliedFilters={appliedFilters}
         />
-        <div className={styles.products}>
+        <div className={`${styles.products} ${showFilters ? styles.filtersOpen : ''}`}>
           {productsLoading && products.length === 0 ? (
             <div className={styles.loading}>Загрузка товаров...</div>
           ) : products.length > 0 ? (
             <>
               {products.map(product => (
-                <ProductCard key={product.id} product={transformProduct(product)} />
+                <ProductCard key={product.id} product={transformProduct(product)} filtersOpen={showFilters} />
               ))}
               {products.length < pagination.count && (
                 <div className={styles.loadMore}>
