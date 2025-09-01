@@ -31,7 +31,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
     const hoverPhoto = productData.photos?.find(p => !p.main_photo) || productData.photos?.[1];
     
     return {
-      id: productData.id || product.id,
+      id: productData.id,
       modelId: product.id,
       name: product.title,
       description: productData.short_description || product.description || 'Съемные чехлы, можно стирать в стиральной машине',
@@ -51,20 +51,20 @@ export default function ProductCard({ product, filtersOpen = false }) {
   const handleColorChange = async (color) => {
     setSelectedColor({ name: color.title || 'Цвет', hex: `#${color.code_hex}` });
     
-    const productId = product.product?.id || product.id;
-    if (!productId) {
-      console.log('Нет product_id для запроса');
+    const modelId = product.id;
+    if (!modelId) {
+      console.log('Нет model_id для запроса');
       return;
     }
     
     setIsLoading(true);
     try {
       const requestBody = {
-        model_id: product.product?.id || product.id,
+        model_id: product.id,
         color_id: color.id,
       };
       
-      console.log('Отправляем запрос на смену цвета:', requestBody, 'Product ID:', productId);
+      console.log('Отправляем запрос на смену цвета:', requestBody, 'Model ID:', product.id);
       
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
@@ -127,7 +127,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
     e.stopPropagation();
     
     const price = currentProduct.discountedPrice || currentProduct.price;
-    const productId = product.product?.id || currentProduct.id;
+    const productId = currentProduct.id;
     
     const productToAdd = {
       id: productId,
@@ -151,7 +151,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
     e.preventDefault();
     e.stopPropagation();
     
-    const productId = product.product?.id || currentProduct.id;
+    const productId = currentProduct.id;
     
     const productToToggle = {
       id: productId,
@@ -178,7 +178,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
         <div className={styles.card__sale}>Sale</div>
       )}
       
-      <Link href={`/product/${product.product?.id || currentProduct.id}`} className={styles.card__link}>
+      <Link href={`/product/${currentProduct.id}`} className={styles.card__link}>
         <div 
           className={`${styles.card__image} ${filtersOpen ? styles.card__image_filters_open : ''}`}
           onMouseEnter={() => setIsHovered(true)}
@@ -233,7 +233,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       </Link>
       
       <div className={styles.card__content}>
-        <Link href={`/product/${product.product?.id || currentProduct.id}`} className={styles.card__title_link}>
+        <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link}>
           <h3 className={styles.card__title}>
             {currentProduct.name || product.title || product.name}
             {selectedColor.name && (

@@ -75,7 +75,6 @@ justify-content: space-between;
   line-height: 150%;
   text-align: center;
   color: #323433;
-  display: none;
 }
 
 .filters__button::before{
