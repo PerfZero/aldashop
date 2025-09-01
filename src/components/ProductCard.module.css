@@ -53,7 +53,7 @@
   transition: height 0.3s ease;
 }
 
-.card:hover .card__title_link{
+.card__title_link:hover {
   color: #a45b38;
 }
 
@@ -246,7 +246,7 @@
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  border: 2px solid #ddd;
+  border: 1px solid #ddd;
   transition: transform 0.2s ease;
   cursor: pointer;
 }
@@ -256,8 +256,7 @@
 }
 
 .card__color_selected {
-  border-color: #c1a286;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px #c1a286;
+  border-color: #323433;
 }
 
 .card__color_loading {
