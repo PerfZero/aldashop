@@ -102,6 +102,31 @@
   opacity: 1;
 }
 
+.card__pagination {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 3;
+}
+
+.card__pagination_dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.card__pagination_dot_active {
+  background: #c1a286;
+  transform: scale(1.2);
+}
+
 .card__favorite {
   position: absolute;
   top: 16px;
@@ -462,5 +487,14 @@
     width: 24px;
     height: 24px;
     margin: 0 auto;
+  }
+
+  .card__pagination {
+    bottom: 8px;
+  }
+
+  .card__pagination_dot {
+    width: 6px;
+    height: 6px;
   }
 }
