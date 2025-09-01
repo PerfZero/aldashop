@@ -1,8 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/pagination';
 import styles from './ProductCard.module.css';
 import { useCart } from '../app/components/CartContext';
 import { useFavourites } from '../contexts/FavouritesContext';
@@ -10,8 +14,8 @@ import { useFavourites } from '../contexts/FavouritesContext';
 export default function ProductCard({ product, filtersOpen = false }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const swiperRef = useRef(null);
   const [selectedColor, setSelectedColor] = useState(() => {
     if (product.product?.color) {
       return {
@@ -62,42 +66,10 @@ export default function ProductCard({ product, filtersOpen = false }) {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleTouchStart = (e) => {
-    if (!isMobile) return;
-    const touch = e.touches[0];
-    setTouchStart(touch.clientX);
-  };
 
-  const handleTouchMove = (e) => {
-    if (!isMobile) return;
-    const touch = e.touches[0];
-    setTouchEnd(touch.clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!isMobile || !touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-    
-    if (isLeftSwipe && currentImageIndex < currentProduct.photos.length - 1) {
-      setCurrentImageIndex(currentImageIndex + 1);
-    }
-    if (isRightSwipe && currentImageIndex > 0) {
-      setCurrentImageIndex(currentImageIndex - 1);
-    }
-    
-    setTouchStart(null);
-    setTouchEnd(null);
-  };
-
-  const [touchStart, setTouchStart] = useState(null);
-  const [touchEnd, setTouchEnd] = useState(null);
 
   const handleColorChange = async (color) => {
     setSelectedColor({ name: color.title || 'Цвет', hex: `#${color.code_hex}` });
-    setCurrentImageIndex(0);
     
     const modelId = product.id;
     if (!modelId) {
@@ -232,63 +204,69 @@ export default function ProductCard({ product, filtersOpen = false }) {
           className={`${styles.card__image} ${filtersOpen ? styles.card__image_filters_open : ''}`}
           onMouseEnter={() => !isMobile && setIsHovered(true)}
           onMouseLeave={() => !isMobile && setIsHovered(false)}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
         >
-          <div className={`${styles.card__image_container} ${isHovered && !isMobile ? styles.card__image_container_hover : ''}`}>
-            {isMobile ? (
+          {isMobile ? (
+            <Swiper
+              ref={swiperRef}
+              modules={[Pagination]}
+              pagination={currentProduct.photos && currentProduct.photos.length > 1 ? {
+                clickable: true,
+                dynamicBullets: false,
+              } : false}
+              spaceBetween={0}
+              slidesPerView={1}
+              className={styles.card__swiper}
+            >
+              {currentProduct.photos && currentProduct.photos.length > 0 ? (
+                currentProduct.photos.slice(0, 2).map((photo, index) => (
+                  <SwiperSlide key={index} className={styles.card__swiper_slide}>
+                    <Image
+                      src={photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`}
+                      alt={`${currentProduct.name || product.title || 'Товар'} - фото ${index + 1}`}
+                      width={398}
+                      height={320}
+                      priority
+                      className={styles.card__image_main}
+                    />
+                  </SwiperSlide>
+                ))
+              ) : (
+                <SwiperSlide className={styles.card__swiper_slide}>
+                  <Image
+                    src={currentProduct.image}
+                    alt={currentProduct.name || product.title || 'Товар'}
+                    width={398}
+                    height={320}
+                    priority
+                    className={styles.card__image_main}
+                  />
+                </SwiperSlide>
+              )}
+            </Swiper>
+          ) : (
+            <div className={`${styles.card__image_container} ${isHovered ? styles.card__image_container_hover : ''}`}>
               <Image
-                src={currentProduct.photos[currentImageIndex]?.photo ? 
-                  (currentProduct.photos[currentImageIndex].photo.startsWith('http') ? 
-                    currentProduct.photos[currentImageIndex].photo : 
-                    `https://aldalinde.ru${currentProduct.photos[currentImageIndex].photo}`) : 
-                  currentProduct.image}
+                src={currentProduct.image}
                 alt={currentProduct.name || product.title || 'Товар'}
                 width={398}
                 height={320}
                 priority
                 className={styles.card__image_main}
               />
-            ) : (
-              <>
+              {currentProduct.hoverImage && (
                 <Image
-                  src={currentProduct.image}
-                  alt={currentProduct.name || product.title || 'Товар'}
+                  src={currentProduct.hoverImage}
+                  alt={`${currentProduct.name || product.title || 'Товар'} - вид 2`}
                   width={398}
                   height={320}
                   priority
-                  className={styles.card__image_main}
+                  className={styles.card__image_hover}
                 />
-                {currentProduct.hoverImage && (
-                  <Image
-                    src={currentProduct.hoverImage}
-                    alt={`${currentProduct.name || product.title || 'Товар'} - вид 2`}
-                    width={398}
-                    height={320}
-                    priority
-                    className={styles.card__image_hover}
-                  />
-                )}
-              </>
-            )}
-          </div>
-          
-          {isMobile && currentProduct.photos.length > 1 && (
-            <div className={styles.card__pagination}>
-              {currentProduct.photos.map((_, index) => (
-                <button
-                  key={index}
-                  className={`${styles.card__pagination_dot} ${index === currentImageIndex ? styles.card__pagination_dot_active : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setCurrentImageIndex(index);
-                  }}
-                />
-              ))}
+              )}
             </div>
           )}
+          
+
           <button 
             className={`${styles.card__favorite} ${isFavourite(currentProduct.id) ? styles.card__favorite_active : ''}`}
             onClick={handleToggleFavourite}
