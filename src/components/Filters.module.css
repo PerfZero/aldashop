@@ -21,8 +21,7 @@
 .filters__footer{
   display: flex;
   gap: 12px;
-  padding: 16px;
-  border-top: 1px solid rgba(193, 175, 134, 0.8);
+  padding: 16px 0;
 }
 
 .toggleSwitch {
