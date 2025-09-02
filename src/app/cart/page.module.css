@@ -1,7 +1,7 @@
 .container {
-    max-width: 1240px;
+    max-width:  1720px;
     margin: 0 auto;
-    padding:  20px 0;
+    padding:  20px ;
   }
   
   .title {
@@ -51,8 +51,8 @@
   }
   
   .cartLeft {
-    width: 820px;
 border-top: 1px solid rgba(193, 175, 134, 0.5);
+flex: 1;
 
   }
   
