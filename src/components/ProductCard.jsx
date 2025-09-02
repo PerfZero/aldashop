@@ -209,7 +209,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
             <Swiper
               ref={swiperRef}
               modules={[Pagination]}
-              pagination={currentProduct.photos && currentProduct.photos.length > 1 ? {
+              pagination={currentProduct.hoverImage ? {
                 clickable: true,
                 dynamicBullets: false,
               } : false}
@@ -217,24 +217,21 @@ export default function ProductCard({ product, filtersOpen = false }) {
               slidesPerView={1}
               className={styles.card__swiper}
             >
-              {currentProduct.photos && currentProduct.photos.length > 0 ? (
-                currentProduct.photos.slice(0, 2).map((photo, index) => (
-                  <SwiperSlide key={index} className={styles.card__swiper_slide}>
-                    <Image
-                      src={photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`}
-                      alt={`${currentProduct.name || product.title || 'Товар'} - фото ${index + 1}`}
-                      width={398}
-                      height={320}
-                      priority
-                      className={styles.card__image_main}
-                    />
-                  </SwiperSlide>
-                ))
-              ) : (
+              <SwiperSlide className={styles.card__swiper_slide}>
+                <Image
+                  src={currentProduct.image}
+                  alt={currentProduct.name || product.title || 'Товар'}
+                  width={398}
+                  height={320}
+                  priority
+                  className={styles.card__image_main}
+                />
+              </SwiperSlide>
+              {currentProduct.hoverImage && (
                 <SwiperSlide className={styles.card__swiper_slide}>
                   <Image
-                    src={currentProduct.image}
-                    alt={currentProduct.name || product.title || 'Товар'}
+                    src={currentProduct.hoverImage}
+                    alt={`${currentProduct.name || product.title || 'Товар'} - вид 2`}
                     width={398}
                     height={320}
                     priority
