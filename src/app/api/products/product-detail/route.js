@@ -4,12 +4,10 @@ export async function POST(request) {
     
     const apiRequestBody = {
       model_id: body.model_id,
-      size_id: body.size_id,
       color_id: body.color_id,
-      material_id: body.material_id,
     };
     
-    const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
+    const response = await fetch('https://aldalinde.ru/api/products/product-detail-list/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -33,7 +31,6 @@ export async function POST(request) {
     try {
       data = JSON.parse(responseText);
       
-      // Добавляем базовый URL к фотографиям только если они относительные
       if (data.photos && Array.isArray(data.photos)) {
         data.photos = data.photos.map(photo => ({
           ...photo,
@@ -41,7 +38,6 @@ export async function POST(request) {
         }));
       }
       
-      // Добавляем title к размерам
       if (data.available_sizes && Array.isArray(data.available_sizes)) {
         data.available_sizes = data.available_sizes.map(size => ({
           ...size,

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import styles from './Reviews.module.css';
 import SortSelect from './SortSelect';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,12 +18,15 @@ const mockReviews = [
 export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount = 0, productId }) {
   const { isAuthenticated, user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sortBy, setSortBy] = useState('recommended');
+  const [sortBy, setSortBy] = useState('newest');
   const [modalRating, setModalRating] = useState(0);
   const [modalImages, setModalImages] = useState([]);
   const [modalMessage, setModalMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [totalReviews, setTotalReviews] = useState(0);
   const fileInputRef = useRef(null);
 
   const handleOpenModal = () => {
@@ -50,6 +53,31 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
     const files = Array.from(e.target.files).slice(0, 3);
     setModalImages(files);
   };
+
+  const fetchReviews = async () => {
+    if (!productId) return;
+    
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/products/reviews?product_id=${productId}&sort_by=${sortBy}&limit=10&page=1`);
+      
+      if (!response.ok) {
+        throw new Error('Ошибка загрузки отзывов');
+      }
+      
+      const data = await response.json();
+      setReviews(data.results || []);
+      setTotalReviews(data.count || 0);
+    } catch (error) {
+      console.error('Ошибка загрузки отзывов:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReviews();
+  }, [productId, sortBy]);
 
   const handleSubmitReview = async () => {
     if (!isAuthenticated) {
@@ -104,7 +132,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
       }
 
       handleCloseModal();
-      window.location.reload();
+      fetchReviews();
     } catch (error) {
       setSubmitError(error.message);
     } finally {
@@ -254,7 +282,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
             <div className={styles.reviews__stars}>
               {renderStars(avgRating)}
             </div>
-            <span className={styles.reviews__count}>{reviewsCount} Отзывов</span>
+            <span className={styles.reviews__count}>{totalReviews} Отзывов</span>
           </div>
         </div>
         <div className={styles.reviews__sort}>
@@ -263,9 +291,11 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
             value={sortBy}
             onChange={(value) => setSortBy(value)}
             options={[
-              { value: 'recommended', label: 'Рекомендации' },
               { value: 'newest', label: 'Сначала новые' },
-              { value: 'oldest', label: 'Сначала старые' }
+              { value: 'oldest', label: 'Сначала старые' },
+              { value: 'highest_rating', label: 'По убыванию оценки' },
+              { value: 'lowest_rating', label: 'По возрастанию оценки' },
+              { value: 'with_photos', label: 'С фото в начале' }
             ]}
           />
           {isAuthenticated && (
@@ -277,36 +307,72 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
       </div>
 
       <div className={styles.reviews__list}>
-        {mockReviews.map(review => (
-          <div key={review.id} className={styles.review}>
-            <div className={styles.review__header}>
-              <div className={styles.review__author}>
-                <span className={styles.review__name}>{review.author}</span>
-                <div className={styles.review__stars}>
-                  {renderStars(review.rating)}
-                </div>
-                <span className={styles.review__location}>{review.location}</span>
+        {loading ? (
+          <div className={styles.reviews__loading}>Загрузка отзывов...</div>
+        ) : reviews.length > 0 ? (
+          reviews.map(review => (
+                         <div key={review.id} className={styles.review}>
+               <div className={styles.review__header}>
+                 <div className={styles.review__author}>
+                   <div className={styles.review__avatar}>
+                     <div className={styles.review__avatar_placeholder}></div>
+                   </div>
+                   <div className={styles.review__author_info}>
+                     <span className={styles.review__name}>{review.user_name}</span>
+                     <div className={styles.review__stars}>
+                       {renderStars(review.rate)}
+                     </div>
+                     <span className={styles.review__location}>{review.city}</span>
+                   </div>
+                 </div>
+               </div>
+              <div className={styles.review__content}>
+                <p className={styles.review__text}>{review.message}</p>
+                {review.photos && review.photos.length > 0 && (
+                  <div className={styles.review__images}>
+                    {review.photos.map((photo, index) => (
+                      <div key={index} className={styles.review__image}>
+                        {photo.photo ? (
+                          <img 
+                            src={photo.photo}
+                            alt={`Фото отзыва ${index + 1}`}
+                          />
+                        ) : (
+                          <div className={styles.review__image_placeholder}></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+              <span className={styles.review__date}>
+                {new Date(review.date_create).toLocaleDateString('ru-RU', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
+              </span>
             </div>
-            <div className={styles.review__content}>
-              <p className={styles.review__text}>{review.text}</p>
-              {review.images && review.images.length > 0 && (
-                <div className={styles.review__images}>
-                  {review.images.map((image, index) => (
-                    <img 
-                      key={index}
-                      src={image}
-                      alt={`Фото отзыва ${index + 1}`}
-                      className={styles.review__image}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-            <span className={styles.review__date}>{review.date}</span>
-
+          ))
+        ) : (
+          <div className={styles.reviews__empty}>
+            <h3 className={styles.reviews__empty_title}>Пока нет отзывов...</h3>
+            <p className={styles.reviews__empty_text}>
+              Будьте первым, кто поделится мнением! Ваш отзыв поможет другим <br /> пользователям сделать правильный выбор.
+            </p>
+            {isAuthenticated ? (
+              <button className={styles.reviews__button} onClick={handleOpenModal}>
+                Оставить отзыв<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
+  </svg>
+              </button>
+            ) : (
+              <div className={styles.reviews__auth_message}>
+                <p>Для оставления отзыва необходимо войти в систему</p>
+              </div>
+            )}
           </div>
-        ))}
+        )}
       </div>
     </div>
   );

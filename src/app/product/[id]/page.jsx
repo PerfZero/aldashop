@@ -746,7 +746,7 @@ export default function ProductPage({ params }) {
       </div>
       
       <Reviews 
-        hasReviews={product.avg_rating > 0 || product.reviews_count > 0} 
+        hasReviews={true}
         avgRating={product.avg_rating || 0}
         reviewsCount={product.reviews_count || 0}
         productId={product.id}

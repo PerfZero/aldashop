@@ -30,6 +30,18 @@ export async function POST(request) {
     try {
       data = JSON.parse(responseText);
       
+      // Получаем количество отзывов для продукта
+      try {
+        const reviewsResponse = await fetch(`https://aldalinde.ru/api/products/reviews/${body.product_id}/?limit=1&page=1`);
+        if (reviewsResponse.ok) {
+          const reviewsData = await reviewsResponse.json();
+          data.reviews_count = reviewsData.count || 0;
+        }
+      } catch (reviewsError) {
+        console.error('Ошибка получения количества отзывов:', reviewsError);
+        data.reviews_count = 0;
+      }
+      
       // Добавляем базовый URL к фотографиям только если они относительные
       if (data.photos && Array.isArray(data.photos)) {
         data.photos = data.photos.map(photo => ({

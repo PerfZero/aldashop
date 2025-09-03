@@ -114,11 +114,12 @@ export default function ProductCard({ product, filtersOpen = false }) {
           
           setCurrentProduct(prev => {
             const newImage = mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : prev.image;
-            const newHoverImage = hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : prev.hoverImage;
+            const newHoverImage = hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null;
             
             const newProduct = {
               ...prev,
               id: data.id,
+              name: data.title || prev.name,
               price: data.price || 0,
               discountedPrice: data.discounted_price,
               image: newImage,
@@ -303,10 +304,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       <div className={styles.card__content}>
         <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link}>
           <h3 className={styles.card__title}>
-            {currentProduct.name || product.title || product.name}
-            {selectedColor.name && (
-              <span className={styles.card__title_color}>  {selectedColor.name}</span>
-            )}
+            {product.title || currentProduct.name || 'Товар'}
           </h3>
         </Link>
         

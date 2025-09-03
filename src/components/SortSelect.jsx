@@ -24,7 +24,7 @@ export default function SortSelect({ value, onChange, options = [] }) {
     return null;
   }
 
-  const currentOption = options.find(option => option.id === value) || options[0];
+  const currentOption = options.find(option => option.value === value) || options[0];
 
   return (
     <div className={styles.sortSelect} ref={dropdownRef}>
@@ -36,7 +36,7 @@ export default function SortSelect({ value, onChange, options = [] }) {
           type="button"
           aria-expanded={isOpen}
         >
-          {currentOption?.title}
+          {currentOption?.label}
           <svg 
             className={`${styles.sortSelect__arrow} ${isOpen ? styles.sortSelect__arrow_open : ''}`} 
             width="12" 
@@ -52,15 +52,15 @@ export default function SortSelect({ value, onChange, options = [] }) {
           <div className={styles.sortSelect__dropdown}>
             {options.map(option => (
               <button
-                key={option.id}
-                className={`${styles.sortSelect__option} ${option.id === (currentOption?.id) ? styles.sortSelect__option_active : ''}`}
+                key={option.value}
+                className={`${styles.sortSelect__option} ${option.value === (currentOption?.value) ? styles.sortSelect__option_active : ''}`}
                 onClick={() => {
-                  onChange && onChange(option.id);
+                  onChange && onChange(option.value);
                   setIsOpen(false);
                 }}
                 type="button"
               >
-                {option.title}
+                {option.label}
               </button>
             ))}
           </div>
