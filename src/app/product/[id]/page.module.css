@@ -692,6 +692,18 @@ cursor: pointer;
   padding: 0 0;
  }
 
+ .product__main_image{
+  flex: none;
+  height: 430px;
+ }
+
+ .product__gallery{
+  position: relative;
+  top: 0;
+  height: auto;
+  flex: none;
+ }
+
  .product{
   flex-direction: column;
   margin-top: 0 ;
