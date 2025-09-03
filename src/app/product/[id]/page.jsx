@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import styles from './page.module.css';
 import Reviews from '@/components/Reviews';
 import { useCart } from '../../components/CartContext';
 import { useFavourites } from '../../../contexts/FavouritesContext';
+import ProductSkeleton from './ProductSkeleton';
 
 
 export default function ProductPage({ params }) {
+  const router = useRouter();
   const resolvedParams = use(params);
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -194,9 +197,6 @@ export default function ProductPage({ params }) {
 
       
       setProduct(data);
-      if (data.id && data.id !== parseInt(resolvedParams.id)) {
-        window.history.replaceState({}, '', `/product/${data.id}`);
-      }
       setLoading(false);
 
     } catch (error) {
@@ -205,33 +205,84 @@ export default function ProductPage({ params }) {
     }
   };
 
-  const handleSizeChange = (size) => {
+  const handleSizeChange = async (size) => {
     setSelectedSize(size);
-    const colorObj = selectedColor;
-    const materialObj = selectedMaterial;
-    
-    if (colorObj && materialObj) {
-      fetchProductDetailsByOptions(size.id, colorObj.id, materialObj.id);
+    try {
+      const response = await fetch('/api/products/product-detail/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model_id: modelId,
+          size_id: size.id,
+          color_id: selectedColor?.id,
+          material_id: selectedMaterial?.id,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.id) {
+          router.push(`/product/${data.id}`);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при получении товара:', error);
     }
   };
 
-  const handleColorChange = (color) => {
+  const handleColorChange = async (color) => {
     setSelectedColor(color);
-    const sizeObj = selectedSize;
-    const materialObj = selectedMaterial;
-    
-    if (sizeObj && materialObj) {
-      fetchProductDetailsByOptions(sizeObj.id, color.id, materialObj.id);
+    try {
+      const response = await fetch('/api/products/product-detail/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model_id: modelId,
+          size_id: selectedSize?.id,
+          color_id: color.id,
+          material_id: selectedMaterial?.id,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.id) {
+          router.push(`/product/${data.id}`);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при получении товара:', error);
     }
   };
 
-  const handleMaterialChange = (material) => {
+  const handleMaterialChange = async (material) => {
     setSelectedMaterial(material);
-    const sizeObj = selectedSize;
-    const colorObj = selectedColor;
-    
-    if (sizeObj && colorObj) {
-      fetchProductDetailsByOptions(sizeObj.id, colorObj.id, material.id);
+    try {
+      const response = await fetch('/api/products/product-detail/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model_id: modelId,
+          size_id: selectedSize?.id,
+          color_id: selectedColor?.id,
+          material_id: material.id,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.id) {
+          router.push(`/product/${data.id}`);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка при получении товара:', error);
     }
   };
 
@@ -317,68 +368,7 @@ export default function ProductPage({ params }) {
   };
 
   if (loading) {
-    return (
-      <main className={styles.page}>
-        <div className={styles.product__skeleton}>
-          <div className={`${styles.skeleton} ${styles.product__skeleton_title}`}></div>
-          
-          <div className={styles.product__skeleton_content}>
-            <div className={styles.product__skeleton_gallery}>
-              <div className={styles.product__skeleton_thumbnails}>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_thumbnail}`}></div>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_thumbnail}`}></div>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_thumbnail}`}></div>
-              </div>
-              <div className={`${styles.skeleton} ${styles.product__skeleton_main_image}`}></div>
-            </div>
-            
-            <div className={styles.product__skeleton_info}>
-              <div className={`${styles.skeleton} ${styles.product__skeleton_price}`}></div>
-              
-              <div className={styles.product__skeleton_options}>
-                <div>
-                  <div className={`${styles.skeleton} ${styles.product__skeleton_option_title}`}></div>
-                  <div className={styles.product__skeleton_option_list}>
-                    <div className={`${styles.skeleton} ${styles.product__skeleton_size}`}></div>
-                    <div className={`${styles.skeleton} ${styles.product__skeleton_size}`}></div>
-                    <div className={`${styles.skeleton} ${styles.product__skeleton_size}`}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className={`${styles.skeleton} ${styles.product__skeleton_option_title}`}></div>
-                  <div className={styles.product__skeleton_option_list}>
-                    <div className={`${styles.skeleton} ${styles.product__skeleton_color}`}></div>
-                    <div className={`${styles.skeleton} ${styles.product__skeleton_color}`}></div>
-                    <div className={`${styles.skeleton} ${styles.product__skeleton_color}`}></div>
-                  </div>
-                </div>
-                
-                <div>
-                  <div className={`${styles.skeleton} ${styles.product__skeleton_option_title}`}></div>
-                  <div className={styles.product__skeleton_option_list}>
-                    <div className={`${styles.skeleton} ${styles.product__skeleton_material}`}></div>
-                    <div className={`${styles.skeleton} ${styles.product__skeleton_material}`}></div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className={styles.product__skeleton_details}>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_detail}`}></div>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_detail}`}></div>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_detail}`}></div>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_detail}`}></div>
-              </div>
-              
-              <div className={styles.product__skeleton_buttons}>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_cart_button}`}></div>
-                <div className={`${styles.skeleton} ${styles.product__skeleton_favorite_button}`}></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-    );
+    return <ProductSkeleton />;
   }
 
   if (error) {
