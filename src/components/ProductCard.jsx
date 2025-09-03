@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -54,6 +54,14 @@ export default function ProductCard({ product, filtersOpen = false }) {
   const [isLoading, setIsLoading] = useState(false);
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
+
+  const handleMouseEnter = useCallback(() => {
+    setIsHovered(true);
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovered(false);
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -202,8 +210,8 @@ export default function ProductCard({ product, filtersOpen = false }) {
       <Link href={`/product/${currentProduct.id}`} className={styles.card__link}>
         <div 
           className={`${styles.card__image} ${filtersOpen ? styles.card__image_filters_open : ''}`}
-          onMouseEnter={() => !isMobile && setIsHovered(true)}
-          onMouseLeave={() => !isMobile && setIsHovered(false)}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
         >
           {isMobile ? (
             <Swiper

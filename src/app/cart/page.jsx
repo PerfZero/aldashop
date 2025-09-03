@@ -24,6 +24,7 @@ export default function CartPage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
+    patronymic: '',
     inn: '',
     phone: '',
     email: '',
@@ -98,6 +99,7 @@ export default function CartPage() {
                   ...prev,
                   firstName: data.profile_fields.first_name || prev.firstName,
                   lastName: data.profile_fields.last_name || prev.lastName,
+                  patronymic: data.profile_fields.patronymic || prev.patronymic,
                   phone: data.profile_fields.phone || prev.phone,
                   email: data.emails?.[0] || prev.email,
                 };
@@ -236,6 +238,7 @@ export default function CartPage() {
       pay_method: formData.payment,
       first_name: formData.firstName,
       last_name: formData.lastName,
+      patronymic: formData.patronymic,
       phone: formData.phone
     };
 
@@ -546,19 +549,36 @@ export default function CartPage() {
                       </div>
                     </div>
                     
-                    <div className={formData.isLegalEntity ? `${styles.inputField} ${styles.innInput}` : styles.inputField}>
+                    <div className={styles.inputField}>
                       <div className={styles.inputContainer}>
                         <input 
                           type="text" 
-                          name={formData.isLegalEntity ? "inn" : "lastName"} 
+                          name="lastName" 
                           placeholder=" " 
                           required
-                          value={formData.isLegalEntity ? formData.inn || "" : formData.lastName}
+                          value={formData.lastName}
                           onChange={handleInputChange}
                         />
                         <span className={styles.floatingLabel}>
-                          {formData.isLegalEntity ? "Укажите ИНН ИП или организацию " : "Фамилия "}
-                          <span className={styles.requiredStar}>*</span>
+                          Фамилия <span className={styles.requiredStar}>*</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className={styles.formRow}>
+                    <div className={styles.inputField}>
+                      <div className={styles.inputContainer}>
+                        <input 
+                          type="text" 
+                          name="patronymic" 
+                          placeholder=" " 
+                          required
+                          value={formData.patronymic}
+                          onChange={handleInputChange}
+                        />
+                        <span className={styles.floatingLabel}>
+                          Отчество <span className={styles.requiredStar}>*</span>
                         </span>
                       </div>
                     </div>

@@ -20,6 +20,8 @@ export default function ProductPage({ params }) {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [modelId, setModelId] = useState(null);
   const [isAdded, setIsAdded] = useState(false);
+  const [showMaterialInfo, setShowMaterialInfo] = useState(true);
+  const [showProductInfo, setShowProductInfo] = useState(true);
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
 
@@ -446,12 +448,14 @@ export default function ProductPage({ params }) {
                 >
                   <path 
                     d="M7.5 0L9.18386 5.18237H14.6329L10.2245 8.38525L11.9084 13.5676L7.5 10.3647L3.09161 13.5676L4.77547 8.38525L0.367076 5.18237H5.81614L7.5 0Z" 
-                    fill={index < 4 ? "#A45B38" : "#E5E5E5"} 
+                    fill={index < (parseFloat(product.avg_rating) || 0) ? "#A45B38" : "#E5E5E5"} 
                   />
                 </svg>
               ))}
             </div>
-            <span className={styles.product__reviews}>0 Отзывов</span>
+            <span className={styles.product__reviews}>
+              {product.avg_rating ? `${product.avg_rating.toFixed(1)}` : '0'} ({product.reviews_count || 0} отзывов)
+            </span>
           </div>
           
           <div className={styles.product__price}>
@@ -522,12 +526,14 @@ export default function ProductPage({ params }) {
                 >
                   <path 
                     d="M7.5 0L9.18386 5.18237H14.6329L10.2245 8.38525L11.9084 13.5676L7.5 10.3647L3.09161 13.5676L4.77547 8.38525L0.367076 5.18237H5.81614L7.5 0Z" 
-                    fill={index < 4 ? "#A45B38" : "#E5E5E5"} 
+                    fill={index < (parseFloat(product.avg_rating) || 0) ? "#A45B38" : "#E5E5E5"} 
                   />
                 </svg>
               ))}
             </div>
-            <span className={styles.product__reviews}>0 Отзывов</span>
+            <span className={styles.product__reviews}>
+              {product.avg_rating ? `${product.avg_rating.toFixed(1)}` : '0'} ({product.reviews_count || 0} отзывов)
+            </span>
           </div>
           
           <p className={styles.product__article}>Артикул: {product.generated_article}</p>
@@ -682,8 +688,24 @@ export default function ProductPage({ params }) {
           
           {product.param && product.param.length > 0 && (
             <div className={styles.product__params}>
-              <h2 className={styles.product__params_title}>Материал изделия и уход</h2>
-              <div className={styles.product__params_list}>
+              <div 
+                className={styles.product__section_header}
+                onClick={() => setShowMaterialInfo(!showMaterialInfo)}
+              >
+                <h2 className={styles.product__params_title}>Материал изделия и уход</h2>
+                <div className={styles.product__toggle_button}>
+                  {showMaterialInfo ? (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 8H12" stroke="#323433" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 4V12M4 8H12" stroke="#323433" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <div className={`${styles.product__params_list} ${showMaterialInfo ? styles.product__content_visible : styles.product__content_hidden}`}>
                 {product.param.map((param, index) => (
                   <div key={index} className={styles.product__param}>
                     <span className={styles.product__param_key}>{param.key_param}</span>
@@ -696,8 +718,24 @@ export default function ProductPage({ params }) {
           
           {product.description && (
             <div className={styles.product__description}>
-              <h2 className={styles.product__description_title}>Информация о товаре</h2>
-              <div className={styles.product__description_content}>
+              <div 
+                className={styles.product__section_header}
+                onClick={() => setShowProductInfo(!showProductInfo)}
+              >
+                <h2 className={styles.product__description_title}>Информация о товаре</h2>
+                <div className={styles.product__toggle_button}>
+                  {showProductInfo ? (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 8H12" stroke="#323433" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 4V12M4 8H12" stroke="#323433" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <div className={`${styles.product__description_content} ${showProductInfo ? styles.product__content_visible : styles.product__content_hidden}`}>
                 <p className={styles.product__description_paragraph}>
                   {product.description}
                 </p>
@@ -707,7 +745,12 @@ export default function ProductPage({ params }) {
         </div>
       </div>
       
-      <Reviews hasReviews={false} />
+      <Reviews 
+        hasReviews={product.avg_rating > 0 || product.reviews_count > 0} 
+        avgRating={product.avg_rating || 0}
+        reviewsCount={product.reviews_count || 0}
+        productId={product.id}
+      />
     </main>
   );
 } 

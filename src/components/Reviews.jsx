@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import styles from './Reviews.module.css';
 import SortSelect from './SortSelect';
+import { useAuth } from '../contexts/AuthContext';
 
 const mockReviews = [
   {
@@ -14,20 +15,31 @@ const mockReviews = [
   }
 ];
 
-export default function Reviews({ hasReviews = true }) {
+export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount = 0, productId }) {
+  const { isAuthenticated, user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sortBy, setSortBy] = useState('recommended');
   const [modalRating, setModalRating] = useState(0);
   const [modalImages, setModalImages] = useState([]);
+  const [modalMessage, setModalMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const fileInputRef = useRef(null);
 
   const handleOpenModal = () => {
+    if (!isAuthenticated) {
+      setSubmitError('Необходимо войти в систему для оставления отзыва');
+      return;
+    }
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setModalRating(0);
+    setModalMessage('');
+    setModalImages([]);
+    setSubmitError('');
   };
 
   const handleStarClick = (index) => {
@@ -35,11 +47,73 @@ export default function Reviews({ hasReviews = true }) {
   };
 
   const handleFilesChange = (e) => {
-    const files = Array.from(e.target.files).slice(0, 10);
+    const files = Array.from(e.target.files).slice(0, 3);
     setModalImages(files);
   };
 
+  const handleSubmitReview = async () => {
+    if (!isAuthenticated) {
+      setSubmitError('Необходимо войти в систему для оставления отзыва');
+      return;
+    }
+
+    if (!modalRating || !modalMessage.trim()) {
+      setSubmitError('Пожалуйста, поставьте оценку и напишите отзыв');
+      return;
+    }
+
+    if (modalMessage.length > 400) {
+      setSubmitError('Текст отзыва не должен превышать 400 символов');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      
+      if (!accessToken) {
+        throw new Error('Токен авторизации не найден');
+      }
+
+      const formData = new FormData();
+      formData.append('product_id', productId);
+      formData.append('rate', modalRating);
+      formData.append('message', modalMessage.trim());
+
+      modalImages.forEach((file, index) => {
+        formData.append(`photos[${index}]`, file);
+      });
+
+      const response = await fetch('/api/user/reviews/create', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (data.code === 'token_not_valid') {
+          throw new Error('Токен недействителен. Пожалуйста, войдите заново.');
+        }
+        throw new Error(data.error || data.detail || 'Ошибка при отправке отзыва');
+      }
+
+      handleCloseModal();
+      window.location.reload();
+    } catch (error) {
+      setSubmitError(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const renderStars = (rating, isInteractive = false) => {
+    const numericRating = parseFloat(rating) || 0;
     return [...Array(5)].map((_, index) => (
       <svg 
         key={index}
@@ -53,8 +127,8 @@ export default function Reviews({ hasReviews = true }) {
       >
         <path 
           d="M24.0146 13.9746L24.127 14.3193H37.4824L26.9717 21.9561L26.6777 22.1699L26.79 22.5156L30.8037 34.8701L20.2939 27.2344L20 27.0215L19.7061 27.2344L9.19531 34.8701L13.21 22.5156L13.3223 22.1699L13.0283 21.9561L2.51758 14.3193H15.873L15.9854 13.9746L20 1.61719L24.0146 13.9746Z" 
-          fill={index < rating ? "#A45B38" : "#fff"} 
-          stroke={index < rating ? "#A45B38" : "#A45B38"}
+          fill={index < numericRating ? "#A45B38" : "#fff"} 
+          stroke={index < numericRating ? "#A45B38" : "#A45B38"}
         />
       </svg>
     ));
@@ -70,11 +144,17 @@ export default function Reviews({ hasReviews = true }) {
           <h3 className={styles.reviews__empty_title}>Пока нет отзывов...</h3>
           <p className={styles.reviews__empty_text}>
           Будьте первым, кто поделится мнением! Ваш отзыв поможет другим <br /> пользователям сделать правильный выбор.</p>
-          <button className={styles.reviews__button} onClick={handleOpenModal}>
-            Оставить отзыв<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
-</svg>
-          </button>
+          {isAuthenticated ? (
+            <button className={styles.reviews__button} onClick={handleOpenModal}>
+              Оставить отзыв<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
+  </svg>
+            </button>
+          ) : (
+            <div className={styles.reviews__auth_message}>
+              <p>Для оставления отзыва необходимо войти в систему</p>
+            </div>
+          )}
         </div>
 
         {isModalOpen && (
@@ -93,7 +173,15 @@ export default function Reviews({ hasReviews = true }) {
                 <textarea 
                   className={styles.modal__textarea}
                   placeholder="Комментарий*"
+                  value={modalMessage}
+                  onChange={(e) => setModalMessage(e.target.value)}
+                  maxLength={400}
                 />
+                {modalMessage.length > 0 && (
+                  <div className={styles.modal__char_count}>
+                    {modalMessage.length}/400 символов
+                  </div>
+                )}
                                   <div className={styles.modal__upload_title}>Добавьте фото</div>
 
                 <div
@@ -108,7 +196,7 @@ export default function Reviews({ hasReviews = true }) {
                     </svg>
                   </div>
                   <div className={styles.modal__upload_hint}>
-                    Загрузите не более 10 файлов
+                    Загрузите не более 3 файлов
                   </div>
                   <input
                     type="file"
@@ -131,8 +219,17 @@ export default function Reviews({ hasReviews = true }) {
                     </div>
                   )}
                 </div>
-                <button className={styles.modal__submit}>
-                  Отправить отзыв
+                {submitError && (
+                  <div className={styles.modal__error}>
+                    {submitError}
+                  </div>
+                )}
+                <button 
+                  className={styles.modal__submit} 
+                  onClick={handleSubmitReview}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Отправка...' : 'Отправить отзыв'}
                 </button>
               </div>
               <button className={styles.modal__close} onClick={handleCloseModal}>
@@ -155,9 +252,9 @@ export default function Reviews({ hasReviews = true }) {
           <h2 className={styles.reviews__title}>Отзывы</h2>
           <div className={styles.reviews__rating}>
             <div className={styles.reviews__stars}>
-              {renderStars(5)}
+              {renderStars(avgRating)}
             </div>
-            <span className={styles.reviews__count}>420 Отзывов</span>
+            <span className={styles.reviews__count}>{reviewsCount} Отзывов</span>
           </div>
         </div>
         <div className={styles.reviews__sort}>
@@ -171,6 +268,11 @@ export default function Reviews({ hasReviews = true }) {
               { value: 'oldest', label: 'Сначала старые' }
             ]}
           />
+          {isAuthenticated && (
+            <button className={styles.reviews__button} onClick={handleOpenModal}>
+              Оставить отзыв
+            </button>
+          )}
         </div>
       </div>
 

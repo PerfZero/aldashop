@@ -78,7 +78,7 @@
   height: 100%;
   object-fit: contain;
   object-position: center;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.4s ease !important;
 }
 
 .card__image_main {
@@ -390,6 +390,11 @@
 
   .card__image {
     aspect-ratio: 1 / 1;
+  }
+
+  .card__image_main,
+  .card__image_hover {
+    transition: opacity 0.1s ease;
   }
 
   .card__bestseller {
