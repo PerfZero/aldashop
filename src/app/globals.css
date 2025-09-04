@@ -133,3 +133,17 @@ html {
   font-size: 16px !important;
   font-weight: bold !important;
 }
+
+/* Стили для активных слайдов в галерее */
+.swiper-slide-thumb-active {
+  border: 1px solid #a45b38 !important;
+}
+
+.swiper-slide-active {
+  border: 1px solid #a45b38 !important;
+}
+
+/* Стили для неактивных слайдов */
+.swiper-slide:not(.swiper-slide-thumb-active) {
+  border: 2px solid transparent !important;
+}

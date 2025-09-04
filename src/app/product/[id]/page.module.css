@@ -58,21 +58,7 @@ flex: 0 2 600px;
   opacity: 1 !important;
 }
 
-.product__thumbs_swiper .swiper-slide.swiper-slide-active .product__thumbnail {
-  border-color: #a45b38 !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 12px rgba(164, 91, 56, 0.3) !important;
-}
-
-.product__thumbs_swiper .swiper-slide.swiper-slide-active {
-  opacity: 1 !important;
-}
-
-.product__thumbs_swiper .swiper-slide.swiper-slide-visible.swiper-slide-fully-visible.swiper-slide-active.swiper-slide-thumb-active .product__thumbnail {
-  border-color: #a45b38 !important;
-  transform: scale(1.05) !important;
-  box-shadow: 0 4px 12px rgba(164, 91, 56, 0.3) !important;
-}
+/* Стили для слайдов теперь в globals.css */
 
 .product__main_swiper {
   flex: 1;
@@ -85,19 +71,30 @@ flex: 0 2 600px;
   justify-content: center;
 }
 
+.product__main_swiper .swiper-slide-active ~ .swiper-slide .product__thumbnail {
+  border-color: transparent !important;
+  transform: scale(1) !important;
+  box-shadow: none !important;
+}
+
 .product__thumbnail {
-  width: 80px;
-  height: 80px;
+  height: 100%;
   overflow: hidden;
+  padding: 5px;
   border: 2px solid transparent;
   transition: all 0.3s ease;
   cursor: pointer;
 }
 
-.product__thumbnail:hover {
-  border-color: #a45b38;
-  transform: scale(1.05);
+/* Hover эффекты убраны */
+
+.product__thumbnail.active {
+  border-color: #a45b38 !important;
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 12px rgba(164, 91, 56, 0.3) !important;
 }
+
+/* Стили для неактивных слайдов теперь в globals.css */
 
 .product__thumbnail img {
   width: 100%;

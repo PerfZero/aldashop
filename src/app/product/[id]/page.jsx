@@ -25,6 +25,7 @@ export default function ProductPage({ params }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const [activeThumbIndex, setActiveThumbIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
@@ -50,6 +51,19 @@ export default function ProductPage({ params }) {
   useEffect(() => {
     fetchProductDetails();
   }, [resolvedParams.id]);
+
+  useEffect(() => {
+    if (thumbsSwiper) {
+      const thumbnails = document.querySelectorAll(`.${styles.product__thumbnail}`);
+      thumbnails.forEach((thumb, index) => {
+        if (index === 0) {
+          thumb.classList.add('active');
+        } else {
+          thumb.classList.remove('active');
+        }
+      });
+    }
+  }, [thumbsSwiper, styles.product__thumbnail]);
 
   const fetchProductDetails = async (productId = null, sizeId = null, colorId = null, materialId = null) => {
     try {
@@ -495,6 +509,19 @@ export default function ProductPage({ params }) {
                 watchSlidesProgress={true}
                 modules={[FreeMode, Navigation, Thumbs]}
                 className={styles.product__thumbs_swiper}
+                onSlideChange={(swiper) => {
+                  setActiveThumbIndex(swiper.activeIndex);
+                  setTimeout(() => {
+                    const thumbnails = document.querySelectorAll(`.${styles.product__thumbnail}`);
+                    thumbnails.forEach((thumb, index) => {
+                      if (index === swiper.activeIndex) {
+                        thumb.classList.add('active');
+                      } else {
+                        thumb.classList.remove('active');
+                      }
+                    });
+                  }, 100);
+                }}
               >
                 {product.photos.map((photo, index) => (
                   <SwiperSlide key={index}>
