@@ -39,7 +39,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
     return {
       id: productData.id,
       modelId: product.id,
-      name: product.title,
+      name: productData.title,
       description: productData.short_description || product.description || 'Съемные чехлы, можно стирать в стиральной машине',
       price: productData.price || 0,
       discountedPrice: productData.discounted_price,
