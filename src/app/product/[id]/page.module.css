@@ -4,23 +4,7 @@
   padding: 0 20px;
 }
 
-:global(.swiper-button-next),
-:global(.swiper-button-prev) {
-  color: #a45b38 !important;
-  background: #ffffff !important;
-  width: 44px !important;
-  height: 44px !important;
-  border-radius: 50% !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
-  border: 1px solid rgba(164, 91, 56, 0.2) !important;
-}
-
-:global(.swiper-button-next::after),
-:global(.swiper-button-prev::after) {
-  color: #a45b38 !important;
-  font-size: 16px !important;
-  font-weight: bold !important;
-}
+/* Глобальные стили для стрелок Swiper */
 
 .product {
   display: flex;
