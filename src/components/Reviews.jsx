@@ -314,9 +314,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
                          <div key={review.id} className={styles.review}>
                <div className={styles.review__header}>
                  <div className={styles.review__author}>
-                   <div className={styles.review__avatar}>
-                     <div className={styles.review__avatar_placeholder}></div>
-                   </div>
+                 
                    <div className={styles.review__author_info}>
                      <span className={styles.review__name}>{review.user_name}</span>
                      <div className={styles.review__stars}>
@@ -328,22 +326,22 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
                </div>
               <div className={styles.review__content}>
                 <p className={styles.review__text}>{review.message}</p>
-                {review.photos && review.photos.length > 0 && (
-                  <div className={styles.review__images}>
-                    {review.photos.map((photo, index) => (
-                      <div key={index} className={styles.review__image}>
-                        {photo.photo ? (
-                          <img 
-                            src={photo.photo}
-                            alt={`Фото отзыва ${index + 1}`}
-                          />
-                        ) : (
-                          <div className={styles.review__image_placeholder}></div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                                 {review.has_photos && review.photos && review.photos.length > 0 && (
+                   <div className={styles.review__images}>
+                     {review.photos.map((photo, index) => (
+                       <div key={index} className={styles.review__image}>
+                         {photo.photo ? (
+                           <img 
+                             src={`https://aldalinde.ru${photo.photo}`}
+                             alt={`Фото отзыва ${index + 1}`}
+                           />
+                         ) : (
+                           <div className={styles.review__image_placeholder}></div>
+                         )}
+                       </div>
+                     ))}
+                   </div>
+                 )}
               </div>
               <span className={styles.review__date}>
                 {new Date(review.date_create).toLocaleDateString('ru-RU', {

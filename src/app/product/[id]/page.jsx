@@ -9,6 +9,13 @@ import Reviews from '@/components/Reviews';
 import { useCart } from '../../components/CartContext';
 import { useFavourites } from '../../../contexts/FavouritesContext';
 import ProductSkeleton from './ProductSkeleton';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { FreeMode, Navigation, Thumbs, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/thumbs';
+import 'swiper/css/free-mode';
 
 
 export default function ProductPage({ params }) {
@@ -17,7 +24,8 @@ export default function ProductPage({ params }) {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
@@ -27,6 +35,17 @@ export default function ProductPage({ params }) {
   const [showProductInfo, setShowProductInfo] = useState(true);
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     fetchProductDetails();
@@ -425,7 +444,7 @@ export default function ProductPage({ params }) {
             )}
           </h1>
           
-          <div className={styles.product__rating}>
+          <div id="rating-gallery" className={styles.product__rating}>
             <div className={styles.product__stars}>
               {[...Array(5)].map((_, index) => (
                 <svg 
@@ -443,7 +462,11 @@ export default function ProductPage({ params }) {
                 </svg>
               ))}
             </div>
-            <span className={styles.product__reviews}>
+            <span 
+              className={styles.product__reviews}
+              onClick={() => document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' })}
+              style={{ cursor: 'pointer' }}
+            >
               {product.avg_rating ? `${product.avg_rating.toFixed(1)}` : '0'} ({product.reviews_count || 0} отзывов)
             </span>
           </div>
@@ -463,32 +486,51 @@ export default function ProductPage({ params }) {
         <div className={styles.product__gallery}>
           {product.photos && product.photos.length > 0 && (
             <>
-              <div className={styles.product__thumbnails}>
+              <Swiper
+                onSwiper={setThumbsSwiper}
+                direction={isMobile ? "horizontal" : "vertical"}
+                spaceBetween={10}
+                slidesPerView={4}
+                freeMode={true}
+                watchSlidesProgress={true}
+                modules={[FreeMode, Navigation, Thumbs]}
+                className={styles.product__thumbs_swiper}
+              >
                 {product.photos.map((photo, index) => (
-                  <button
-                    key={index}
-                    className={`${styles.product__thumbnail} ${selectedImage === index ? styles.product__thumbnail_active : ''}`}
-                    onClick={() => setSelectedImage(index)}
-                  >
-                    <Image
-                      src={photo.photo}
-                      alt={`${product.title} - фото ${index + 1}`}
-                      width={80}
-                      height={80}
-                    />
-                  </button>
+                  <SwiperSlide key={index}>
+                    <div className={styles.product__thumbnail}>
+                      <Image
+                        src={photo.photo}
+                        alt={`${product.title} - фото ${index + 1}`}
+                        width={80}
+                        height={80}
+                      />
+                    </div>
+                  </SwiperSlide>
                 ))}
-              </div>
+              </Swiper>
               
-              <div className={styles.product__main_image}>
-                <Image
-                  src={product.photos[selectedImage]?.photo}
-                  alt={product.title}
-                  width={600}
-                  height={600}
-                  priority
-                />
-              </div>
+              <Swiper
+                spaceBetween={10}
+                navigation={true}
+                thumbs={{ swiper: thumbsSwiper }}
+                modules={[FreeMode, Navigation, Thumbs]}
+                className={styles.product__main_swiper}
+              >
+                {product.photos.map((photo, index) => (
+                  <SwiperSlide key={index}>
+                    <div className={styles.product__main_image}>
+                      <Image
+                        src={photo.photo}
+                        alt={`${product.title} - фото ${index + 1}`}
+                        width={600}
+                        height={600}
+                        priority
+                      />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </>
           )}
         </div>
@@ -503,7 +545,7 @@ export default function ProductPage({ params }) {
             </h1>
           </div>
           
-          <div className={styles.product__rating}>
+          <div id="rating" className={styles.product__rating}>
             <div className={styles.product__stars}>
               {[...Array(5)].map((_, index) => (
                 <svg 
@@ -521,7 +563,11 @@ export default function ProductPage({ params }) {
                 </svg>
               ))}
             </div>
-            <span className={styles.product__reviews}>
+            <span 
+              className={styles.product__reviews}
+              onClick={() => document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' })}
+              style={{ cursor: 'pointer' }}
+            >
               {product.avg_rating ? `${product.avg_rating.toFixed(1)}` : '0'} ({product.reviews_count || 0} отзывов)
             </span>
           </div>
@@ -735,12 +781,14 @@ export default function ProductPage({ params }) {
         </div>
       </div>
       
-      <Reviews 
-        hasReviews={true}
-        avgRating={product.avg_rating || 0}
-        reviewsCount={product.reviews_count || 0}
-        productId={product.id}
-      />
+      <div id="reviews">
+        <Reviews 
+          hasReviews={true}
+          avgRating={product.avg_rating || 0}
+          reviewsCount={product.reviews_count || 0}
+          productId={product.id}
+        />
+      </div>
     </main>
   );
 } 
