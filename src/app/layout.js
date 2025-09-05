@@ -9,6 +9,26 @@ import { FavouritesProvider } from '../contexts/FavouritesContext';
 import QueryParamProviderWrapper from '../components/QueryParamProvider';
 import './globals.css';
 
+export const metadata = {
+  title: {
+    default: 'ALDA - Мебель, которую выбирают сердцем',
+    template: '%s | ALDA'
+  },
+  description: 'ALDA - интернет-магазин качественной мебели. Диваны, кресла, пуфы и другая мягкая мебель для вашего дома. Доставка по Сочи и Краснодарскому краю.',
+  keywords: 'мебель, диваны, кресла, пуфы, мягкая мебель, интернет-магазин, ALDA, Сочи, Краснодарский край',
+  openGraph: {
+    title: 'ALDA - Мебель, которую выбирают сердцем',
+    description: 'ALDA - интернет-магазин качественной мебели. Диваны, кресла, пуфы и другая мягкая мебель для вашего дома.',
+    type: 'website',
+    locale: 'ru_RU',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  viewport: 'width=device-width, initial-scale=1',
+};
+
 const montserrat = Montserrat({ subsets: ['latin', 'cyrillic'], variable: '--font-montserrat' });
 const tenorSans = Tenor_Sans({ subsets: ['latin', 'cyrillic'], weight: '400', variable: '--font-tenor-sans' });
 
