@@ -124,6 +124,7 @@
 .review{
     display: flex;
     justify-content: space-between;
+    gap: 30px;
 }
 
 .review__name {
@@ -452,6 +453,7 @@ height: 15px;
     margin-bottom: 20px;
     flex-direction: column;
     align-items: flex-start;
+   
   }
 
   .modal_wrapper{
@@ -505,6 +507,8 @@ height: 15px;
   .review__header{
     flex-direction: row;
 }
+
+
 
 .reviews__sort_label{
   display: none;
