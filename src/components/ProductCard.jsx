@@ -31,6 +31,42 @@ export default function ProductCard({ product, filtersOpen = false }) {
     }
     return {};
   });
+
+  useEffect(() => {
+    if (product.product?.color) {
+      setSelectedColor({
+        name: product.product.color.title,
+        hex: `#${product.product.color.code_hex}`
+      });
+    } else if (product.available_colors?.[0]) {
+      setSelectedColor({
+        name: product.available_colors[0].title,
+        hex: `#${product.available_colors[0].code_hex}`
+      });
+    }
+  }, [product]);
+
+  useEffect(() => {
+    const productData = product.product || {};
+    const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
+    const hoverPhoto = productData.photos?.find(p => !p.main_photo) || productData.photos?.[1];
+    
+    setCurrentProduct({
+      id: productData.id,
+      modelId: product.id,
+      name: productData.title,
+      description: productData.short_description || product.description || 'Съемные чехлы, можно стирать в стиральной машине',
+      price: productData.price || 0,
+      discountedPrice: productData.discounted_price,
+      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : '/placeholder.jpg',
+      hoverImage: hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null,
+      inStock: productData.in_stock !== undefined ? productData.in_stock : true,
+      isBestseller: productData.bestseller || product.is_bestseller || false,
+      available_colors: product.available_colors || [],
+      photos: productData.photos || []
+    });
+  }, [product]);
+
   const [currentProduct, setCurrentProduct] = useState(() => {
     const productData = product.product || {};
     const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
@@ -81,7 +117,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
     
     const modelId = product.id;
     if (!modelId) {
-      console.log('Нет model_id для запроса');
+      // console.log('Нет model_id для запроса');
       return;
     }
     
@@ -92,7 +128,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
         color_id: color.id,
       };
       
-      console.log('Отправляем запрос на смену цвета:', requestBody, 'Model ID:', product.id);
+      // console.log('Отправляем запрос на смену цвета:', requestBody, 'Model ID:', product.id);
       
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
@@ -102,11 +138,11 @@ export default function ProductCard({ product, filtersOpen = false }) {
         body: JSON.stringify(requestBody),
       });
 
-      console.log('Ответ сервера:', response.status);
+      // console.log('Ответ сервера:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Полученные данные:', data);
+        // console.log('Полученные данные:', data);
         
         if (data && data.id) {
           const mainPhoto = data.photos?.find(p => p.main_photo) || data.photos?.[0];
@@ -128,18 +164,18 @@ export default function ProductCard({ product, filtersOpen = false }) {
               photos: data.photos || []
             };
             
-            console.log('Товар обновлен:', data.id, data.price, 'Старый ID:', prev.id, 'Новый ID:', newProduct.id);
-            console.log('Изображения:', { oldImage: prev.image, newImage, oldHover: prev.hoverImage, newHover: newHoverImage });
+            // console.log('Товар обновлен:', data.id, data.price, 'Старый ID:', prev.id, 'Новый ID:', newProduct.id);
+            // console.log('Изображения:', { oldImage: prev.image, newImage, oldHover: prev.hoverImage, newHover: newHoverImage });
             
             if (prev.id === newProduct.id && prev.price === newProduct.price && prev.image === newImage) {
-              console.log('Данные не изменились, пропускаем обновление');
+              // console.log('Данные не изменились, пропускаем обновление');
               return prev;
             }
             
             return newProduct;
           });
         } else {
-          console.log('Получены пустые данные или нет ID');
+          // console.log('Получены пустые данные или нет ID');
         }
       } else {
         const errorText = await response.text();
@@ -168,7 +204,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       quantity: 1
     };
     
-    console.log('Добавляем в корзину:', productToAdd);
+    // console.log('Добавляем в корзину:', productToAdd);
     await addToCart(productToAdd);
     setIsAdded(true);
     
@@ -193,7 +229,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       isBestseller: currentProduct.isBestseller,
     };
     
-    console.log('Переключаем избранное:', productToToggle);
+    // console.log('Переключаем избранное:', productToToggle);
     await toggleFavourite(productToToggle);
   };
 
@@ -332,7 +368,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Клик по цвету:', color);
+                    // console.log('Клик по цвету:', color);
                     handleColorChange(color);
                   }}
                   disabled={isLoading}

@@ -298,11 +298,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
               { value: 'with_photos', label: 'С фото в начале' }
             ]}
           />
-          {isAuthenticated && (
-            <button className={styles.reviews__button} onClick={handleOpenModal}>
-              Оставить отзыв
-            </button>
-          )}
+       
         </div>
       </div>
 
@@ -372,6 +368,11 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
           </div>
         )}
       </div>
+      {isAuthenticated && (
+            <button className={styles.reviews__button} onClick={handleOpenModal}>
+              Оставить отзыв
+            </button>
+          )}
     </div>
   );
 } 

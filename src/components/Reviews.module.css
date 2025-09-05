@@ -505,10 +505,26 @@ height: 15px;
   
   .review{
     flex-direction: column;
+    gap: 5px;
+
   }
 
   .review__header{
     flex-direction: row;
+    margin-bottom: 0;
+    width: 100%;
+}
+
+.review__author{
+  width: 100%;
+}
+
+.review__author_info {
+  flex-direction: row;
+  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
 }
 
 

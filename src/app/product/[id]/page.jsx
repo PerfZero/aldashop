@@ -137,32 +137,32 @@ export default function ProductPage({ params }) {
         body: JSON.stringify(requestBody),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      // console.log('Response status:', response.status);
+      // console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.log('ОШИБКА 400 - Полный ответ сервера:', errorText);
-        console.log('ОШИБКА 400 - Статус:', response.status);
-        console.log('ОШИБКА 400 - Отправленные данные:', requestBody);
+        // console.log('ОШИБКА 400 - Полный ответ сервера:', errorText);
+        // console.log('ОШИБКА 400 - Статус:', response.status);
+        // console.log('ОШИБКА 400 - Отправленные данные:', requestBody);
         throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
 
       const responseText = await response.text();
-      console.log('Сырой ответ от сервера:', responseText);
+      // console.log('Сырой ответ от сервера:', responseText);
       
       let data;
       try {
         data = JSON.parse(responseText);
-        console.log('Распарсенные данные:', data);
+        // console.log('Распарсенные данные:', data);
       } catch (parseError) {
-        console.log('ОШИБКА парсинга JSON:', parseError);
-        console.log('Сырой текст который не удалось распарсить:', responseText);
+        // console.log('ОШИБКА парсинга JSON:', parseError);
+        // console.log('Сырой текст который не удалось распарсить:', responseText);
         throw new Error('Invalid JSON response');
       }
 
       if (data.error) {
-        console.log('Ошибка в данных:', data.error);
+        // console.log('Ошибка в данных:', data.error);
         throw new Error(data.error);
       }
 
@@ -184,7 +184,7 @@ export default function ProductPage({ params }) {
         color_id: colorId,
         material_id: materialId,
       };
-      console.log('Отправляем запрос на прямой API:', requestBody);
+      // console.log('Отправляем запрос на прямой API:', requestBody);
       
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
@@ -194,18 +194,18 @@ export default function ProductPage({ params }) {
         body: JSON.stringify(requestBody),
       });
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      // console.log('Response status:', response.status);
+      // console.log('Response headers:', Object.fromEntries(response.headers.entries()));
       
       if (!response.ok) {
         const errorText = await response.text();
-        console.log('Ошибка ответа:', response.status, errorText);
-        console.log('Full error response:', errorText);
+        // console.log('Ошибка ответа:', response.status, errorText);
+        // console.log('Full error response:', errorText);
         throw new Error(`HTTP error! status: ${response.status}, response: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
+      // console.log('Response data:', data);
 
       if (data.error) {
         throw new Error(data.error);
@@ -456,6 +456,16 @@ export default function ProductPage({ params }) {
             {product.bestseller && (
               <div className={styles.product__bestseller}>Bestseller</div>
             )}
+
+<button 
+              className={`${styles.product__favorite_button} ${isFavourite(product?.id) ? styles.product__favorite_button_active : ''}`}
+              onClick={handleToggleFavourite}
+              aria-label={isFavourite(product?.id) ? 'Удалить из избранного' : 'Добавить в избранное'}
+            >
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path fillRule="evenodd" clipRule="evenodd" d="M3.80638 6.20641C4.70651 5.30655 5.92719 4.80104 7.19998 4.80104C8.47276 4.80104 9.69344 5.30655 10.5936 6.20641L12 7.61161L13.4064 6.20641C13.8492 5.74796 14.3788 5.38229 14.9644 5.13072C15.5501 4.87916 16.1799 4.74675 16.8172 4.74121C17.4546 4.73567 18.0866 4.85712 18.6766 5.09847C19.2665 5.33982 19.8024 5.69623 20.2531 6.14691C20.7038 6.5976 21.0602 7.13353 21.3015 7.72343C21.5429 8.31333 21.6643 8.9454 21.6588 9.58274C21.6532 10.2201 21.5208 10.8499 21.2693 11.4356C21.0177 12.0212 20.652 12.5508 20.1936 12.9936L12 21.1884L3.80638 12.9936C2.90651 12.0935 2.401 10.8728 2.401 9.60001C2.401 8.32722 2.90651 7.10654 3.80638 6.20641V6.20641Z" stroke="#323433" strokeWidth="1.5" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </h1>
           
           <div id="rating-gallery" className={styles.product__rating}>
@@ -694,16 +704,9 @@ export default function ProductPage({ params }) {
               </div>
             )}
             
-            {product.city && (
-              <div className={styles.product__detail}>
-                <span className={styles.product__detail_label}>Город: </span>
-                <span className={styles.product__detail_value}>{product.city}</span>
-              </div>
-            )}
-
             {product.country && (
               <div className={styles.product__detail}>
-                <span className={styles.product__detail_label}>Страна: </span>
+                <span className={styles.product__detail_label}>Страна производства: </span>
                 <span className={styles.product__detail_value}>{product.country}</span>
               </div>
             )}

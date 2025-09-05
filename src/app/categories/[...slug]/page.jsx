@@ -17,6 +17,7 @@ function CategoryPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState([]);
   const [products, setProducts] = useState([]);
+  
   const [loading, setLoading] = useState(true);
   const [productsLoading, setProductsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -231,6 +232,7 @@ function CategoryPageContent() {
 
       const data = await response.json();
       
+      
       if (page === 1) {
         setProducts(data.results || []);
       } else {
@@ -253,17 +255,8 @@ function CategoryPageContent() {
   
 
   const handleFiltersApply = (newFilters) => {
-    console.log('Применяем фильтры:', newFilters);
     setAppliedFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
-    
-    setPriceMin(newFilters.price?.min);
-    setPriceMax(newFilters.price?.max);
-    setInStock(newFilters.in_stock ? 'true' : '');
-    setSort(newFilters.sort);
-    setMaterial(newFilters.material?.[0]);
-    setColors(newFilters.colors?.join(','));
-    setBestseller(newFilters.bestseller ? 'true' : '');
     
     const dynamicFilterData = {};
     Object.keys(newFilters).forEach(key => {
@@ -272,15 +265,7 @@ function CategoryPageContent() {
       }
     });
     setDynamicFilters(dynamicFilterData);
-    updateUrlWithDynamicFilters(dynamicFilterData);
     
-    console.log('URL параметры после обновления:');
-    console.log('priceMin:', newFilters.price?.min);
-    console.log('priceMax:', newFilters.price?.max);
-    console.log('inStock:', newFilters.in_stock ? 'true' : '');
-    console.log('material:', newFilters.material?.[0]);
-    console.log('colors:', newFilters.colors?.join(','));
-    console.log('dynamicFilters:', dynamicFilterData);
     
     fetchProducts(newFilters, 1);
   };
@@ -388,32 +373,19 @@ function CategoryPageContent() {
   }, []);
 
   useEffect(() => {
-    console.log('URL параметры изменились:', { priceMin, priceMax, inStock, sort, material, colors, bestseller, dynamicFilters });
-    
-    if (filters.length > 0) {
+    if (filters.length > 0 && !appliedFilters.colors) {
       const urlFilters = {
         price: priceMin || priceMax ? { min: priceMin, max: priceMax } : undefined,
         in_stock: inStock === 'true',
         sort: sort,
-        material: material ? [material] : undefined,
-        colors: colors ? colors.split(',').map(c => parseInt(c)) : undefined,
+        material: material && material.trim() !== '' ? [material] : undefined,
+        colors: colors && colors.trim() !== '' ? colors.split(',').map(c => parseInt(c)).filter(c => !isNaN(c)) : undefined,
         bestseller: bestseller === 'true',
         ...dynamicFilters
       };
       
-      const hasFilters = Object.values(urlFilters).some(value => 
-        value !== undefined && value !== false && (!Array.isArray(value) || value.length > 0)
-      );
-      
-      console.log('Собранные фильтры из URL:', urlFilters);
-      console.log('Есть ли фильтры:', hasFilters);
-      
-      if (hasFilters) {
-        setAppliedFilters(urlFilters);
-        fetchProducts(urlFilters, 1);
-      } else if (Object.keys(dynamicFilters).length === 0 && !priceMin && !priceMax && !inStock && !sort && !material && !colors && !bestseller) {
-        setAppliedFilters({});
-      }
+      setAppliedFilters(urlFilters);
+      fetchProducts(urlFilters, 1);
     }
   }, [filters, priceMin, priceMax, inStock, sort, material, colors, bestseller, dynamicFilters]);
 
