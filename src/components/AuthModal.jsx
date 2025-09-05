@@ -172,7 +172,7 @@ export default function AuthModal({ isOpen, onClose }) {
         <div className={styles.modal}>
           <button className={styles.closeButton} onClick={onClose}>
             <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M7.5 7.5L22.5 22.5M22.5 7.5L7.5 22.5" stroke="#C1AF86" stroke-linecap="round" />
+              <path d="M7.5 7.5L22.5 22.5M22.5 7.5L7.5 22.5" stroke="#C1AF86" strokeLinecap="round" />
             </svg>
           </button>
           <div className={styles.confirmationMessage}>
@@ -196,7 +196,7 @@ export default function AuthModal({ isOpen, onClose }) {
       <div className={`${styles.modal} ${isResetPassword ? 'modals' : ''}`}>
         <button className={styles.closeButton} onClick={onClose}>
           <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M7.5 7.5L22.5 22.5M22.5 7.5L7.5 22.5" stroke="#C1AF86" stroke-linecap="round" />
+            <path d="M7.5 7.5L22.5 22.5M22.5 7.5L7.5 22.5" stroke="#C1AF86" strokeLinecap="round" />
           </svg>
         </button>
 
