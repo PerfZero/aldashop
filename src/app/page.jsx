@@ -8,16 +8,6 @@ import DeliverySection from './components/DeliverySection';
 import EmailVerificationModal from '../components/EmailVerificationModal';
 import ResetPasswordModal from '../components/ResetPasswordModal';
 
-export const metadata = {
-  title: 'Главная',
-  description: 'ALDA - интернет-магазин качественной мебели. Диваны, кресла, пуфы и другая мягкая мебель для вашего дома. Доставка по Сочи и Краснодарскому краю. Максимум комфорта в минимуме места.',
-  openGraph: {
-    title: 'ALDA - Мебель, которую выбирают сердцем',
-    description: 'ALDA - интернет-магазин качественной мебели. Диваны, кресла, пуфы и другая мягкая мебель для вашего дома.',
-    type: 'website',
-  },
-};
-
 function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setShowResetModal, searchParams }) {
   const [mainPageData, setMainPageData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
