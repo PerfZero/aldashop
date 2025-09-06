@@ -5,6 +5,8 @@ import Link from 'next/link';
 import styles from './page.module.css';
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useFavourites } from '../../contexts/FavouritesContext';
+import ProductCard from '../../components/ProductCard';
 
 const menuItems = [
   {
@@ -43,6 +45,7 @@ const menuItems = [
 
 export default function AccountPage() {
   const { getUserProfile, updateUserProfile, user, getAuthHeaders } = useAuth();
+  const { favourites, isLoading: favouritesLoading } = useFavourites();
   const [activeTab, setActiveTab] = useState('account');
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [profileData, setProfileData] = useState(null);
@@ -204,16 +207,35 @@ export default function AccountPage() {
         return (
           <div className={styles.favorites__content}>
             <h3 className={styles.favorites__title}>Избранное</h3>
-            <p className={styles.favorites__text}>
-              Нажимайте на <span className={styles.favorites__icon}><svg width="27" height="28" viewBox="0 0 27 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                 <path fillRule="evenodd" clipRule="evenodd" d="M21.6954 14.7257C22.4908 13.9177 22.9327 12.8268 22.9239 11.693C22.915 10.5592 22.4561 9.47537 21.6481 8.67992C21.2481 8.28605 20.7743 7.97484 20.254 7.76405C19.7337 7.55327 19.1769 7.44704 18.6155 7.45143C17.4817 7.46029 16.3978 7.91919 15.6024 8.72717C15.3864 8.94317 15.1119 9.20829 14.7789 9.52254L13.853 10.3944L12.9271 9.52254C12.5934 9.20754 12.3185 8.94242 12.1025 8.72717C11.3008 7.92545 10.2134 7.47506 9.07965 7.47506C7.94585 7.47506 6.85849 7.92545 6.05677 8.72717C4.40527 10.3798 4.38615 13.0517 5.99602 14.7122L13.853 22.5692L21.6954 14.7257ZM5.10165 7.77317C5.624 7.25068 6.24416 6.83621 6.92671 6.55344C7.60926 6.27066 8.34084 6.12512 9.07965 6.12512C9.81846 6.12512 10.55 6.27066 11.2326 6.55344C11.9151 6.83621 12.5353 7.25068 13.0576 7.77317C13.2624 7.97867 13.5275 8.23442 13.853 8.54042C14.177 8.23442 14.4421 7.97829 14.6484 7.77204C15.6952 6.7091 17.1214 6.10555 18.6133 6.09416C20.1051 6.08277 21.5403 6.66447 22.6033 7.71129C23.6662 8.75812 24.2698 10.1843 24.2812 11.6761C24.2925 13.168 23.7108 14.6032 22.664 15.6662L14.6484 23.6829C14.4374 23.8938 14.1513 24.0123 13.853 24.0123C13.5547 24.0123 13.2686 23.8938 13.0576 23.6829L5.03977 15.665C4.01157 14.6046 3.44172 13.1823 3.4533 11.7053C3.46488 10.2283 4.05695 8.81509 5.10165 7.77092V7.77317Z" fill="#323433" fillOpacity="0.5" />
-</svg></span>, чтобы сохранить любимые товары, следить за снижением цен и акциями
-            </p>
-            <Link href="/catalog" className={styles.favorites__link}>
-              В каталог<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
-</svg>
-            </Link>
+            
+            {favouritesLoading ? (
+              <div className={styles.loading}>Загрузка избранного...</div>
+            ) : favourites.length > 0 ? (
+              <div className={styles.favorites__container}>
+                <div className={styles.favorites__count}>
+                  {favourites.length} {favourites.length === 1 ? 'товар' : favourites.length < 5 ? 'товара' : 'товаров'}
+                </div>
+                
+                <div className={styles.favorites__grid}>
+                  {favourites.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className={styles.favorites__empty}>
+                <p className={styles.favorites__text}>
+                  Нажимайте на <span className={styles.favorites__icon}><svg width="27" height="28" viewBox="0 0 27 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                     <path fillRule="evenodd" clipRule="evenodd" d="M21.6954 14.7257C22.4908 13.9177 22.9327 12.8268 22.9239 11.693C22.915 10.5592 22.4561 9.47537 21.6481 8.67992C21.2481 8.28605 20.7743 7.97484 20.254 7.76405C19.7337 7.55327 19.1769 7.44704 18.6155 7.45143C17.4817 7.46029 16.3978 7.91919 15.6024 8.72717C15.3864 8.94317 15.1119 9.20829 14.7789 9.52254L13.853 10.3944L12.9271 9.52254C12.5934 9.20754 12.3185 8.94242 12.1025 8.72717C11.3008 7.92545 10.2134 7.47506 9.07965 7.47506C7.94585 7.47506 6.85849 7.92545 6.05677 8.72717C4.40527 10.3798 4.38615 13.0517 5.99602 14.7122L13.853 22.5692L21.6954 14.7257ZM5.10165 7.77317C5.624 7.25068 6.24416 6.83621 6.92671 6.55344C7.60926 6.27066 8.34084 6.12512 9.07965 6.12512C9.81846 6.12512 10.55 6.27066 11.2326 6.55344C11.9151 6.83621 12.5353 7.25068 13.0576 7.77317C13.2624 7.97867 13.5275 8.23442 13.853 8.54042C14.177 8.23442 14.4421 7.97829 14.6484 7.77204C15.6952 6.7091 17.1214 6.10555 18.6133 6.09416C20.1051 6.08277 21.5403 6.66447 22.6033 7.71129C23.6662 8.75812 24.2698 10.1843 24.2812 11.6761C24.2925 13.168 23.7108 14.6032 22.664 15.6662L14.6484 23.6829C14.4374 23.8938 14.1513 24.0123 13.853 24.0123C13.5547 24.0123 13.2686 23.8938 13.0576 23.6829L5.03977 15.665C4.01157 14.6046 3.44172 13.1823 3.4533 11.7053C3.46488 10.2283 4.05695 8.81509 5.10165 7.77092V7.77317Z" fill="#323433" fillOpacity="0.5" />
+    </svg></span>, чтобы сохранить любимые товары, следить за снижением цен и акциями
+                </p>
+                <Link href="/catalog" className={styles.favorites__link}>
+                  В каталог<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
+    </svg>
+                </Link>
+              </div>
+            )}
           </div>
         );
       case 'orders':

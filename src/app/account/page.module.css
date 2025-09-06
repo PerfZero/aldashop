@@ -518,6 +518,30 @@ color: #323433;
 margin-bottom: 30px;
 }
 
+.favorites__container {
+  text-align: left;
+}
+
+.favorites__count {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 150%;
+  color: rgba(50, 52, 51, 0.6);
+  margin-bottom: 30px;
+}
+
+.favorites__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.favorites__empty {
+  text-align: center;
+}
+
 .account__menu_item:last-child svg ,.account__menu_item:last-child svg path{
   fill: none;
 }
@@ -565,11 +589,20 @@ margin-bottom: 30px;
     border-bottom: none;
   }
 
-
-
   .account__menu_item_active{
     border-bottom: 2px solid #a45b38;
+  }
 
+  .favorites__grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .favorites__grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
 }
 
