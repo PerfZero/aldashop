@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import styles from './Reviews.module.css';
 import SortSelect from './SortSelect';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,10 +19,11 @@ const mockReviews = [
 export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount = 0, productId }) {
   const { isAuthenticated, user } = useAuth();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortBy, setSortBy] = useState('recommended');
   const [modalRating, setModalRating] = useState(0);
   const [modalImages, setModalImages] = useState([]);
   const [modalMessage, setModalMessage] = useState('');
+  const [modalTitle, setModalTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [reviews, setReviews] = useState([]);
@@ -41,6 +43,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
     setIsModalOpen(false);
     setModalRating(0);
     setModalMessage('');
+    setModalTitle('');
     setModalImages([]);
     setSubmitError('');
   };
@@ -85,8 +88,8 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
       return;
     }
 
-    if (!modalRating || !modalMessage.trim()) {
-      setSubmitError('Пожалуйста, поставьте оценку и напишите отзыв');
+    if (!modalRating || !modalTitle.trim() || !modalMessage.trim()) {
+      setSubmitError('Пожалуйста, поставьте оценку, укажите заголовок и напишите отзыв');
       return;
     }
 
@@ -108,6 +111,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
       const formData = new FormData();
       formData.append('product_id', productId);
       formData.append('rate', modalRating);
+      formData.append('title', modalTitle.trim());
       formData.append('message', modalMessage.trim());
 
       modalImages.forEach((file, index) => {
@@ -184,91 +188,6 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
             </div>
           )}
         </div>
-
-        {isModalOpen && (
-          <div className={styles.modal}>
-            <div className={styles.modal__content}>
-            <div className={styles.modal_wrapper}>
-              <h3 className={styles.modal__title}>Ваше мнение важно для нас!</h3>
-              <p className={styles.modal__text}>
-                Пожалуйста, оставьте отзыв о нашем магазине и приобретенной мебели. 
-                Ваш опыт поможет нам стать лучше и другим покупателям — сделать правильный выбор!
-              </p>
-              <div className={styles.modal__form}>
-                <div className={styles.modal__stars}>
-                  {renderStars(modalRating, true)}
-                </div>
-                <textarea 
-                  className={styles.modal__textarea}
-                  placeholder="Комментарий*"
-                  value={modalMessage}
-                  onChange={(e) => setModalMessage(e.target.value)}
-                  maxLength={400}
-                />
-                {modalMessage.length > 0 && (
-                  <div className={styles.modal__char_count}>
-                    {modalMessage.length}/400 символов
-                  </div>
-                )}
-                                  <div className={styles.modal__upload_title}>Добавьте фото</div>
-
-                <div
-                  className={styles.modal__upload_area}
-                  onClick={() => fileInputRef.current && fileInputRef.current.click()}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={styles.modal__upload_icon}>
-                    <svg width="50" height="51" viewBox="0 0 50 51" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M31.25 38L18.75 25.5L3.125 41.125V3.625H46.875V38M25 31.75L34.375 22.375L46.875 34.875V47.375H3.125V38" stroke="#A45B38" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M15.625 19.25C18.2138 19.25 20.3125 17.1513 20.3125 14.5625C20.3125 11.9737 18.2138 9.875 15.625 9.875C13.0362 9.875 10.9375 11.9737 10.9375 14.5625C10.9375 17.1513 13.0362 19.25 15.625 19.25Z" stroke="#A45B38" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                  <div className={styles.modal__upload_hint}>
-                    Загрузите не более 3 файлов
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    style={{ display: 'none' }}
-                    ref={fileInputRef}
-                    onChange={handleFilesChange}
-                  />
-                  {modalImages.length > 0 && (
-                    <div className={styles.modal__upload_preview}>
-                      {modalImages.map((file, idx) => (
-                        <img
-                          key={idx}
-                          src={URL.createObjectURL(file)}
-                          alt={`preview-${idx}`}
-                          className={styles.modal__upload_preview_img}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </div>
-                {submitError && (
-                  <div className={styles.modal__error}>
-                    {submitError}
-                  </div>
-                )}
-                <button 
-                  className={styles.modal__submit} 
-                  onClick={handleSubmitReview}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? 'Отправка...' : 'Отправить отзыв'}
-                </button>
-              </div>
-              <button className={styles.modal__close} onClick={handleCloseModal}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M0.5 0.5L15.5 15.5M15.5 0.5L0.5 15.5" stroke="#C1AF86" strokeLinecap="round" />
-</svg>
-              </button>
-            </div>
-          </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -286,11 +205,12 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
           </div>
         </div>
         <div className={styles.reviews__sort}>
-          <span className={styles.reviews__sort_label}></span>
+          <span className={styles.reviews__sort_label}>Сортировать по:</span>
           <SortSelect
             value={sortBy}
             onChange={(value) => setSortBy(value)}
             options={[
+              { value: 'recommended', label: 'По рекомендации' },
               { value: 'newest', label: 'Сначала новые' },
               { value: 'oldest', label: 'Сначала старые' },
               { value: 'highest_rating', label: 'По убыванию оценки' },
@@ -317,6 +237,13 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
                        {renderStars(review.rate)}
                      </div>
                      <span className={styles.review__location}>{review.city}</span>
+                     <span className={styles.review__date}>
+                {new Date(review.date_create).toLocaleDateString('ru-RU', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric'
+                })}
+              </span>
                    </div>
                  </div>
                </div>
@@ -368,11 +295,105 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
           </div>
         )}
       </div>
-      {isAuthenticated && (
+      {isAuthenticated && reviews.length > 0 && (
             <button className={styles.reviews__button} onClick={handleOpenModal}>
               Оставить отзыв
             </button>
           )}
+
+      {isModalOpen && createPortal(
+        <div className={styles.modal} onClick={handleCloseModal}>
+          <div className={styles.modal__content} onClick={(e) => e.stopPropagation()}>
+          <div className={styles.modal_wrapper}>
+            <h3 className={styles.modal__title}>Ваше мнение важно для нас!</h3>
+            <p className={styles.modal__text}>
+              Пожалуйста, оставьте отзыв о нашем магазине и приобретенной мебели. 
+              Ваш опыт поможет нам стать лучше и другим покупателям — сделать правильный выбор!
+            </p>
+            <div className={styles.modal__form}>
+              <div className={styles.modal__stars}>
+                {renderStars(modalRating, true)}
+              </div>
+              <input 
+                type="text"
+                className={styles.modal__title_input}
+                placeholder="Заголовок отзыва*"
+                value={modalTitle}
+                onChange={(e) => setModalTitle(e.target.value)}
+                maxLength={100}
+              />
+              <textarea 
+                className={styles.modal__textarea}
+                placeholder="Комментарий*"
+                value={modalMessage}
+                onChange={(e) => setModalMessage(e.target.value)}
+                maxLength={400}
+              />
+              {modalMessage.length > 0 && (
+                <div className={styles.modal__char_count}>
+                  {modalMessage.length}/400 символов
+                </div>
+              )}
+                                <div className={styles.modal__upload_title}>Добавьте фото</div>
+
+              <div
+                className={styles.modal__upload_area}
+                onClick={() => fileInputRef.current && fileInputRef.current.click()}
+                style={{ cursor: 'pointer' }}
+              >
+                <div className={styles.modal__upload_icon}>
+                  <svg width="50" height="51" viewBox="0 0 50 51" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M31.25 38L18.75 25.5L3.125 41.125V3.625H46.875V38M25 31.75L34.375 22.375L46.875 34.875V47.375H3.125V38" stroke="#A45B38" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M15.625 19.25C18.2138 19.25 20.3125 17.1513 20.3125 14.5625C20.3125 11.9737 18.2138 9.875 15.625 9.875C13.0362 9.875 10.9375 11.9737 10.9375 14.5625C10.9375 17.1513 13.0362 19.25 15.625 19.25Z" stroke="#A45B38" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </div>
+                <div className={styles.modal__upload_hint}>
+                  Загрузите не более 3 файлов
+                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  style={{ display: 'none' }}
+                  ref={fileInputRef}
+                  onChange={handleFilesChange}
+                />
+                {modalImages.length > 0 && (
+                  <div className={styles.modal__upload_preview}>
+                    {modalImages.map((file, idx) => (
+                      <img
+                        key={idx}
+                        src={URL.createObjectURL(file)}
+                        alt={`preview-${idx}`}
+                        className={styles.modal__upload_preview_img}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+              {submitError && (
+                <div className={styles.modal__error}>
+                  {submitError}
+                </div>
+              )}
+              <button 
+                className={styles.modal__submit} 
+                onClick={handleSubmitReview}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Отправка...' : 'Отправить отзыв'}
+              </button>
+            </div>
+            <button className={styles.modal__close} onClick={handleCloseModal}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0.5 0.5L15.5 15.5M15.5 0.5L0.5 15.5" stroke="#C1AF86" strokeLinecap="round" />
+</svg>
+            </button>
+          </div>
+        </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 } 

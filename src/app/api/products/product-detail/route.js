@@ -4,10 +4,12 @@ export async function POST(request) {
     
     const apiRequestBody = {
       model_id: body.model_id,
-      color_id: body.color_id,
+      ...(body.size_id && { size_id: body.size_id }),
+      ...(body.color_id && { color_id: body.color_id }),
+      ...(body.material_id && { material_id: body.material_id }),
     };
     
-    const response = await fetch('https://aldalinde.ru/api/products/product-detail-list/', {
+    const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -221,6 +221,7 @@
   font-size: 12px;
   line-height: 140%;
   color: #323433;
+  text-decoration: underline;
 }
 
 .product__article {
@@ -241,11 +242,15 @@
   align-items: center;
 }
 
+.product__main_image img{
+  object-fit: contain;
+}
+
 .product__price_old {
   font-family: "Tenor Sans", sans-serif;
   font-weight: 400;
-  font-size: 24px;
-  color: #999;
+  font-size: 20px;
+  color: #999A99;
   text-decoration: line-through;
 }
 
@@ -253,7 +258,7 @@
   font-family: "Tenor Sans", sans-serif;
   font-weight: 400;
   font-size: 32px;
-  color: #e74c3c;
+  color: #323433;
 }
 
 .product__section_title {
@@ -830,6 +835,13 @@
   .product__main_swiper {
     height: 250px;
   }
+
+  .product__main_image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
 
   .product__thumbs_swiper {
     height: auto;

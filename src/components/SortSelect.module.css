@@ -2,6 +2,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+
   position: relative;
 }
 
@@ -38,6 +39,7 @@
   color: #323433;
   padding: 8px;
 }
+
 
 
 
@@ -91,13 +93,21 @@
   }
 
   .sortSelect__button{
-    font-size: 0;
+    font-size: 12px;
     width: auto;
   }
 
+
+  .sortSelect{
+    justify-content: space-between;
+    width: 100%;
+
+  }
   
 
   .sortSelect__container{
     position: static;
+    width: 100%;
+    max-width: fit-content;
   }
 }

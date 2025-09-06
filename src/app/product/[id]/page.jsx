@@ -65,12 +65,12 @@ export default function ProductPage({ params }) {
     }
   }, [thumbsSwiper, styles.product__thumbnail]);
 
-  const fetchProductDetails = async (productId = null, sizeId = null, colorId = null, materialId = null) => {
+  const fetchProductDetails = async (productId = null, sizeId = null, colorId = null) => {
     try {
       setLoading(true);
       
       // Если это первая загрузка, получаем товар по product_id
-      if (!modelId && !sizeId && !colorId && !materialId) {
+      if (!modelId && !sizeId && !colorId) {
         const response = await fetch('/api/products/product-page/', {
           method: 'POST',
           headers: {
@@ -124,9 +124,8 @@ export default function ProductPage({ params }) {
       // Для изменения опций используем product-detail с сохраненным modelId
       const requestBody = {
         model_id: modelId,
-        size_id: sizeId,
-        color_id: colorId,
-        material_id: materialId,
+        ...(sizeId && { size_id: sizeId }),
+        ...(colorId && { color_id: colorId }),
       };
       
       const response = await fetch('/api/products/product-detail/', {
@@ -175,14 +174,13 @@ export default function ProductPage({ params }) {
     }
   };
 
-  const fetchProductDetailsByOptions = async (sizeId, colorId, materialId) => {
+  const fetchProductDetailsByOptions = async (sizeId, colorId) => {
     try {
       setLoading(true);
       const requestBody = {
         model_id: modelId,
-        size_id: sizeId,
-        color_id: colorId,
-        material_id: materialId,
+        ...(sizeId && { size_id: sizeId }),
+        ...(colorId && { color_id: colorId }),
       };
       // console.log('Отправляем запрос на прямой API:', requestBody);
       
@@ -240,25 +238,28 @@ export default function ProductPage({ params }) {
 
   const handleSizeChange = async (size) => {
     setSelectedSize(size);
+    const requestData = {
+      model_id: modelId,
+      size_id: size.id,
+      color_id: selectedColor?.id,
+      ...(selectedMaterial?.id && { material_id: selectedMaterial.id }),
+    };
+    
     try {
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model_id: modelId,
-          size_id: size.id,
-          color_id: selectedColor?.id,
-          material_id: selectedMaterial?.id,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data.id) {
-          router.push(`/product/${data.id}`);
-        }
+        setProduct(prevProduct => ({
+          ...prevProduct,
+          ...data
+        }));
       }
     } catch (error) {
       console.error('Ошибка при получении товара:', error);
@@ -267,25 +268,28 @@ export default function ProductPage({ params }) {
 
   const handleColorChange = async (color) => {
     setSelectedColor(color);
+    const requestData = {
+      model_id: modelId,
+      size_id: selectedSize?.id,
+      color_id: color.id,
+      ...(selectedMaterial?.id && { material_id: selectedMaterial.id }),
+    };
+    
     try {
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model_id: modelId,
-          size_id: selectedSize?.id,
-          color_id: color.id,
-          material_id: selectedMaterial?.id,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data.id) {
-          router.push(`/product/${data.id}`);
-        }
+        setProduct(prevProduct => ({
+          ...prevProduct,
+          ...data
+        }));
       }
     } catch (error) {
       console.error('Ошибка при получении товара:', error);
@@ -294,25 +298,28 @@ export default function ProductPage({ params }) {
 
   const handleMaterialChange = async (material) => {
     setSelectedMaterial(material);
+    const requestData = {
+      model_id: modelId,
+      size_id: selectedSize?.id,
+      color_id: selectedColor?.id,
+      material_id: material.id,
+    };
+    
     try {
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          model_id: modelId,
-          size_id: selectedSize?.id,
-          color_id: selectedColor?.id,
-          material_id: material.id,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       if (response.ok) {
         const data = await response.json();
-        if (data.id) {
-          router.push(`/product/${data.id}`);
-        }
+        setProduct(prevProduct => ({
+          ...prevProduct,
+          ...data
+        }));
       }
     } catch (error) {
       console.error('Ошибка при получении товара:', error);
@@ -320,7 +327,7 @@ export default function ProductPage({ params }) {
   };
 
   // Функция для проверки доступности комбинации опций
-  const checkOptionsAvailability = async (sizeId, colorId, materialId) => {
+  const checkOptionsAvailability = async (sizeId, colorId) => {
     try {
       const response = await fetch('/api/products/product-detail/', {
         method: 'POST',
@@ -331,7 +338,6 @@ export default function ProductPage({ params }) {
           model_id: modelId,
           size_id: sizeId,
           color_id: colorId,
-          material_id: materialId,
         }),
       });
 
@@ -344,9 +350,8 @@ export default function ProductPage({ params }) {
       // Проверяем, совпадают ли запрошенные и полученные опции
       const sizeMatch = !sizeId || data.sizes?.id === sizeId;
       const colorMatch = !colorId || data.color?.id === colorId;
-      const materialMatch = !materialId || data.material?.id === materialId;
       
-      return sizeMatch && colorMatch && materialMatch;
+      return sizeMatch && colorMatch;
     } catch (error) {
       return false;
     }
@@ -441,7 +446,7 @@ export default function ProductPage({ params }) {
   breadcrumbs.push({ text: product.title, href: `/product/${resolvedParams.id}` });
 
 
-  const hasDiscount = product.discounted_price && product.price > product.discounted_price;
+  const hasDiscount = product.discounted_price && product.discounted_price !== null;
   const originalPrice = product.price?.toLocaleString('ru-RU');
   const discountedPrice = product.discounted_price?.toLocaleString('ru-RU');
 
@@ -455,6 +460,9 @@ export default function ProductPage({ params }) {
             {product.title} 
             {product.bestseller && (
               <div className={styles.product__bestseller}>Bestseller</div>
+            )}
+            {hasDiscount && (
+              <div className={styles.product__sale}>Sale</div>
             )}
 
 <button 
@@ -498,8 +506,9 @@ export default function ProductPage({ params }) {
           <div className={styles.product__price}>
             {hasDiscount ? (
               <>
+                              <span className={styles.product__price_new}>{discountedPrice} ₽</span>
+
                 <span className={styles.product__price_old}>{originalPrice} ₽</span>
-                <span className={styles.product__price_new}>{discountedPrice} ₽</span>
               </>
             ) : (
               <span>{originalPrice} ₽</span>
@@ -579,6 +588,9 @@ export default function ProductPage({ params }) {
               {product.bestseller && (
                 <div className={styles.product__bestseller}>Bestseller</div>
               )}
+              {hasDiscount && (
+                <div className={styles.product__bestseller}>Sale</div>
+              )}
             </h1>
           </div>
           
@@ -587,8 +599,8 @@ export default function ProductPage({ params }) {
               {[...Array(5)].map((_, index) => (
                 <svg 
                   key={index}
-                  width="15" 
-                  height="14" 
+                  width="20" 
+                  height="20" 
                   viewBox="0 0 15 14" 
                   fill="none" 
                   xmlns="http://www.w3.org/2000/svg"
@@ -614,8 +626,9 @@ export default function ProductPage({ params }) {
           <div className={styles.product__price}>
             {hasDiscount ? (
               <>
+                              <span className={styles.product__price_new}>{discountedPrice} ₽</span>
+
                 <span className={styles.product__price_old}>{originalPrice} ₽</span>
-                <span className={styles.product__price_new}>{discountedPrice} ₽</span>
               </>
             ) : (
               <span>{originalPrice} ₽</span>
@@ -645,7 +658,7 @@ export default function ProductPage({ params }) {
           {product.available_sizes && product.available_sizes.length > 0 && (
             <div className={styles.product__sizes}>
               <h3 className={styles.product__section_title}>
-                Размеры: <span className={styles.product__size_name}>{selectedSize?.title}</span>
+                Размер: <span className={styles.product__size_name}>{selectedSize?.title}</span>
               </h3>
               <div className={styles.product__sizes_list}>
                                  {product.available_sizes.map((size) => (
