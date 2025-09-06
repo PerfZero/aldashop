@@ -796,7 +796,7 @@
   }
 
   .product__gallery {
-    height: 350px;
+    height: 100%;
     margin-bottom: 20px;
     gap: 10px;
   }
@@ -833,7 +833,12 @@
   }
 
   .product__main_swiper {
-    height: 250px;
+    height: auto;
+    flex: none;
+  }
+
+  .product__main_image{
+    height: auto;
   }
 
   .product__main_image img {

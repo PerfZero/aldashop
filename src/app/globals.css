@@ -127,6 +127,10 @@ html {
   border: 1px solid rgba(164, 91, 56, 0.2) !important;
 }
 
+.product__main_swiper .swiper-slide {
+  border: none !important;
+}
+
 .swiper-button-next::after,
 .swiper-button-prev::after {
   color: #a45b38 !important;
