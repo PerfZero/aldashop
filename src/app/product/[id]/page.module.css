@@ -551,8 +551,9 @@
 }
 
 .product__cart_button.added {
-  background: #c1a286;
+  background: #a45b38;
   color: #ffffff;
+  justify-content: center;
 }
 
 .product__cart_button.added svg path {

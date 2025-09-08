@@ -34,8 +34,12 @@ export default function ProductPage({ params }) {
   const [isAdded, setIsAdded] = useState(false);
   const [showMaterialInfo, setShowMaterialInfo] = useState(true);
   const [showProductInfo, setShowProductInfo] = useState(true);
-  const { addToCart } = useCart();
+  const { addToCart, cartItems } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
+
+  const isInCart = (productId) => {
+    return cartItems.some(item => item.id === productId);
+  };
 
   useEffect(() => {
     const checkMobile = () => {
@@ -744,17 +748,14 @@ export default function ProductPage({ params }) {
           
           <div className={styles.product__actions}>
             <button 
-              className={`${styles.product__cart_button} ${isAdded ? styles.added : ''}`} 
+              className={`${styles.product__cart_button} ${(isAdded || isInCart(product?.id)) ? styles.added : ''}`} 
               onClick={handleAddToCart}
               disabled={loading}
             >
-              {isAdded ? (
-                <>
-                  <span>Добавлено</span>
-                  <svg width="14" height="11" viewBox="0 0 14 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M1 5.5L5 9.5L13 1.5" stroke="#C1A286" strokeWidth="1" strokeLinecap="round" />
-                  </svg>
-                </>
+              {isAdded || isInCart(product?.id) ? (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white"/>
+                </svg>
               ) : (
                 <>
                   <span>{loading ? 'Загрузка...' : 'В корзину'}</span>
