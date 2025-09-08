@@ -46,7 +46,7 @@ export function FavouritesProvider({ children }) {
         const favouritesList = (data.results || data).map(item => {
           const product = item.product;
           const mainPhoto = product.photos?.find(photo => photo.main_photo) || product.photos?.[0];
-          const secondaryPhoto = product.photos?.find(photo => !photo.main_photo) || product.photos?.[1];
+          const secondaryPhoto = product.photos?.find(photo => !photo.main_photo && !photo.photo_interior) || product.photos?.[1];
           
           return {
             id: product.id,
@@ -54,8 +54,8 @@ export function FavouritesProvider({ children }) {
             name: product.title || `Товар ${product.id}`,
             price: product.price || 0,
             discountedPrice: product.discounted_price || null,
-            image: mainPhoto?.photo ? `https://aldalinde.ru${mainPhoto.photo}` : '/placeholder.jpg',
-            hoverImage: secondaryPhoto?.photo ? `https://aldalinde.ru${secondaryPhoto.photo}` : null,
+            image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : null,
+            hoverImage: secondaryPhoto?.photo ? (secondaryPhoto.photo.startsWith('http') ? secondaryPhoto.photo : `https://aldalinde.ru${secondaryPhoto.photo}`) : null,
             article: product.generated_article || `ART${product.id}`,
             inStock: product.in_stock || false,
             isBestseller: product.bestseller || false,

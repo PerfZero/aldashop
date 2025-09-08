@@ -58,7 +58,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       description: productData.short_description || product.description || 'Съемные чехлы, можно стирать в стиральной машине',
       price: productData.price || 0,
       discountedPrice: productData.discounted_price,
-      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : '/placeholder.jpg',
+      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'null',
       hoverImage: hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null,
       inStock: productData.in_stock !== undefined ? productData.in_stock : true,
       isBestseller: productData.bestseller || product.is_bestseller || false,
@@ -79,7 +79,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       description: productData.short_description || product.description || 'Съемные чехлы, можно стирать в стиральной машине',
       price: productData.price || 0,
       discountedPrice: productData.discounted_price,
-      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : '/placeholder.jpg',
+      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'null',
       hoverImage: hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null,
       inStock: productData.in_stock !== undefined ? productData.in_stock : true,
       isBestseller: productData.bestseller || product.is_bestseller || false,
@@ -262,16 +262,18 @@ export default function ProductCard({ product, filtersOpen = false }) {
               slidesPerView={1}
               className={styles.card__swiper}
             >
-              <SwiperSlide className={styles.card__swiper_slide}>
-                <Image
-                  src={currentProduct.image}
-                  alt={currentProduct.name || product.title || 'Товар'}
-                  width={398}
-                  height={320}
-                  priority
-                  className={styles.card__image_main}
-                />
-              </SwiperSlide>
+              {currentProduct.image && (
+                <SwiperSlide className={styles.card__swiper_slide}>
+                  <Image
+                    src={currentProduct.image}
+                    alt={currentProduct.name || product.title || 'Товар'}
+                    width={398}
+                    height={320}
+                    priority
+                    className={styles.card__image_main}
+                  />
+                </SwiperSlide>
+              )}
               {currentProduct.hoverImage && (
                 <SwiperSlide className={styles.card__swiper_slide}>
                   <Image
@@ -287,14 +289,16 @@ export default function ProductCard({ product, filtersOpen = false }) {
             </Swiper>
           ) : (
             <div className={`${styles.card__image_container} ${isHovered ? styles.card__image_container_hover : ''}`}>
-              <Image
-                src={currentProduct.image}
-                alt={currentProduct.name || product.title || 'Товар'}
-                width={398}
-                height={320}
-                priority
-                className={styles.card__image_main}
-              />
+              {currentProduct.image && (
+                <Image
+                  src={currentProduct.image}
+                  alt={currentProduct.name || product.title || 'Товар'}
+                  width={398}
+                  height={320}
+                  priority
+                  className={styles.card__image_main}
+                />
+              )}
               {currentProduct.hoverImage && (
                 <Image
                   src={currentProduct.hoverImage}
