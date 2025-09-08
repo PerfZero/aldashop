@@ -10,7 +10,7 @@ import { useCart } from '../../components/CartContext';
 import { useFavourites } from '../../../contexts/FavouritesContext';
 import ProductSkeleton from './ProductSkeleton';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { FreeMode, Navigation, Thumbs, Pagination } from 'swiper/modules';
+import { FreeMode, Navigation, Thumbs, Pagination, Mousewheel } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -526,7 +526,12 @@ export default function ProductPage({ params }) {
                 slidesPerView="auto"
                 freeMode={true}
                 watchSlidesProgress={true}
-                modules={[FreeMode, Navigation, Thumbs]}
+                modules={[FreeMode, Navigation, Thumbs, Mousewheel]}
+                mousewheel={{
+                  forceToAxis: true,
+                  sensitivity: 1,
+                  releaseOnEdges: true
+                }}
                 className={styles.product__thumbs_swiper}
                 onSlideChange={(swiper) => {
                   setActiveThumbIndex(swiper.activeIndex);
@@ -560,7 +565,12 @@ export default function ProductPage({ params }) {
                 spaceBetween={10}
                 navigation={true}
                 thumbs={{ swiper: thumbsSwiper }}
-                modules={[FreeMode, Navigation, Thumbs]}
+                modules={[FreeMode, Navigation, Thumbs, Mousewheel]}
+                mousewheel={{
+                  forceToAxis: true,
+                  sensitivity: 1,
+                  releaseOnEdges: true
+                }}
                 className={styles.product__main_swiper}
               >
                 {product.photos.map((photo, index) => (
