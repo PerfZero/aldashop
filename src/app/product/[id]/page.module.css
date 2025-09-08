@@ -36,7 +36,7 @@
 
 .product__thumbs_swiper {
   width: 100px;
-  height: 400px;
+  height: auto;
   flex-shrink: 0;
 }
 
@@ -44,6 +44,7 @@
   opacity: 0.6;
   transition: opacity 0.3s ease;
   cursor: pointer;
+  width: auto;
 }
 
 .product__thumbs_swiper .swiper-slide-thumb-active {

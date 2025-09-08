@@ -6,7 +6,7 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'aldalinde.ru',
         port: '',
-        pathname: '/media/**',
+        pathname: '/**',
       },
     ],
   },

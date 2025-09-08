@@ -151,3 +151,8 @@ html {
 .swiper-slide:not(.swiper-slide-thumb-active) {
   border: 2px solid transparent !important;
 }
+
+/* Автоматическая ширина для миниатюр */
+.swiper-thumbs .swiper-slide {
+  height: auto !important;
+}

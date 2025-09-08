@@ -523,7 +523,7 @@ export default function ProductPage({ params }) {
                 onSwiper={setThumbsSwiper}
                 direction={isMobile ? "horizontal" : "vertical"}
                 spaceBetween={10}
-                slidesPerView={4}
+                slidesPerView="auto"
                 freeMode={true}
                 watchSlidesProgress={true}
                 modules={[FreeMode, Navigation, Thumbs]}
