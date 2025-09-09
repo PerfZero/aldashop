@@ -440,8 +440,8 @@ export default function CartPage() {
           <h1 className={styles.title}>Корзина</h1>
 
           <div className={styles.cartItems}>
-            {cartItems.map(item => (
-              <div key={item.id} className={styles.cartItem}>
+            {cartItems.map((item, index) => (
+              <div key={`${item.id}-${index}`} className={styles.cartItem}>
                 <div className={styles.itemLeft}>
                   <div className={styles.productImage}>
                     <img src={item.image} alt={item.name} />
@@ -610,9 +610,9 @@ export default function CartPage() {
                   {autocompleteData?.legal_persons && autocompleteData.legal_persons.length > 0 && (
                     <div className={styles.savedAddresses}>
                       <h4>Сохраненные юридические лица</h4>
-                      {autocompleteData.legal_persons.map((legalPerson) => (
+                      {autocompleteData.legal_persons.map((legalPerson, index) => (
                         <div 
-                          key={legalPerson.id}
+                          key={`legal-${legalPerson.id}-${index}`}
                           className={styles.savedAddress}
                           onClick={() => {
                             setFormData(prev => ({
@@ -749,9 +749,9 @@ export default function CartPage() {
                           {isPickupDropdownOpen && (
                             <div className={styles.selectOptions}>
                               {autocompleteData?.pickup_addresses && autocompleteData.pickup_addresses.length > 0 ? (
-                                autocompleteData.pickup_addresses.map((address) => (
+                                autocompleteData.pickup_addresses.map((address, index) => (
                                   <div 
-                                    key={address.id} 
+                                    key={`pickup-${address.id}-${index}`} 
                                     className={styles.selectOption}
                                     onClick={() => handleSelectPickupAddressFromAPI(address)}
                                   >
@@ -780,9 +780,9 @@ export default function CartPage() {
                         {autocompleteData?.delivery_addresses && autocompleteData.delivery_addresses.length > 0 && (
                           <div className={styles.savedAddresses}>
                             <h4>Сохраненные адреса</h4>
-                            {autocompleteData.delivery_addresses.map((address) => (
+                            {autocompleteData.delivery_addresses.map((address, index) => (
                               <div 
-                                key={address.id}
+                                key={`delivery-${address.id}-${index}`}
                                 className={`${styles.savedAddress} ${selectedAddressId === address.id ? styles.selected : ''}`}
                                 onClick={() => handleSelectSavedAddress(address)}
                               >
