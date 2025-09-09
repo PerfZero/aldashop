@@ -27,7 +27,6 @@ export default function Header() {
   const { favourites } = useFavourites();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
   const searchRef = useRef(null);
 
   
@@ -139,40 +138,14 @@ export default function Header() {
 
 
 
-  useEffect(() => {
-    if (searchQuery.length > 1) {
-      const searchProducts = async () => {
-        try {
-          const response = await fetch('/api/products/models-list', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              search: searchQuery,
-              limit: 5,
-              sort: 1
-            }),
-          });
-
-          if (response.ok) {
-            const data = await response.json();
-            setSearchResults(data.results || []);
-          } else {
-            setSearchResults([]);
-          }
-        } catch (error) {
-          console.error('Ошибка поиска:', error);
-          setSearchResults([]);
-        }
-      };
-
-      const timeoutId = setTimeout(searchProducts, 300);
-      return () => clearTimeout(timeoutId);
-    } else if (searchQuery.length === 0) {
-      setSearchResults([]);
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setIsSearchOpen(false);
+      setSearchQuery("");
     }
-  }, [searchQuery]);
+  };
 
   // Блокировка прокрутки при открытом мобильном меню
   useEffect(() => {
@@ -379,7 +352,7 @@ export default function Header() {
             {/* Десктопный поиск */}
             {isSearchOpen && (
               <div className={styles.searchDropdown} ref={searchRef}>
-                <div className={styles.searchDropdown__header}>
+                <form onSubmit={handleSearchSubmit} className={styles.searchDropdown__header}>
                   <svg className={styles.mobileSearch__icon} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M19.0002 19L14.6572 14.657M14.6572 14.657C15.4001 13.9141 15.9894 13.0322 16.3914 12.0615C16.7935 11.0909 17.0004 10.0506 17.0004 9C17.0004 7.9494 16.7935 6.90908 16.3914 5.93845C15.9894 4.96782 15.4001 4.08589 14.6572 3.343C13.9143 2.60011 13.0324 2.01082 12.0618 1.60877C11.0911 1.20673 10.0508 0.999794 9.00021 0.999794C7.9496 0.999794 6.90929 1.20673 5.93866 1.60877C4.96803 2.01082 4.08609 2.60011 3.34321 3.343C1.84288 4.84333 1 6.87821 1 9C1 11.1218 1.84288 13.1567 3.34321 14.657C4.84354 16.1573 6.87842 17.0002 9.00021 17.0002C11.122 17.0002 13.1569 16.1573 14.6572 14.657Z" stroke="#323433" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
@@ -392,47 +365,9 @@ export default function Header() {
                     autoFocus
                   />
                   {searchQuery && (
-                    <button className={styles.mobileSearch__close} onClick={() => setSearchQuery("")}>×</button>
+                    <button type="button" className={styles.mobileSearch__close} onClick={() => setSearchQuery("")}>×</button>
                   )}
-                </div>
-                {searchQuery && (
-                  <div className={styles.searchDropdown__resultsList}>
-                    {searchResults.length > 0 ? (
-                      <>
-                        {searchResults.map(result => {
-                          const mainPhoto = result.product?.photos?.find(photo => photo.main_photo);
-                          const imageSrc = mainPhoto ? mainPhoto.photo : "/images/sofa.png";
-                          
-                          return (
-                            <Link 
-                              key={result.id} 
-                              href={`/product/${result.id}`} 
-                              className={styles.searchDropdown__result}
-                              onClick={() => setIsSearchOpen(false)}
-                            >
-                              <img 
-                                src={imageSrc} 
-                                alt={result.product?.title || result.title} 
-                                className={styles.searchDropdown__img}
-                                onError={(e) => {
-                                  e.target.src = "/images/sofa.png";
-                                }}
-                              />
-                              <div className={styles.searchDropdown__info}>
-                                <span className={styles.searchDropdown__name}><b>{result.product?.title || result.title}</b></span>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                        <div className={styles.searchDropdown__all}>
-                          <Link href={`/search?q=${encodeURIComponent(searchQuery)}`}>Посмотреть все варианты</Link>
-                        </div>
-                      </>
-                    ) : (
-                      <span className={styles.searchDropdown__empty}>Ничего не найдено</span>
-                    )}
-                  </div>
-                )}
+                </form>
               </div>
             )}
                          <button 
@@ -578,7 +513,7 @@ export default function Header() {
       {/* Поиск для мобильной версии - только на главной странице */}
       {pathname === '/' && (
         <div className={styles.mobileSearch}>
-          <div className={styles.mobileSearch__inputWrapper}>
+          <form onSubmit={handleSearchSubmit} className={styles.mobileSearch__inputWrapper}>
             <svg className={styles.mobileSearch__icon} width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M19.0002 19L14.6572 14.657M14.6572 14.657C15.4001 13.9141 15.9894 13.0322 16.3914 12.0615C16.7935 11.0909 17.0004 10.0506 17.0004 9C17.0004 7.9494 16.7935 6.90908 16.3914 5.93845C15.9894 4.96782 15.4001 4.08589 14.6572 3.343C13.9143 2.60011 13.0324 2.01082 12.0618 1.60877C11.0911 1.20673 10.0508 0.999794 9.00021 0.999794C7.9496 0.999794 6.90929 1.20673 5.93866 1.60877C4.96803 2.01082 4.08609 2.60011 3.34321 3.343C1.84288 4.84333 1 6.87821 1 9C1 11.1218 1.84288 13.1567 3.34321 14.657C4.84354 16.1573 6.87842 17.0002 9.00021 17.0002C11.122 17.0002 13.1569 16.1573 14.6572 14.657Z" stroke="#323433" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -590,47 +525,9 @@ export default function Header() {
               className={styles.mobileSearch__input}
             />
             {searchQuery && (
-              <button className={styles.mobileSearch__close} onClick={() => setSearchQuery("")}>×</button>
+              <button type="button" className={styles.mobileSearch__close} onClick={() => setSearchQuery("")}>×</button>
             )}
-          </div>
-          {searchQuery && (
-            <div className={styles.mobileSearch__resultsList}>
-              {searchResults.length > 0 ? (
-                <>
-                  {searchResults.map(result => {
-                    const mainPhoto = result.product?.photos?.find(photo => photo.main_photo);
-                    const imageSrc = mainPhoto ? mainPhoto.photo : "/images/sofa.png";
-                    
-                    return (
-                      <Link 
-                        key={result.id} 
-                        href={`/product/${result.id}`} 
-                        className={styles.mobileSearch__result}
-                        onClick={() => setSearchQuery("")}
-                      >
-                        <img 
-                          src={imageSrc} 
-                          alt={result.product?.title || result.title} 
-                          className={styles.mobileSearch__img}
-                          onError={(e) => {
-                            e.target.src = "/images/sofa.png";
-                          }}
-                        />
-                        <div className={styles.mobileSearch__info}>
-                          <span className={styles.mobileSearch__name}><b>{result.product?.title || result.title}</b></span>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                  <div className={styles.mobileSearch__all}>
-                    <Link href={`/search?q=${encodeURIComponent(searchQuery)}`}>Посмотреть все варианты</Link>
-                  </div>
-                </>
-              ) : (
-                <span className={styles.mobileSearch__empty}></span>
-              )}
-            </div>
-          )}
+          </form>
         </div>
       )}
     </header>
