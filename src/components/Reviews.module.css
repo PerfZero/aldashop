@@ -160,6 +160,7 @@
 
 .review__content {
 max-width: 1220px;
+width: 100%;
 }
 
 .review__text {

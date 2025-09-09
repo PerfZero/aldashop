@@ -139,16 +139,37 @@ export default function Header() {
 
 
 
-  // Имитация поиска (заглушка)
   useEffect(() => {
     if (searchQuery.length > 1) {
-      // Здесь должен быть fetch к API
-      setSearchResults([
-        { id: 1, title: "Диван-кровать", image: "/images/sofa.png" },
-        { id: 2, title: "Диван-угловой", image: "/images/sofa.png" },
-        { id: 3, title: "Диван-кровать", image: "/images/sofa.png" },
-      ]);
-    } else {
+      const searchProducts = async () => {
+        try {
+          const response = await fetch('/api/products/models-list', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              search: searchQuery,
+              limit: 5,
+              sort: 1
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setSearchResults(data.results || []);
+          } else {
+            setSearchResults([]);
+          }
+        } catch (error) {
+          console.error('Ошибка поиска:', error);
+          setSearchResults([]);
+        }
+      };
+
+      const timeoutId = setTimeout(searchProducts, 300);
+      return () => clearTimeout(timeoutId);
+    } else if (searchQuery.length === 0) {
       setSearchResults([]);
     }
   }, [searchQuery]);
@@ -378,16 +399,33 @@ export default function Header() {
                   <div className={styles.searchDropdown__resultsList}>
                     {searchResults.length > 0 ? (
                       <>
-                        {searchResults.map(result => (
-                          <div key={result.id} className={styles.searchDropdown__result}>
-                            <img src={result.image} alt={result.title} className={styles.searchDropdown__img} />
-                            <div className={styles.searchDropdown__info}>
-                              <span className={styles.searchDropdown__name}><b>{result.title}</b></span>
-                            </div>
-                          </div>
-                        ))}
+                        {searchResults.map(result => {
+                          const mainPhoto = result.product?.photos?.find(photo => photo.main_photo);
+                          const imageSrc = mainPhoto ? mainPhoto.photo : "/images/sofa.png";
+                          
+                          return (
+                            <Link 
+                              key={result.id} 
+                              href={`/product/${result.id}`} 
+                              className={styles.searchDropdown__result}
+                              onClick={() => setIsSearchOpen(false)}
+                            >
+                              <img 
+                                src={imageSrc} 
+                                alt={result.product?.title || result.title} 
+                                className={styles.searchDropdown__img}
+                                onError={(e) => {
+                                  e.target.src = "/images/sofa.png";
+                                }}
+                              />
+                              <div className={styles.searchDropdown__info}>
+                                <span className={styles.searchDropdown__name}><b>{result.product?.title || result.title}</b></span>
+                              </div>
+                            </Link>
+                          );
+                        })}
                         <div className={styles.searchDropdown__all}>
-                          <a href="#">Посмотреть все варианты</a>
+                          <Link href={`/search?q=${encodeURIComponent(searchQuery)}`}>Посмотреть все варианты</Link>
                         </div>
                       </>
                     ) : (
@@ -559,16 +597,33 @@ export default function Header() {
             <div className={styles.mobileSearch__resultsList}>
               {searchResults.length > 0 ? (
                 <>
-                  {searchResults.map(result => (
-                    <div key={result.id} className={styles.mobileSearch__result}>
-                      <img src={result.image} alt={result.title} className={styles.mobileSearch__img} />
-                      <div className={styles.mobileSearch__info}>
-                        <span className={styles.mobileSearch__name}><b>{result.title}</b></span>
-                      </div>
-                    </div>
-                  ))}
+                  {searchResults.map(result => {
+                    const mainPhoto = result.product?.photos?.find(photo => photo.main_photo);
+                    const imageSrc = mainPhoto ? mainPhoto.photo : "/images/sofa.png";
+                    
+                    return (
+                      <Link 
+                        key={result.id} 
+                        href={`/product/${result.id}`} 
+                        className={styles.mobileSearch__result}
+                        onClick={() => setSearchQuery("")}
+                      >
+                        <img 
+                          src={imageSrc} 
+                          alt={result.product?.title || result.title} 
+                          className={styles.mobileSearch__img}
+                          onError={(e) => {
+                            e.target.src = "/images/sofa.png";
+                          }}
+                        />
+                        <div className={styles.mobileSearch__info}>
+                          <span className={styles.mobileSearch__name}><b>{result.product?.title || result.title}</b></span>
+                        </div>
+                      </Link>
+                    );
+                  })}
                   <div className={styles.mobileSearch__all}>
-                    <a href="#">Посмотреть все варианты</a>
+                    <Link href={`/search?q=${encodeURIComponent(searchQuery)}`}>Посмотреть все варианты</Link>
                   </div>
                 </>
               ) : (

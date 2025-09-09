@@ -29,6 +29,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalReviews, setTotalReviews] = useState(0);
+  const [userHasReviewed, setUserHasReviewed] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleOpenModal = () => {
@@ -71,6 +72,14 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
       const data = await response.json();
       setReviews(data.results || []);
       setTotalReviews(data.count || 0);
+      
+      // Проверяем, оставил ли текущий пользователь отзыв
+      if (isAuthenticated && user) {
+        const userReview = (data.results || []).find(review => 
+          review.user_email === user.email || review.user_id === user.id
+        );
+        setUserHasReviewed(!!userReview);
+      }
     } catch (error) {
       console.error('Ошибка загрузки отзывов:', error);
     } finally {
@@ -83,20 +92,37 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
   }, [productId, sortBy]);
 
   const handleSubmitReview = async () => {
+    console.log('=== НАЧАЛО СОЗДАНИЯ ОТЗЫВА ===');
+    
     if (!isAuthenticated) {
+      console.log('Ошибка: пользователь не авторизован');
       setSubmitError('Необходимо войти в систему для оставления отзыва');
       return;
     }
 
     if (!modalRating || !modalTitle.trim() || !modalMessage.trim()) {
+      console.log('Ошибка: не заполнены обязательные поля', {
+        rating: modalRating,
+        title: modalTitle,
+        message: modalMessage
+      });
       setSubmitError('Пожалуйста, поставьте оценку, укажите заголовок и напишите отзыв');
       return;
     }
 
     if (modalMessage.length > 400) {
+      console.log('Ошибка: текст отзыва слишком длинный', modalMessage.length);
       setSubmitError('Текст отзыва не должен превышать 400 символов');
       return;
     }
+
+    console.log('Данные отзыва:', {
+      productId,
+      rating: modalRating,
+      title: modalTitle,
+      message: modalMessage,
+      photosCount: modalImages.length
+    });
 
     setIsSubmitting(true);
     setSubmitError('');
@@ -105,18 +131,24 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
       const accessToken = localStorage.getItem('accessToken');
       
       if (!accessToken) {
+        console.log('Ошибка: токен авторизации не найден');
         throw new Error('Токен авторизации не найден');
       }
 
+      console.log('Создаем FormData...');
       const formData = new FormData();
       formData.append('product_id', productId);
       formData.append('rate', modalRating);
       formData.append('title', modalTitle.trim());
       formData.append('message', modalMessage.trim());
 
+      console.log('Добавляем фотографии в FormData...');
       modalImages.forEach((file, index) => {
-        formData.append(`photos[${index}]`, file);
+        console.log(`Фото ${index}:`, file.name, file.size, file.type);
+        formData.append('photos', file);
       });
+
+      console.log('Отправляем запрос на API...');
 
       const response = await fetch('/api/user/reviews/create', {
         method: 'POST',
@@ -126,20 +158,27 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
         body: formData,
       });
 
+      console.log('Ответ от API:', response.status, response.statusText);
       const data = await response.json();
+      console.log('Данные ответа:', data);
 
       if (!response.ok) {
+        console.log('Ошибка ответа:', data);
         if (data.code === 'token_not_valid') {
           throw new Error('Токен недействителен. Пожалуйста, войдите заново.');
         }
         throw new Error(data.error || data.detail || 'Ошибка при отправке отзыва');
       }
 
+      console.log('Отзыв успешно создан!');
       handleCloseModal();
+      setUserHasReviewed(true);
       fetchReviews();
     } catch (error) {
+      console.log('Ошибка при создании отзыва:', error);
       setSubmitError(error.message);
     } finally {
+      console.log('Завершение создания отзыва');
       setIsSubmitting(false);
     }
   };
@@ -177,11 +216,17 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
           <p className={styles.reviews__empty_text}>
           Будьте первым, кто поделится мнением! Ваш отзыв поможет другим <br /> пользователям сделать правильный выбор.</p>
           {isAuthenticated ? (
-            <button className={styles.reviews__button} onClick={handleOpenModal}>
-              Оставить отзыв<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
-  </svg>
-            </button>
+            !userHasReviewed ? (
+              <button className={styles.reviews__button} onClick={handleOpenModal}>
+                Оставить отзыв<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
+    </svg>
+              </button>
+            ) : (
+              <div className={styles.reviews__auth_message}>
+                <p>Вы уже оставили отзыв на этот товар</p>
+              </div>
+            )
           ) : (
             <div className={styles.reviews__auth_message}>
               <p>Для оставления отзыва необходимо войти в систему</p>
@@ -282,11 +327,17 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
               Будьте первым, кто поделится мнением! Ваш отзыв поможет другим <br /> пользователям сделать правильный выбор.
             </p>
             {isAuthenticated ? (
-              <button className={styles.reviews__button} onClick={handleOpenModal}>
-                Оставить отзыв<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
-  </svg>
-              </button>
+              !userHasReviewed ? (
+                <button className={styles.reviews__button} onClick={handleOpenModal}>
+                  Оставить отзыв<svg width="32" height="12" viewBox="0 0 32 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="#C1A286" />
+    </svg>
+                </button>
+              ) : (
+                <div className={styles.reviews__auth_message}>
+                  <p>Вы уже оставили отзыв на этот товар</p>
+                </div>
+              )
             ) : (
               <div className={styles.reviews__auth_message}>
                 <p>Для оставления отзыва необходимо войти в систему</p>
@@ -295,7 +346,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
           </div>
         )}
       </div>
-      {isAuthenticated && reviews.length > 0 && (
+      {isAuthenticated && reviews.length > 0 && !userHasReviewed && (
             <button className={styles.reviews__button} onClick={handleOpenModal}>
               Оставить отзыв
             </button>
