@@ -1,15 +1,12 @@
+import { NextResponse } from 'next/server';
+
 export async function GET(request) {
   try {
-    const authHeader = request.headers.get('authorization');
     const cookieHeader = request.headers.get('cookie');
     
     const headers = {
       'accept': 'application/json',
     };
-    
-    if (authHeader) {
-      headers['Authorization'] = authHeader;
-    }
     
     if (cookieHeader) {
       headers['Cookie'] = cookieHeader;
@@ -22,28 +19,31 @@ export async function GET(request) {
 
     const data = await response.json();
 
-    if (!response.ok) {
-      return Response.json(data, { status: response.status });
+    const responseHeaders = new Headers();
+    const setCookieHeader = response.headers.get('set-cookie');
+    if (setCookieHeader) {
+      responseHeaders.set('Set-Cookie', setCookieHeader);
     }
 
-    return Response.json(data, { status: 200 });
+    if (!response.ok) {
+      return NextResponse.json(data, {
+        status: response.status,
+        headers: responseHeaders,
+      });
+    }
+
+    return NextResponse.json(data, {
+      status: 200,
+      headers: responseHeaders,
+    });
   } catch (error) {
-    return Response.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const authHeader = request.headers.get('authorization');
     const cookieHeader = request.headers.get('cookie');
-
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
-
     const body = await request.json();
     const { product_id, quantity = 1 } = body;
 
@@ -69,7 +69,6 @@ export async function POST(request) {
     }
 
     const headers = {
-      'Authorization': authHeader,
       'Content-Type': 'application/json',
       'accept': 'application/json',
     };
@@ -86,16 +85,22 @@ export async function POST(request) {
 
     const data = await response.json();
 
+    const responseHeaders = new Headers();
+    const setCookieHeader = response.headers.get('set-cookie');
+    if (setCookieHeader) {
+      responseHeaders.set('Set-Cookie', setCookieHeader);
+    }
+
     if (!response.ok) {
-      return new Response(JSON.stringify(data), {
+      return NextResponse.json(data, {
         status: response.status,
-        headers: { 'Content-Type': 'application/json' },
+        headers: responseHeaders,
       });
     }
 
-    return new Response(JSON.stringify(data), {
+    return NextResponse.json(data, {
       status: 201,
-      headers: { 'Content-Type': 'application/json' },
+      headers: responseHeaders,
     });
   } catch (error) {
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
@@ -103,4 +108,4 @@ export async function POST(request) {
       headers: { 'Content-Type': 'application/json' },
     });
   }
-} 
+}

@@ -21,6 +21,7 @@
   gap: 20px;
   flex: 0 2 600px;
   width: 100%;
+  position: relative;
 }
 
 .product__gallery {
@@ -886,4 +887,41 @@
   .product__description_title {
     font-size: 18px;
   }
+}
+
+.product__loader {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  z-index: 10;
+  border-radius: 8px;
+}
+
+.product__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #a45b38;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.product__loader span {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  color: #323433;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }

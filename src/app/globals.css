@@ -156,3 +156,11 @@ html {
 .swiper-thumbs .swiper-slide {
   height: auto !important;
 }
+
+
+
+@media (max-width: 768px) {
+  .swiper-thumbs .swiper-slide {
+    width: auto;
+  }
+  }

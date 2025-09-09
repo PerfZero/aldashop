@@ -1,42 +1,41 @@
+import { NextResponse } from 'next/server';
+
 export async function POST(request) {
   try {
+    const cookieHeader = request.headers.get('cookie');
     const authHeader = request.headers.get('authorization');
-    
-    if (!authHeader) {
-      return Response.json({ error: 'No authorization header' }, { status: 401 });
+
+    const headers = {
+      'Content-Type': 'application/json',
+      'accept': 'application/json',
+    };
+
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
     }
 
-    console.log('[merge-data] Making request with token only');
+    if (cookieHeader) {
+      headers['Cookie'] = cookieHeader;
+    }
 
     const response = await fetch('https://aldalinde.ru/api/user/merge-data/', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'accept': 'application/json',
-        'Authorization': authHeader,
-      },
+      headers,
     });
 
-    console.log('[merge-data] response status:', response.status);
+    const data = await response.json();
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.log('[merge-data] error response body:', errorText);
-      return Response.json({ 
-        error: `Внешний API ошибка: ${response.status}`,
-        details: errorText
-      }, { status: response.status });
+    const responseHeaders = new Headers(response.headers);
+    const setCookieHeader = responseHeaders.get('set-cookie');
+    if (setCookieHeader) {
+      responseHeaders.append('Set-Cookie', setCookieHeader);
     }
 
-    const data = await response.json();
-    console.log('[merge-data] success response:', data);
-    
-    return Response.json(data);
+    return new NextResponse(JSON.stringify(data), {
+      status: response.status,
+      headers: responseHeaders,
+    });
   } catch (error) {
-    console.error('[merge-data] internal error:', error);
-    return Response.json({ 
-      error: 'Внутренняя ошибка сервера',
-      details: error.message
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

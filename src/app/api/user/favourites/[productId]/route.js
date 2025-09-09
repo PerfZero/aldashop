@@ -2,6 +2,7 @@ export async function DELETE(request, { params }) {
   try {
     const { productId } = params;
     const authHeader = request.headers.get('authorization');
+    const cookieHeader = request.headers.get('cookie');
 
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -10,12 +11,18 @@ export async function DELETE(request, { params }) {
       });
     }
 
+    const headers = {
+      'Authorization': authHeader,
+      'Content-Type': 'application/json',
+    };
+    
+    if (cookieHeader) {
+      headers['Cookie'] = cookieHeader;
+    }
+
     const response = await fetch(`https://aldalinde.ru/api/user/favourites/${productId}/`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/json',
-      },
+      headers,
     });
 
     if (response.status === 204) {

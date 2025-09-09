@@ -86,18 +86,7 @@ export function AuthProvider({ children }) {
 
   const mergeSessionData = async (accessToken) => {
     try {
-      // Проверяем, есть ли данные в localStorage для слияния
-      const cartData = localStorage.getItem('cart');
-      const favouritesData = localStorage.getItem('favourites');
-      
-      if (!cartData && !favouritesData) {
-        console.log('[AuthContext] No session data to merge');
-        return { success: true };
-      }
-
       console.log('[AuthContext] Merging session data...');
-      
-      console.log('[AuthContext] Making merge request with token only');
       
       const response = await fetch('/api/user/merge-data', {
         method: 'POST',
@@ -105,6 +94,7 @@ export function AuthProvider({ children }) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
+        credentials: 'include',
       });
 
       const data = await response.json();

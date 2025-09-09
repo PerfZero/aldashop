@@ -1,6 +1,8 @@
 export async function POST(request) {
   try {
     const body = await request.json();
+    const cookieHeader = request.headers.get('cookie');
+    const authHeader = request.headers.get('authorization');
     
     const apiRequestBody = {
       model_id: body.model_id,
@@ -9,12 +11,22 @@ export async function POST(request) {
       ...(body.material_id && { material_id: body.material_id }),
     };
     
+    const headers = {
+      'Content-Type': 'application/json',
+      'accept': 'application/json',
+    };
+    
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
+    if (cookieHeader) {
+      headers['Cookie'] = cookieHeader;
+    }
+    
     const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'accept': 'application/json',
-      },
+      headers,
       body: JSON.stringify(apiRequestBody),
     });
 

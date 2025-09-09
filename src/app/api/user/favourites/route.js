@@ -1,6 +1,7 @@
 export async function POST(request) {
   try {
     const authHeader = request.headers.get('authorization');
+    const cookieHeader = request.headers.get('cookie');
 
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -19,12 +20,18 @@ export async function POST(request) {
       });
     }
 
+    const headers = {
+      'Authorization': authHeader,
+      'Content-Type': 'application/json',
+    };
+    
+    if (cookieHeader) {
+      headers['Cookie'] = cookieHeader;
+    }
+
     const response = await fetch(`https://aldalinde.ru/api/user/favourites/`, {
       method: 'POST',
-      headers: {
-        'Authorization': authHeader,
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ product_id }),
     });
 
@@ -45,6 +52,7 @@ export async function POST(request) {
 export async function GET(request) {
   try {
     const authHeader = request.headers.get('authorization');
+    const cookieHeader = request.headers.get('cookie');
 
     if (!authHeader) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -53,10 +61,16 @@ export async function GET(request) {
       });
     }
 
+    const headers = {
+      'Authorization': authHeader,
+    };
+    
+    if (cookieHeader) {
+      headers['Cookie'] = cookieHeader;
+    }
+
     const response = await fetch(`https://aldalinde.ru/api/user/favourites/`, {
-      headers: {
-        'Authorization': authHeader,
-      },
+      headers,
     });
 
     const data = await response.json();

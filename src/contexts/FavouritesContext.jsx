@@ -15,8 +15,8 @@ export function FavouritesProvider({ children }) {
     if (isAuthenticated) {
       loadFavourites();
     } else {
-      // Для неавторизованных пользователей загружаем из localStorage
-      loadFromLocalStorage();
+      // Для неавторизованных пользователей загружаем через API с сессией
+      loadFavouritesForUnauthenticated();
     }
   }, [isAuthenticated]);
 
@@ -91,36 +91,66 @@ export function FavouritesProvider({ children }) {
     setIsLoading(false);
   };
 
-  const loadFromLocalStorage = () => {
-    if (typeof window !== 'undefined') {
-      const storedFavourites = localStorage.getItem('favourites');
-      if (storedFavourites) {
-        try {
-          setFavourites(JSON.parse(storedFavourites));
+  const loadFavouritesForUnauthenticated = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/favourites', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const favouritesList = (data.results || data).map(item => {
+          const product = item.product;
+          const mainPhoto = product.photos?.find(photo => photo.main_photo) || product.photos?.[0];
+          const secondaryPhoto = product.photos?.find(photo => !photo.main_photo && !photo.photo_interior) || product.photos?.[1];
+          
+          return {
+            id: product.id,
+            title: product.title || `Товар ${product.id}`,
+            name: product.title || `Товар ${product.id}`,
+            price: product.price || 0,
+            discountedPrice: product.discounted_price || null,
+            image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : null,
+            hoverImage: secondaryPhoto?.photo ? (secondaryPhoto.photo.startsWith('http') ? secondaryPhoto.photo : `https://aldalinde.ru${secondaryPhoto.photo}`) : null,
+            article: product.generated_article || `ART${product.id}`,
+            inStock: product.in_stock || false,
+            isBestseller: product.bestseller || false,
+            color: product.color?.title || null,
+            material: product.material?.title || null,
+            dimensions: product.sizes ? `${product.sizes.width}×${product.sizes.height}×${product.sizes.depth} см` : null,
+            weight: product.weight || null,
+            delivery: product.delivery || null,
+            production_time: product.production_time || null,
+            date_create: item.date_create || null,
+            product: {
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              discounted_price: product.discounted_price,
+              photos: product.photos,
+              in_stock: product.in_stock,
+              bestseller: product.bestseller,
+              generated_article: product.generated_article,
+              color: product.color,
+              material: product.material,
+              sizes: product.sizes,
+              weight: product.weight,
+              delivery: product.delivery,
+              production_time: product.production_time
+            }
+          };
+        }) || [];
+        setFavourites(favouritesList);
+      } else {
+        setFavourites([]);
+      }
         } catch (error) {
           setFavourites([]);
         }
-      }
-    }
+    setIsLoading(false);
   };
 
-  // Сохраняем в localStorage для неавторизованных пользователей
-  useEffect(() => {
-    if (!isAuthenticated && typeof window !== 'undefined') {
-      localStorage.setItem('favourites', JSON.stringify(favourites));
-    }
-  }, [favourites, isAuthenticated]);
-
-  // Очищаем localStorage при авторизации (данные уже слиты с сервером)
-  useEffect(() => {
-    if (isAuthenticated && typeof window !== 'undefined') {
-      const favouritesData = localStorage.getItem('favourites');
-      if (favouritesData) {
-        console.log('[FavouritesContext] User authenticated, clearing localStorage favourites data');
-        localStorage.removeItem('favourites');
-      }
-    }
-  }, [isAuthenticated]);
 
   const addToFavourites = async (product) => {
     if (isAuthenticated) {
@@ -162,44 +192,25 @@ export function FavouritesProvider({ children }) {
       } catch (error) {
       }
     } else {
-      // Для неавторизованных пользователей работаем с localStorage
-      setFavourites(prev => {
-        const isAlreadyFavourite = prev.some(item => item.id === product.id);
-        if (isAlreadyFavourite) {
-          return prev;
+      // Для неавторизованных пользователей работаем через API с сессией
+      try {
+        const response = await fetch('/api/favourites', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            product_id: product.id,
+          }),
+        });
+
+        if (response.ok) {
+          await loadFavouritesForUnauthenticated();
         }
-                 const newFavourites = [...prev, {
-           id: product.id,
-           title: product.name || product.title || `Товар ${product.id}`,
-           name: product.name || product.title || `Товар ${product.id}`,
-           price: product.price || 0,
-           discountedPrice: product.discountedPrice || product.discounted_price || null,
-           image: product.image || '/placeholder.jpg',
-           article: product.article || product.generated_article || `ART${product.id}`,
-           inStock: product.inStock || product.in_stock || false,
-           isBestseller: product.isBestseller || product.bestseller || false,
-           color: product.color || null,
-           material: product.material || null,
-           dimensions: product.dimensions || null,
-           product: {
-             id: product.id,
-             title: product.name || product.title,
-             price: product.price,
-             discounted_price: product.discountedPrice || product.discounted_price,
-             photos: product.photos || [],
-             in_stock: product.inStock || product.in_stock,
-             bestseller: product.isBestseller || product.bestseller,
-             generated_article: product.article || product.generated_article,
-             color: product.color,
-             material: product.material,
-             sizes: product.sizes,
-             weight: product.weight,
-             delivery: product.delivery,
-             production_time: product.production_time
-           }
-         }];
-        return newFavourites;
-      });
+      } catch (error) {
+        console.error('Ошибка при добавлении в избранное (неавторизованный):', error);
+      }
     }
   };
 
@@ -230,8 +241,19 @@ export function FavouritesProvider({ children }) {
       } catch (error) {
       }
     } else {
-      // Для неавторизованных пользователей работаем с localStorage
-      setFavourites(prev => prev.filter(item => item.id !== productId));
+      // Для неавторизованных пользователей работаем через API с сессией
+      try {
+        const response = await fetch(`/api/favourites/${productId}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+
+        if (response.ok || response.status === 204) {
+          await loadFavouritesForUnauthenticated();
+        }
+      } catch (error) {
+        console.error('Ошибка при удалении из избранного (неавторизованный):', error);
+      }
     }
   };
 
