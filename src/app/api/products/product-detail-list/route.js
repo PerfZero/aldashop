@@ -6,9 +6,7 @@ export async function POST(request) {
     
     const apiRequestBody = {
       model_id: body.model_id,
-      ...(body.size_id && { size_id: body.size_id }),
-      ...(body.color_id && { color_id: body.color_id }),
-      ...(body.material_id && { material_id: body.material_id }),
+      color_id: body.color_id,
     };
     
     const headers = {
@@ -24,7 +22,7 @@ export async function POST(request) {
       headers['Cookie'] = cookieHeader;
     }
     
-    const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
+    const response = await fetch('https://aldalinde.ru/api/products/product-detail-list/', {
       method: 'POST',
       headers,
       body: JSON.stringify(apiRequestBody),
@@ -49,13 +47,6 @@ export async function POST(request) {
         data.photos = data.photos.map(photo => ({
           ...photo,
           photo: photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`
-        }));
-      }
-      
-      if (data.available_sizes && Array.isArray(data.available_sizes)) {
-        data.available_sizes = data.available_sizes.map(size => ({
-          ...size,
-          title: size.value
         }));
       }
       

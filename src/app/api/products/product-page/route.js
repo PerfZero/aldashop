@@ -70,6 +70,10 @@ export async function POST(request) {
         }));
       }
       
+      data.in_cart = data.in_cart || false;
+      data.in_stock = data.in_stock !== undefined ? data.in_stock : true;
+      data.in_wishlist = data.in_wishlist || false;
+      
     } catch (parseError) {
       return Response.json({ error: "Invalid JSON response" }, { status: 500 });
     }

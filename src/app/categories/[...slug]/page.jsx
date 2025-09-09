@@ -220,7 +220,11 @@ function CategoryPageContent() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(localStorage.getItem('accessToken') && {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }),
         },
+        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
 

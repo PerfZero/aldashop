@@ -158,6 +158,10 @@
   font-weight: 400;
   font-size: 32px;
   color: #323433;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .product__bestseller {
@@ -541,7 +545,7 @@
   color: #c1a286;
   border: 1px solid #c1a286;
   padding: 0px 15px;
-  width: 295px;
+  width: 100% ;
   height: 50px;
   display: flex;
   align-items: center;

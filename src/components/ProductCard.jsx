@@ -130,11 +130,15 @@ export default function ProductCard({ product, filtersOpen = false }) {
       
       // console.log('Отправляем запрос на смену цвета:', requestBody, 'Model ID:', product.id);
       
-      const response = await fetch('/api/products/product-detail/', {
+      const response = await fetch('/api/products/product-detail-list/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(localStorage.getItem('accessToken') && {
+            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+          }),
         },
+        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
 
