@@ -293,6 +293,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
                  </div>
                </div>
               <div className={styles.review__content}>
+                <span className={styles.review__title}>{review.title}</span>
                 <p className={styles.review__text}>{review.message}</p>
                                  {review.has_photos && review.photos && review.photos.length > 0 && (
                    <div className={styles.review__images}>

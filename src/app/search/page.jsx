@@ -28,6 +28,7 @@ function SearchPageContent() {
     { value: 4, label: 'По убыванию цены' }
   ];
 
+
   const fetchProducts = async (page = 1) => {
     try {
       setProductsLoading(true);
@@ -81,6 +82,7 @@ function SearchPageContent() {
       fetchProducts(pagination.page + 1);
     }
   };
+  
 
   useEffect(() => {
     if (!query) return;

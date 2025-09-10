@@ -129,6 +129,40 @@ align-items: center;
 justify-content: center;
 }
 
+.account__button_secondary {
+    border: 1px solid #c1a286;
+    padding: 0px 15px;
+    height: 50px;
+    font-family: "Montserrat", sans-serif;
+font-weight: 600;
+font-size: 16px;
+line-height: 150%;
+color: #c1a286;
+display: flex;
+align-items: center;
+justify-content: center;
+background: transparent;
+cursor: pointer;
+}
+
+.account__button_logout {
+    border: 1px solid #c1a286;
+    padding: 0px 15px;
+    height: 50px;
+    font-family: "Montserrat", sans-serif;
+font-weight: 600;
+font-size: 16px;
+line-height: 150%;
+color: #c1a286;
+display: flex;
+align-items: center;
+justify-content: center;
+background: transparent;
+cursor: pointer;
+transition: all 0.3s ease;
+}
+
+
 
 /* Favorites content styles */
 .favorites__content {
@@ -558,6 +592,10 @@ margin-bottom: 30px;
 
 @media (max-width: 768px) {
   .account__container {
+    flex-direction: column;
+  }
+
+  .account__actions{
     flex-direction: column;
   }
 

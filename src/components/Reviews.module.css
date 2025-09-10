@@ -478,6 +478,21 @@ height: 15px;
 }
 
 
+.review__author_info .review__date{
+  display: none;
+}
+
+.review__title{
+  display: block;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 150%;
+  color: #323433;
+  margin-bottom: 10px;
+}
+
+
 @media (max-width: 768px) {
   .reviews__header {
     margin-bottom: 20px;
@@ -556,6 +571,10 @@ height: 15px;
   align-items: center;
   grid-template-columns: 1fr 1fr;
   width: 100%;
+}
+
+.review__author_info .review__date{
+  display: block;
 }
 
 .review__name{

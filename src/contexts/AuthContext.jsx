@@ -223,11 +223,46 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
-    setIsAuthenticated(false);
-    setUser(null);
+  const logout = async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      const accessToken = localStorage.getItem('accessToken');
+      console.log('[AuthContext] Logout called, refreshToken exists:', !!refreshToken, 'accessToken exists:', !!accessToken);
+      
+      if (refreshToken) {
+        console.log('[AuthContext] Sending logout request to API...');
+        // Отправляем запрос на сервер для добавления refresh токена в черный список
+        const response = await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({ refresh: refreshToken }),
+        });
+
+        console.log('[AuthContext] Logout API response status:', response.status);
+        const responseData = await response.json();
+        console.log('[AuthContext] Logout API response data:', responseData);
+
+        if (!response.ok) {
+          console.warn('[AuthContext] Logout API call failed, but continuing with local logout');
+        } else {
+          console.log('[AuthContext] Logout API call successful');
+        }
+      } else {
+        console.log('[AuthContext] No refresh token found, skipping API call');
+      }
+    } catch (error) {
+      console.warn('[AuthContext] Logout API error:', error);
+    } finally {
+      console.log('[AuthContext] Clearing local data and logging out...');
+      // В любом случае очищаем локальные данные
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      setIsAuthenticated(false);
+      setUser(null);
+    }
   };
 
   const resetPassword = async (email) => {

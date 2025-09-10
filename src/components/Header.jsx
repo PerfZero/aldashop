@@ -183,6 +183,19 @@ export default function Header() {
     setActiveMenu(category);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      setIsMobileMenuOpen(false);
+      // После выхода перенаправляем на главную страницу
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // В случае ошибки все равно перенаправляем на главную
+      window.location.href = '/';
+    }
+  };
+
   return (
     <header className={styles.header}>
       <div className={styles.header__container}>
@@ -289,6 +302,14 @@ export default function Header() {
                 >
                   Покупки
                 </button>
+                {isAuthenticated && (
+                  <button 
+                    className={styles.mobileMenu__sidebarItem}
+                    onClick={handleLogout}
+                  >
+                    Выйти
+                  </button>
+                )}
               </div>
             </div>
             {/* Правая колонка — подкатегории и картинки */}

@@ -44,7 +44,7 @@ const menuItems = [
 
 
 export default function AccountPage() {
-  const { getUserProfile, updateUserProfile, user, getAuthHeaders } = useAuth();
+  const { getUserProfile, updateUserProfile, user, getAuthHeaders, logout } = useAuth();
   const { favourites, isLoading: favouritesLoading } = useFavourites();
   const [activeTab, setActiveTab] = useState('account');
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -165,6 +165,18 @@ export default function AccountPage() {
     setIsLoading(false);
   };
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // После выхода перенаправляем на главную страницу
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      // В случае ошибки все равно перенаправляем на главную
+      window.location.href = '/';
+    }
+  };
+
 
 
   const renderContent = () => {
@@ -195,6 +207,7 @@ export default function AccountPage() {
                   <ProfileView 
                     profileData={profileData}
                     onEdit={() => setIsEditing(true)}
+                    onLogout={handleLogout}
                   />
                 )}
               </>
@@ -566,7 +579,7 @@ export default function AccountPage() {
   );
 }
 
-const ProfileView = ({ profileData, onEdit }) => {
+const ProfileView = ({ profileData, onEdit, onLogout }) => {
   const user_data = profileData?.user_data || {};
   const can_edit = profileData?.can_edit || false;
   
@@ -602,6 +615,9 @@ const ProfileView = ({ profileData, onEdit }) => {
         <Link href="/auth/change-password" className={styles.account__button}>
           Обновить пароль
         </Link>
+        <button className={styles.account__button_logout} onClick={onLogout}>
+          Выйти
+        </button>
       </div>
     </>
   );
