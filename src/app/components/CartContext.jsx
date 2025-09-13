@@ -8,16 +8,12 @@ const CartContext = createContext();
 
 // Провайдер контекста
 export function CartProvider({ children }) {
-  // Инициализируем состояние корзины из localStorage при загрузке
   const [cartItems, setCartItems] = useState([]);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated, getAuthHeaders, refreshToken } = useAuth();
 
      // Загружаем данные корзины из API или localStorage
    useEffect(() => {
      const loadCart = async () => {
-             setIsLoading(true);
       
       try {
         // Если пользователь авторизован, загружаем корзину из API
@@ -91,13 +87,11 @@ export function CartProvider({ children }) {
       } catch (error) {
         setCartItems([]);
       }
-      setIsLoaded(true);
-      setIsLoading(false);
     };
 
 
     loadCart();
-  }, [isAuthenticated, getAuthHeaders, refreshToken]);
+  }, [isAuthenticated]);
 
 
   // Добавление товара в корзину
@@ -358,14 +352,101 @@ export function CartProvider({ children }) {
 
   // Обновление количества товара
   const updateQuantity = async (productId, newQuantity) => {
-    if (!isAuthenticated) {
-      console.error('Пользователь не авторизован');
-      return;
-    }
-
     if (newQuantity <= 0) {
       // Если количество меньше или равно 0, полностью удаляем товар
       removeFromCart(productId, true);
+      return;
+    }
+
+    if (!isAuthenticated) {
+      // Для неавторизованных пользователей используем API через сессию
+      try {
+        // Получаем текущее количество товара
+        const currentItem = cartItems.find(item => item.id === productId);
+        const currentQuantity = currentItem ? currentItem.quantity : 0;
+        
+        // Если количество не изменилось, ничего не делаем
+        if (newQuantity === currentQuantity) {
+          return;
+        }
+        
+        // Оптимистично обновляем локальное состояние
+        setCartItems(prevItems => 
+          prevItems.map(item => 
+            item.id === productId 
+              ? { ...item, quantity: newQuantity }
+              : item
+          )
+        );
+        
+        if (newQuantity > currentQuantity) {
+          // Увеличиваем количество - добавляем разницу
+          const difference = newQuantity - currentQuantity;
+          const response = await fetch('/api/cart', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              product_id: productId,
+              quantity: difference,
+            }),
+          });
+
+          if (!response.ok) {
+            // Если запрос не удался, откатываем изменения
+            setCartItems(prevItems => 
+              prevItems.map(item => 
+                item.id === productId 
+                  ? { ...item, quantity: currentQuantity }
+                  : item
+              )
+            );
+          }
+        } else if (newQuantity < currentQuantity) {
+          // Уменьшаем количество - удаляем разницу
+          const difference = currentQuantity - newQuantity;
+          let allRequestsSuccessful = true;
+          
+          for (let i = 0; i < difference; i++) {
+            const response = await fetch(`/api/cart/${productId}`, {
+              method: 'DELETE',
+              credentials: 'include',
+            });
+            
+            if (!response.ok && response.status !== 204) {
+              allRequestsSuccessful = false;
+            }
+            
+            // Если товар полностью удален (статус 204), прерываем цикл
+            if (response.status === 204) {
+              break;
+            }
+          }
+          
+          if (!allRequestsSuccessful) {
+            // Если запросы не удались, откатываем изменения
+            setCartItems(prevItems => 
+              prevItems.map(item => 
+                item.id === productId 
+                  ? { ...item, quantity: currentQuantity }
+                  : item
+              )
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка при обновлении количества (неавторизованный):', error);
+        // При ошибке откатываем изменения
+        setCartItems(prevItems => 
+          prevItems.map(item => 
+            item.id === productId 
+              ? { ...item, quantity: currentQuantity }
+              : item
+          )
+        );
+      }
       return;
     }
 
@@ -380,6 +461,17 @@ export function CartProvider({ children }) {
       if (newQuantity === currentQuantity) {
         return;
       }
+      
+      // Оптимистично обновляем локальное состояние
+      setCartItems(prevItems => 
+        prevItems.map(item => 
+          item.id === productId 
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+      
+      let allRequestsSuccessful = true;
       
       if (newQuantity > currentQuantity) {
         // Увеличиваем количество - добавляем разницу
@@ -413,6 +505,10 @@ export function CartProvider({ children }) {
             });
           }
         }
+        
+        if (!response.ok) {
+          allRequestsSuccessful = false;
+        }
       } else if (newQuantity < currentQuantity) {
         // Уменьшаем количество - удаляем разницу
         const difference = currentQuantity - newQuantity;
@@ -433,47 +529,39 @@ export function CartProvider({ children }) {
             }
           }
           
+          if (!response.ok && response.status !== 204) {
+            allRequestsSuccessful = false;
+          }
+          
           // Если товар полностью удален (статус 204), прерываем цикл
           if (response.status === 204) {
             break;
           }
         }
       }
-
-      // Перезагружаем корзину после обновления
-      let cartResponse = await fetch('/api/user/cart', {
-        headers,
-      });
       
-      if (cartResponse.status === 401) {
-        const refreshResult = await refreshToken();
-        if (refreshResult.success) {
-          headers = getAuthHeaders();
-          cartResponse = await fetch('/api/user/cart', {
-            headers,
-          });
-        }
-      }
-      
-      if (cartResponse.ok) {
-        const data = await cartResponse.json();
-        const apiCartItems = (data.results || data).map(item => ({
-          id: item.product.id,
-          name: item.product.title || `Товар ${item.product.id}`,
-          price: item.product.price,
-          image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
-          quantity: item.quantity,
-          article: item.product.generated_article || `ART${item.product.id}`,
-          inStock: item.product.in_stock,
-          isBestseller: item.product.bestseller,
-          color: item.product.color?.title,
-          material: item.product.material?.title,
-          dimensions: item.product.sizes ? `${item.product.sizes.width}×${item.product.sizes.height}×${item.product.sizes.depth} см` : null,
-        })) || [];
-        setCartItems(apiCartItems);
+      if (!allRequestsSuccessful) {
+        // Если запросы не удались, откатываем изменения
+        setCartItems(prevItems => 
+          prevItems.map(item => 
+            item.id === productId 
+              ? { ...item, quantity: currentQuantity }
+              : item
+          )
+        );
       }
     } catch (error) {
       console.error('Ошибка в updateQuantity:', error);
+      // При ошибке откатываем изменения
+      const currentItem = cartItems.find(item => item.id === productId);
+      const currentQuantity = currentItem ? currentItem.quantity : 0;
+      setCartItems(prevItems => 
+        prevItems.map(item => 
+          item.id === productId 
+            ? { ...item, quantity: currentQuantity }
+            : item
+        )
+      );
     }
   };
 
@@ -482,15 +570,13 @@ export function CartProvider({ children }) {
     setCartItems([]);
   };
 
-  // Значение контекста
   const contextValue = {
     cartItems,
     addToCart,
     removeFromCart,
     removeAllFromCart,
     updateQuantity,
-    clearCart,
-    isLoading
+    clearCart
   };
 
   return (

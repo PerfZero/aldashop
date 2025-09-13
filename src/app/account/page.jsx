@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -46,6 +47,8 @@ const menuItems = [
 export default function AccountPage() {
   const { getUserProfile, updateUserProfile, user, getAuthHeaders, logout } = useAuth();
   const { favourites, isLoading: favouritesLoading } = useFavourites();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState('account');
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [profileData, setProfileData] = useState(null);
@@ -58,6 +61,11 @@ export default function AccountPage() {
   const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
   const [orderDetailsLoading, setOrderDetailsLoading] = useState(false);
   const [orderDetailsError, setOrderDetailsError] = useState('');
+  const [completedOrders, setCompletedOrders] = useState([]);
+  const [completedOrdersLoading, setCompletedOrdersLoading] = useState(false);
+  const [completedOrdersError, setCompletedOrdersError] = useState('');
+  const [completedOrdersPage, setCompletedOrdersPage] = useState(1);
+  const [completedOrdersTotalPages, setCompletedOrdersTotalPages] = useState(1);
 
   const toggleOrderExpand = async (orderId) => {
     if (expandedOrderId === orderId) {
@@ -96,6 +104,20 @@ export default function AccountPage() {
   const steps = ['Принят', 'Оплачен', 'Собран', 'Отправлен', 'Получен'];
 
   useEffect(() => {
+    const tabFromUrl = searchParams.get('tab');
+    if (tabFromUrl && ['account', 'favorites', 'orders'].includes(tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', tabId);
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
+  useEffect(() => {
     const loadProfile = async () => {
       setIsLoading(true);
       const result = await getUserProfile();
@@ -109,6 +131,35 @@ export default function AccountPage() {
       loadProfile();
     }
   }, [activeTab, getUserProfile]);
+
+  const loadCompletedOrders = async (page = 1) => {
+    setCompletedOrdersLoading(true);
+    setCompletedOrdersError('');
+    
+    try {
+      const headers = getAuthHeaders();
+      const response = await fetch(`/api/order/completed-orders/?page=${page}&limit=10`, {
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка загрузки завершенных заказов');
+      }
+
+      const data = await response.json();
+      setCompletedOrders(data.results || []);
+      setCompletedOrdersTotalPages(data.total_pages || 1);
+      setCompletedOrdersPage(page);
+    } catch (error) {
+      setCompletedOrdersError(error.message);
+    } finally {
+      setCompletedOrdersLoading(false);
+    }
+  };
 
   useEffect(() => {
     const loadOrders = async () => {
@@ -137,6 +188,8 @@ export default function AccountPage() {
         } finally {
           setOrdersLoading(false);
         }
+        
+        loadCompletedOrders(1);
       }
     };
 
@@ -549,6 +602,94 @@ export default function AccountPage() {
                 </React.Fragment>
               );
             })}
+            
+            {completedOrdersLoading && (
+              <div className={styles.loading}>Загрузка завершенных заказов...</div>
+            )}
+            
+            {completedOrdersError && (
+              <div className={styles.error}>Ошибка: {completedOrdersError}</div>
+            )}
+            
+            {!completedOrdersLoading && !completedOrdersError && completedOrders.length > 0 && (
+              <>
+                <h3 className={styles.orders__title}>Завершенные</h3>
+                {completedOrders.map((order, index) => {
+                  const orderId = order.id || index + 1;
+                  const orderNumber = order.order_number || `Заказ ${index + 1}`;
+                  const orderDate = order.created_at || '';
+                  const deliveryDate = order.received_date ? new Date(order.received_date).toLocaleDateString('ru-RU') : '';
+                  const totalAmount = order.summ || '0';
+                  const deliveryType = order.delivery_type || 'Не указан';
+                  const address = order.delivery_type === 'Самовывоз' 
+                    ? `${order.address?.administrative_area || ''} ${order.address?.locality || ''} ${order.address?.route || ''} ${order.address?.street_number || ''}`.trim() || 'Не указан'
+                    : order.address?.full_address || 'Не указан';
+                  const productCount = order.product_count || '0';
+                  
+                  return (
+                    <React.Fragment key={`completed-${orderNumber}-${index}`}>
+                      <div className={`${styles.order} ${styles.order_completed}`}>
+                        <div className={styles.order__header}>
+                          <div className={styles.order__info}>
+                            <div className={styles.order__number}>Заказ {orderNumber}</div>
+                            <div className={styles.order__date}>Заказан: {orderDate}</div>
+                          </div>
+                          <div className={styles.order__status}>
+                            <div className={styles.order__status_text}>Получен</div>
+                            <div className={styles.order__delivery_date}>{deliveryDate}</div>
+                          </div>
+                        </div>
+
+                        <div className={styles.order__steps} style={{ '--progress-width': '100%' }}>
+                          {steps.map((step, stepIndex) => (
+                            <div
+                              key={step}
+                              className={`${styles.order__step} ${styles.order__step_active}`}
+                            >
+                              <div className={styles.order__step_dot}></div>
+                              <div className={styles.order__step_text}>{step}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className={styles.order__details}>
+                          <div className={styles.order__collected}>Получен {deliveryDate}</div>
+                          <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
+                          <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
+                          <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
+                          <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
+                        </div>
+                      </div>
+                      <div className={styles.order__details_button} onClick={() => toggleOrderExpand(orderId)}>
+                        Подробнее
+                      </div>
+                    </React.Fragment>
+                  );
+                })}
+                
+                {completedOrdersTotalPages > 1 && (
+                  <div className={styles.orders__pagination}>
+                    <button
+                      className={styles.orders__pagination_button}
+                      onClick={() => loadCompletedOrders(completedOrdersPage - 1)}
+                      disabled={completedOrdersPage === 1}
+                    >
+                      Предыдущая
+                    </button>
+                    <span className={styles.orders__pagination_info}>
+                      Страница {completedOrdersPage} из {completedOrdersTotalPages}
+                    </span>
+                    <button
+                      className={styles.orders__pagination_button}
+                      onClick={() => loadCompletedOrders(completedOrdersPage + 1)}
+                      disabled={completedOrdersPage === completedOrdersTotalPages}
+                    >
+                      Следующая
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         );
       default:
@@ -564,7 +705,7 @@ export default function AccountPage() {
             <button
               key={item.id}
               className={`${styles.account__menu_item} ${activeTab === item.id ? styles.account__menu_item_active : ''}`}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => handleTabChange(item.id)}
             >
               <span className={styles.account__menu_icon}>{item.icon}</span>
               <span className={styles.account__menu_label}>{item.label}</span>

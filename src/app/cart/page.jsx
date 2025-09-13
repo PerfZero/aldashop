@@ -2,14 +2,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { IMaskInput } from 'react-imask';
 import styles from './page.module.css';
 import { useCart } from '../components/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
+import YandexMap from '../../components/YandexMap';
+import AddressSelector from '../../components/AddressSelector';
+import MinimalCartMap from '../../components/MinimalCartMap';
 import AuthModal from '../../components/AuthModal';
 
 export default function CartPage() {
-  const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart, isLoading } = useCart();
+  const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart } = useCart();
   const { isAuthenticated, getAuthHeaders } = useAuth();
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
@@ -21,6 +24,7 @@ export default function CartPage() {
   const [autocompleteData, setAutocompleteData] = useState(null);
   const [isLoadingAutocomplete, setIsLoadingAutocomplete] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [mapSelectedAddress, setMapSelectedAddress] = useState('');
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -63,6 +67,7 @@ export default function CartPage() {
     'ул. Морская, 24',
     'ул. Приморская, 118'
   ]);
+  const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
     calculateTotal();
@@ -70,30 +75,24 @@ export default function CartPage() {
 
   useEffect(() => {
     const loadAutocompleteData = async () => {
-      console.log('Проверяем авторизацию:', isAuthenticated);
       if (isAuthenticated) {
         setIsLoadingAutocomplete(true);
         try {
-          console.log('Отправляем запрос на автодополнение...');
           const response = await fetch('/api/order/autocomplete/', {
             headers: getAuthHeaders(),
           });
           
-          console.log('Статус ответа:', response.status);
           
           if (response.ok) {
             const data = await response.json();
-            console.log('Полученные данные автодополнения:', data);
             setAutocompleteData(data);
             
             if (data.pickup_addresses && data.pickup_addresses.length > 0) {
               const pickupAddressesList = data.pickup_addresses.map(address => address.full_address);
               setPickupAddresses(pickupAddressesList);
-              console.log('Обновлены адреса пунктов выдачи:', pickupAddressesList);
             }
             
             if (data.profile_fields) {
-              console.log('Заполняем поля профиля:', data.profile_fields);
               setFormData(prev => {
                 const newData = {
                   ...prev,
@@ -103,14 +102,14 @@ export default function CartPage() {
                   phone: data.profile_fields.phone || prev.phone,
                   email: data.emails?.[0] || prev.email,
                 };
-                console.log('Новые данные формы:', newData);
                 return newData;
               });
+              
+              // Очищаем ошибки валидации при загрузке данных
+              setValidationErrors({});
             } else {
-              console.log('Нет данных profile_fields в ответе');
             }
           } else {
-            console.log('Ошибка ответа:', response.status, response.statusText);
           }
         } catch (error) {
           console.error('Ошибка при загрузке данных автодополнения:', error);
@@ -118,7 +117,6 @@ export default function CartPage() {
           setIsLoadingAutocomplete(false);
         }
       } else {
-        console.log('Пользователь не авторизован');
       }
     };
 
@@ -144,15 +142,138 @@ export default function CartPage() {
     setTotalPrice(total - discount);
   };
   
+  const validateField = (name, value) => {
+    const errors = {};
+    
+    // Не валидируем пустые поля, если они не обязательны
+    if (!value.trim()) {
+      switch (name) {
+        case 'firstName':
+        case 'lastName':
+        case 'patronymic':
+        case 'phone':
+        case 'email':
+        case 'city':
+          errors[name] = `${name === 'firstName' ? 'Имя' : 
+                          name === 'lastName' ? 'Фамилия' : 
+                          name === 'patronymic' ? 'Отчество' : 
+                          name === 'phone' ? 'Телефон' : 
+                          name === 'email' ? 'Email' : 
+                          'Населенный пункт'} обязательно для заполнения`;
+          break;
+        case 'inn':
+          if (formData.isLegalEntity) {
+            errors.inn = 'ИНН обязателен для заполнения';
+          }
+          break;
+      }
+      return errors;
+    }
+    
+    switch (name) {
+      case 'firstName':
+        if (value.trim().length < 2) {
+          errors.firstName = 'Имя должно содержать минимум 2 символа';
+        } else if (!/^[а-яёa-z\s-]+$/i.test(value.trim())) {
+          errors.firstName = 'Имя может содержать только буквы, пробелы и дефисы';
+        }
+        break;
+        
+      case 'lastName':
+        if (value.trim().length < 2) {
+          errors.lastName = 'Фамилия должна содержать минимум 2 символа';
+        } else if (!/^[а-яёa-z\s-]+$/i.test(value.trim())) {
+          errors.lastName = 'Фамилия может содержать только буквы, пробелы и дефисы';
+        }
+        break;
+        
+      case 'patronymic':
+        if (value.trim().length < 2) {
+          errors.patronymic = 'Отчество должно содержать минимум 2 символа';
+        } else if (!/^[а-яёa-z\s-]+$/i.test(value.trim())) {
+          errors.patronymic = 'Отчество может содержать только буквы, пробелы и дефисы';
+        }
+        break;
+        
+      case 'phone':
+        const phoneDigits = value.replace(/\D/g, '');
+        // Проверяем, что номер заполнен полностью (11 цифр для РФ)
+        if (phoneDigits.length !== 11) {
+          errors.phone = 'Введите корректный номер телефона';
+        }
+        break;
+        
+      case 'email':
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!emailRegex.test(value)) {
+          errors.email = 'Введите корректный email адрес';
+        }
+        break;
+        
+      case 'inn':
+        if (value.trim()) {
+          const innValue = value.replace(/\D/g, '');
+          if (innValue.length !== 10 && innValue.length !== 12) {
+            errors.inn = 'ИНН должен содержать 10 или 12 цифр';
+          }
+        }
+        break;
+        
+      case 'city':
+        // Город уже проверен выше в блоке пустых полей
+        break;
+        
+      case 'street':
+        if (formData.delivery === 'address' && !value.trim()) {
+          errors.street = 'Улица обязательна для заполнения';
+        }
+        break;
+        
+      case 'house':
+        if (formData.delivery === 'address' && !value.trim()) {
+          errors.house = 'Номер дома обязателен для заполнения';
+        }
+        break;
+    }
+    
+    return errors;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    // Обрабатываем специальные поля
+    let processedValue = value;
+    if (name === 'inn') {
+      processedValue = value.replace(/\D/g, '');
+    } else if (name === 'phone') {
+      // Маска сама форматирует, просто убираем лишние символы
+      processedValue = value;
+    } else if (['firstName', 'lastName', 'patronymic'].includes(name)) {
+      // Разрешаем только буквы, пробелы и дефисы для ФИО
+      processedValue = value.replace(/[^а-яёa-z\s-]/gi, '');
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: processedValue
     }));
 
+    // Валидируем только при реальном изменении пользователем
+    const fieldErrors = validateField(name, processedValue);
+    setValidationErrors(prev => {
+      const newErrors = { ...prev };
+      // Очищаем ошибку для этого поля, если валидация прошла успешно
+      if (!fieldErrors[name]) {
+        delete newErrors[name];
+      } else {
+        newErrors[name] = fieldErrors[name];
+      }
+      return newErrors;
+    });
+
     if (name === 'inn' && formData.isLegalEntity) {
-      const innValue = value.replace(/\D/g, '');
+      const innValue = processedValue.replace(/\D/g, '');
       
       if (innValue === '435343353453') {
         setInnStatus('valid');
@@ -170,6 +291,16 @@ export default function CartPage() {
       ...prev,
       [name]: value
     }));
+
+    // Очищаем ошибки валидации для полей адреса при смене типа доставки
+    if (name === 'delivery') {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.street;
+        delete newErrors.house;
+        return newErrors;
+      });
+    }
   };
   
   const handleToggleChange = (name) => {
@@ -177,6 +308,15 @@ export default function CartPage() {
       ...prev,
       [name]: !prev[name]
     }));
+
+    // Очищаем ошибки валидации для ИНН при переключении юридического лица
+    if (name === 'isLegalEntity') {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.inn;
+        return newErrors;
+      });
+    }
   };
   
   const handlePromoCodeSubmit = async (e) => {
@@ -223,11 +363,38 @@ export default function CartPage() {
     }
   };
   
+  const validateForm = () => {
+    const errors = {};
+    
+    const fieldsToValidate = ['firstName', 'lastName', 'patronymic', 'phone', 'email', 'city'];
+    
+    if (formData.isLegalEntity) {
+      fieldsToValidate.push('inn');
+    }
+    
+    if (formData.delivery === 'address') {
+      fieldsToValidate.push('street', 'house');
+    }
+    
+    fieldsToValidate.forEach(field => {
+      const fieldErrors = validateField(field, formData[field]);
+      Object.assign(errors, fieldErrors);
+    });
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!isAuthenticated) {
       setShowAuthModal(true);
+      return;
+    }
+    
+    if (!validateForm()) {
+      alert('Пожалуйста, исправьте ошибки в форме');
       return;
     }
     
@@ -298,7 +465,6 @@ export default function CartPage() {
       };
     }
 
-    console.log('Отправляем заказ:', orderData);
 
     try {
       const headers = {
@@ -317,7 +483,6 @@ export default function CartPage() {
       });
 
       const result = await response.json();
-      console.log('Ответ сервера:', result);
 
       if (response.ok) {
         alert(`Заказ успешно оформлен!`);
@@ -371,55 +536,34 @@ export default function CartPage() {
 
 
 
-  const handleMapClick = (event) => {
-    const coords = event.get('coords');
-    console.log('Координаты клика:', coords);
+  const handleLocationSelect = (locationData) => {
     
-    ymaps.geocode(coords).then((res) => {
-      const firstGeoObject = res.geoObjects.get(0);
-      const address = firstGeoObject.getAddressLine();
-      const components = firstGeoObject.properties.get('metaDataProperty').GeocoderMetaData.Address.Components;
-      
-      console.log('Полный адрес от Яндекс:', address);
-      console.log('Компоненты адреса:', components);
-      
-      let region = '';
-      let city = '';
-      let street = '';
-      let house = '';
-      
-      components.forEach(component => {
-        if (component.kind === 'administrative_area_level_1') {
-          region = component.name;
-        } else if (component.kind === 'locality') {
-          city = component.name;
-        } else if (component.kind === 'route') {
-          street = component.name;
-        } else if (component.kind === 'street_number') {
-          house = component.name;
-        }
-      });
-      
-      setFormData(prev => ({
-        ...prev,
-        region: region || prev.region,
-        city: city || prev.city,
-        street: street || prev.street,
-        house: house || prev.house,
-        coordinates: coords,
-        fullAddress: address
-      }));
-    });
+    // Обновляем адрес из карты
+    if (locationData.fullAddress) {
+      setMapSelectedAddress(locationData.fullAddress);
+    }
+    
+    setFormData(prev => ({
+      ...prev,
+      region: locationData.region || prev.region,
+      city: locationData.city || prev.city,
+      street: locationData.street || prev.street,
+      house: locationData.house || prev.house,
+      coordinates: locationData.coordinates,
+      fullAddress: locationData.fullAddress || locationData.address
+    }));
+
+    // Валидируем поля адреса после обновления
+    if (locationData.street) {
+      const streetErrors = validateField('street', locationData.street);
+      setValidationErrors(prev => ({ ...prev, ...streetErrors }));
+    }
+    if (locationData.house) {
+      const houseErrors = validateField('house', locationData.house);
+      setValidationErrors(prev => ({ ...prev, ...houseErrors }));
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className={styles.empty}>
-        <h1 className={styles.title}>Корзина</h1>
-        <p className={styles.emptyText}>Загрузка корзины...</p>
-      </div>
-    );
-  }
 
   if (cartItems.length === 0) {
     return (
@@ -447,11 +591,6 @@ export default function CartPage() {
                     <img src={item.image} alt={item.name} />
                   </div>
                   
-                  {item.isBestseller && (
-                    <div className={styles.bestsellerBadge}>
-                      <span>Бестселлер</span>
-                    </div>
-                  )}
                 </div>
                 
                 <div className={styles.itemContent}>
@@ -471,6 +610,7 @@ export default function CartPage() {
                       <div className={styles.quantityControls}>
                         <div className={styles.quantityButtons}>
                           <button 
+                            type="button"
                             className={styles.minusButton} 
                             onClick={async () => await updateQuantity(item.id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
@@ -513,6 +653,7 @@ export default function CartPage() {
           </div>
           
           {isAuthenticated && (
+            <>
             <form className={styles.checkoutForm} onSubmit={handleSubmit}>
               <div className={styles.formSection}>
                 <h2 className={styles.sectionTitle}>
@@ -542,10 +683,14 @@ export default function CartPage() {
                           required
                           value={formData.firstName}
                           onChange={handleInputChange}
+                          className={validationErrors.firstName ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>
                           Имя <span className={styles.requiredStar}>*</span>
                         </span>
+                        {validationErrors.firstName && (
+                          <span className={styles.errorMessage}>{validationErrors.firstName}</span>
+                        )}
                       </div>
                     </div>
                     
@@ -558,10 +703,14 @@ export default function CartPage() {
                           required
                           value={formData.lastName}
                           onChange={handleInputChange}
+                          className={validationErrors.lastName ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>
                           Фамилия <span className={styles.requiredStar}>*</span>
                         </span>
+                        {validationErrors.lastName && (
+                          <span className={styles.errorMessage}>{validationErrors.lastName}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -576,10 +725,14 @@ export default function CartPage() {
                           required
                           value={formData.patronymic}
                           onChange={handleInputChange}
+                          className={validationErrors.patronymic ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>
                           Отчество <span className={styles.requiredStar}>*</span>
                         </span>
+                        {validationErrors.patronymic && (
+                          <span className={styles.errorMessage}>{validationErrors.patronymic}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -599,6 +752,29 @@ export default function CartPage() {
                     </div>
                   )}
                   
+                  {formData.isLegalEntity && (
+                    <div className={styles.formRow}>
+                      <div className={styles.inputField}>
+                        <div className={styles.inputContainer}>
+                          <input 
+                            type="text" 
+                            name="inn" 
+                            placeholder=" " 
+                            value={formData.inn}
+                            onChange={handleInputChange}
+                            className={validationErrors.inn ? styles.errorInput : ''}
+                          />
+                          <span className={styles.floatingLabel}>
+                            Укажите ИНН ИП или организацию <span className={styles.requiredStar}>*</span>
+                          </span>
+                          {validationErrors.inn && (
+                            <span className={styles.errorMessage}>{validationErrors.inn}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {formData.isLegalEntity && innStatus === 'valid' && (
                     <div className={styles.innMessage}>
                       <p className={styles.innValid}>
@@ -632,17 +808,22 @@ export default function CartPage() {
                   <div className={styles.formRow}>
                     <div className={styles.inputField}>
                       <div className={styles.inputContainer}>
-                        <input 
+                        <IMaskInput
+                          mask="+7 (000) 000-00-00"
                           type="tel" 
                           name="phone" 
                           placeholder=" " 
                           required
                           value={formData.phone}
                           onChange={handleInputChange}
+                          className={validationErrors.phone ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>
                           Телефон   
                         </span>
+                        {validationErrors.phone && (
+                          <span className={styles.errorMessage}>{validationErrors.phone}</span>
+                        )}
                       </div>
                     </div>
                     
@@ -655,10 +836,14 @@ export default function CartPage() {
                           required
                           value={formData.email}
                           onChange={handleInputChange}
+                          className={validationErrors.email ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>
                           Электронная почта <span className={styles.requiredStar}>*</span>
                         </span>
+                        {validationErrors.email && (
+                          <span className={styles.errorMessage}>{validationErrors.email}</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -676,9 +861,12 @@ export default function CartPage() {
                         placeholder=" "
                         value={formData.city}
                         onChange={handleInputChange}
-                        className={styles.cityField}
+                        className={`${styles.cityField} ${validationErrors.city ? styles.errorInput : ''}`}
                       />
                       <span className={styles.floatingLabel}>Населенный пункт <span className={styles.requiredStar}>*</span></span>
+                      {validationErrors.city && (
+                        <span className={styles.errorMessage}>{validationErrors.city}</span>
+                      )}
                     </div>
                   </div>
                   
@@ -793,20 +981,14 @@ export default function CartPage() {
                         )}
                         <div className={styles.addressFields}>
                           <div className={styles.addressField}>
-                            <div className={styles.inputContainer}>
-                              <input 
-                                type="text" 
-                                name="address" 
-                                placeholder=" "
-                                value={formData.address || formData.pickupAddress}
-                                onChange={handleInputChange}
-                                className={styles.addressInput}
-                                required
-                              />
-                              <span className={styles.floatingLabel}>
-                                Адрес пункта выдачи <span className={styles.requiredStar}>*</span>
-                              </span>
-                            </div>
+                            <AddressSelector
+                              onAddressSelect={handleLocationSelect}
+                              initialAddress={formData.fullAddress || ''}
+                              externalAddress={mapSelectedAddress}
+                              placeholder="Введите адрес доставки"
+                              showMap={true}
+                              className={styles.addressSelector}
+                            />
                           </div>
                           
                           <div className={styles.inputField}>
@@ -824,13 +1006,10 @@ export default function CartPage() {
                           </div>
                         </div>
                         
-                        <div className={styles.mapContainer}>
-                          <YMaps>
-                            <Map defaultState={{ center: [43.585472, 39.723098], zoom: 12 }} width="100%" height="300px" onClick={handleMapClick}>
-                              <Placemark geometry={[43.585472, 39.723098]} />
-                            </Map>
-                          </YMaps>
-                        </div>
+                        <MinimalCartMap
+                          onLocationSelect={handleLocationSelect}
+                          className={styles.minimalCartMap}
+                        />
                       </div>
                     )}
                   </div>
@@ -899,6 +1078,8 @@ export default function CartPage() {
                 <a href="">  правилами пользования</a>,  <a href=""> политику конфиденциальности </a> и <a href=""> договор оферты.</a>
               </p>
             </form>
+            
+            </>
           )}
         </div>
         

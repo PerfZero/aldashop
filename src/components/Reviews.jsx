@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import Lightbox from 'react-image-lightbox';
+import 'react-image-lightbox/style.css';
 import styles from './Reviews.module.css';
 import SortSelect from './SortSelect';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,6 +33,9 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
   const [totalReviews, setTotalReviews] = useState(0);
   const [userHasReviewed, setUserHasReviewed] = useState(false);
   const fileInputRef = useRef(null);
+  const [photoIndex, setPhotoIndex] = useState(0);
+  const [isOpen, setIsOpen] = useState(false);
+  const [images, setImages] = useState([]);
 
   const handleOpenModal = () => {
     if (!isAuthenticated) {
@@ -47,6 +52,13 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
     setModalTitle('');
     setModalImages([]);
     setSubmitError('');
+  };
+
+  const openLightbox = (photos, index = 0) => {
+    const imageUrls = photos.map(photo => `https://aldalinde.ru${photo.photo}`);
+    setImages(imageUrls);
+    setPhotoIndex(index);
+    setIsOpen(true);
   };
 
   const handleStarClick = (index) => {
@@ -303,6 +315,8 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
                            <img 
                              src={`https://aldalinde.ru${photo.photo}`}
                              alt={`Фото отзыва ${index + 1}`}
+                             onClick={() => openLightbox(review.photos, index)}
+                             style={{ cursor: 'pointer' }}
                            />
                          ) : (
                            <div className={styles.review__image_placeholder}></div>
@@ -445,6 +459,21 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
         </div>
         </div>,
         document.body
+      )}
+
+      {isOpen && (
+        <Lightbox
+          mainSrc={images[photoIndex]}
+          nextSrc={images[(photoIndex + 1) % images.length]}
+          prevSrc={images[(photoIndex + images.length - 1) % images.length]}
+          onCloseRequest={() => setIsOpen(false)}
+          onMovePrevRequest={() =>
+            setPhotoIndex((photoIndex + images.length - 1) % images.length)
+          }
+          onMoveNextRequest={() =>
+            setPhotoIndex((photoIndex + 1) % images.length)
+          }
+        />
       )}
     </div>
   );

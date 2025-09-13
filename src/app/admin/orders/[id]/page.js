@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import YandexMap from '../../../../components/YandexMap';
 import styles from './orderDetails.module.css';
 
 // Имитация данных заказа
@@ -138,6 +139,21 @@ export default function OrderDetailsPage({ params }) {
               placeholder="Введите комментарий"
               className={styles.commentInput}
               rows={3}
+            />
+          </div>
+          
+          <div className={styles.formGroup}>
+            <label>Адрес доставки на карте:</label>
+            <YandexMap
+              onLocationSelect={(locationData) => {
+                setAddress(locationData.address);
+                console.log('Выбран адрес:', locationData);
+              }}
+              initialCenter={[43.585472, 39.723098]}
+              initialZoom={12}
+              height="250px"
+              showGeolocation={true}
+              showSearch={true}
             />
           </div>
           

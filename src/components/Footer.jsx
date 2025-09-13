@@ -106,7 +106,7 @@ const Footer = () => {
             )}
             {footerInfo?.instagram_link && (
               <a href={footerInfo.instagram_link} target="_blank" rel="noopener noreferrer">
-                <Image src="/icon_footer_2.svg" alt="Instagram" width={24} height={24} />
+                <Image src="/icon_footer_2.svg" alt="Instagram" width={24} height={24} style={{ width: 'auto', height: 'auto' }} />
               </a>
             )}
             {footerInfo?.telegram_channel_link && (
@@ -117,7 +117,7 @@ const Footer = () => {
           </div>
           <p>Платежные системы</p>
           <div className={styles.paymentSystems}>
-            <Image src="/mir.png" alt="МИР" width={40} height={24} />
+            <Image src="/mir.png" alt="МИР" width={40} height={24} style={{ width: 'auto', height: 'auto' }} />
           </div>
         </div>
       </div>

@@ -7,7 +7,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import AuthModal from '../../components/AuthModal';
 
 export default function CartClient() {
-  const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart, isLoading } = useCart();
+  const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart } = useCart();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   
   console.log('[CartClient] Auth state:', { isAuthenticated, authLoading });
@@ -364,13 +364,6 @@ export default function CartClient() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className={styles.empty}>
-        <p className={styles.emptyText}>Загрузка корзины...</p>
-      </div>
-    );
-  }
 
   if (cartItems.length === 0) {
     return (

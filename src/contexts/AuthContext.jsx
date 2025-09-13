@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext();
 
@@ -13,69 +13,40 @@ export function AuthProvider({ children }) {
     const initializeAuth = async () => {
       const accessToken = localStorage.getItem('accessToken');
       
-      console.log('[AuthContext] Initializing auth, accessToken:', accessToken ? 'exists' : 'not found');
       
       if (accessToken) {
         try {
-          console.log('[AuthContext] Checking token validity...');
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+          
           const response = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
             },
+            signal: controller.signal
           });
+          
+          clearTimeout(timeoutId);
 
-          console.log('[AuthContext] Profile response status:', response.status);
 
           if (response.ok) {
             const userData = await response.json();
-            console.log('[AuthContext] User data received:', userData.user_data?.email);
             setUser(userData.user_data);
             setIsAuthenticated(true);
-          
-            const refreshTokenValue = localStorage.getItem('refreshToken');
-            
-            if (refreshTokenValue) {
-              const refreshResult = await refreshToken();
-              if (refreshResult.success) {
-                try {
-                  const userResponse = await fetch('/api/user/profile', {
-                    headers: {
-                      'Authorization': `Bearer ${refreshResult.accessToken}`,
-                    },
-                  });
-                  
-                  if (userResponse.ok) {
-                    const userData = await userResponse.json();
-                    setUser(userData.user_data);
-                    setIsAuthenticated(true);
-                  } else {
-                    localStorage.removeItem('accessToken');
-                    localStorage.removeItem('refreshToken');
-                  }
-                } catch (error) {
-                  localStorage.removeItem('accessToken');
-                  localStorage.removeItem('refreshToken');
-                }
-              } else {
-                localStorage.removeItem('accessToken');
-                localStorage.removeItem('refreshToken');
-              }
-            } else {
-              localStorage.removeItem('accessToken');
-              localStorage.removeItem('refreshToken');
-            }
           } else {
-            console.log('[AuthContext] Token invalid, removing tokens');
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
           }
         } catch (error) {
-          console.log('[AuthContext] Error checking token:', error);
-          localStorage.removeItem('accessToken');
-          localStorage.removeItem('refreshToken');
+          // Не удаляем токены при сетевых ошибках или таймаутах
+          if (error.name === 'TypeError' && error.message.includes('fetch') || 
+              error.name === 'AbortError') {
+          } else {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+          }
         }
       } else {
-        console.log('[AuthContext] No access token found, user not authenticated');
       }
       
       setIsLoading(false);
@@ -86,7 +57,6 @@ export function AuthProvider({ children }) {
 
   const mergeSessionData = async (accessToken) => {
     try {
-      console.log('[AuthContext] Merging session data...');
       
       const response = await fetch('/api/user/merge-data', {
         method: 'POST',
@@ -100,13 +70,11 @@ export function AuthProvider({ children }) {
       const data = await response.json();
 
       if (response.ok) {
-        console.log('[AuthContext] Session data merged successfully:', data);
         // Очищаем localStorage после успешного слияния
         localStorage.removeItem('cart');
         localStorage.removeItem('favourites');
         return { success: true };
       } else {
-        console.log('[AuthContext] Failed to merge session data:', data);
         return { success: false, error: data.error };
       }
     } catch (error) {
@@ -227,10 +195,8 @@ export function AuthProvider({ children }) {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       const accessToken = localStorage.getItem('accessToken');
-      console.log('[AuthContext] Logout called, refreshToken exists:', !!refreshToken, 'accessToken exists:', !!accessToken);
       
       if (refreshToken) {
-        console.log('[AuthContext] Sending logout request to API...');
         // Отправляем запрос на сервер для добавления refresh токена в черный список
         const response = await fetch('/api/auth/logout', {
           method: 'POST',
@@ -241,22 +207,15 @@ export function AuthProvider({ children }) {
           body: JSON.stringify({ refresh: refreshToken }),
         });
 
-        console.log('[AuthContext] Logout API response status:', response.status);
         const responseData = await response.json();
-        console.log('[AuthContext] Logout API response data:', responseData);
 
         if (!response.ok) {
-          console.warn('[AuthContext] Logout API call failed, but continuing with local logout');
         } else {
-          console.log('[AuthContext] Logout API call successful');
         }
       } else {
-        console.log('[AuthContext] No refresh token found, skipping API call');
       }
     } catch (error) {
-      console.warn('[AuthContext] Logout API error:', error);
     } finally {
-      console.log('[AuthContext] Clearing local data and logging out...');
       // В любом случае очищаем локальные данные
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
@@ -311,39 +270,62 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     try {
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) {
         throw new Error('Нет refresh токена');
       }
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+      
       const response = await fetch('/api/auth/token/refresh', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ refresh: refreshToken }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
 
       const data = await response.json();
 
       if (!response.ok) {
+        // Если токен в черном списке или недействителен, сразу очищаем данные
+        if (data.code === 'token_not_valid' || response.status === 401) {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          setIsAuthenticated(false);
+          setUser(null);
+          return { success: false, error: 'Token invalid' };
+        }
         throw new Error('Ошибка обновления токена');
       }
 
       localStorage.setItem('accessToken', data.access);
       return { success: true, accessToken: data.access };
     } catch (error) {
-      logout();
+      // Не делаем logout при сетевых ошибках или таймаутах
+      if (error.name === 'TypeError' && error.message.includes('fetch') || 
+          error.name === 'AbortError') {
+        return { success: false, error: 'Network error' };
+      }
+      // При ошибке обновления токена просто очищаем локальные данные без API запроса
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+      setIsAuthenticated(false);
+      setUser(null);
       return { success: false, error: error.message };
     }
-  };
+  }, []);
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const accessToken = localStorage.getItem('accessToken');
     return accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {};
-  };
+  }, []);
 
   const getUserProfile = async () => {
     try {

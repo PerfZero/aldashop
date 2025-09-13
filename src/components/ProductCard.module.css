@@ -243,6 +243,7 @@
   font-family: "Montserrat", sans-serif;
   font-weight: 400;
   font-size: 14px;
+  flex: 1;
   line-height: 140%;
   color: #666;
   margin-bottom: 5px;

@@ -42,7 +42,6 @@ export function FavouritesProvider({ children }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('[FavouritesContext] API response:', data);
         const favouritesList = (data.results || data).map(item => {
           const product = item.product;
           const mainPhoto = product.photos?.find(photo => photo.main_photo) || product.photos?.[0];

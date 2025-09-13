@@ -440,7 +440,15 @@ function CategoryPageContent() {
         <SortSelect 
           value={sortBy} 
           onChange={setSortBy} 
-          options={(filters.find(f => f.slug === 'sort')?.options) || []} 
+          options={(filters.find(f => f.slug === 'sort')?.options?.map(option => ({
+            value: option.id,
+            label: option.title
+          }))) || [
+            { value: 1, label: 'Популярные' },
+            { value: 2, label: 'Высокий рейтинг' },
+            { value: 3, label: 'По возрастанию цены' },
+            { value: 4, label: 'По убыванию цены' }
+          ]} 
         />
       </div>
 

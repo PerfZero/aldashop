@@ -49,7 +49,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
   useEffect(() => {
     const productData = product.product || {};
     const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
-    const hoverPhoto = productData.photos?.find(p => !p.main_photo) || productData.photos?.[1];
+    const interiorPhoto = productData.photos?.find(p => p.photo_interior);
     
     setCurrentProduct({
       id: productData.id,
@@ -59,7 +59,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       price: productData.price || 0,
       discountedPrice: productData.discounted_price,
       image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'null',
-      hoverImage: hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null,
+      hoverImage: interiorPhoto?.photo ? (interiorPhoto.photo.startsWith('http') ? interiorPhoto.photo : `https://aldalinde.ru${interiorPhoto.photo}`) : null,
       inStock: productData.in_stock !== undefined ? productData.in_stock : true,
       isBestseller: productData.bestseller || product.is_bestseller || false,
       available_colors: product.available_colors || [],
@@ -70,7 +70,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
   const [currentProduct, setCurrentProduct] = useState(() => {
     const productData = product.product || {};
     const mainPhoto = productData.photos?.find(p => p.main_photo) || productData.photos?.[0];
-    const hoverPhoto = productData.photos?.find(p => !p.main_photo) || productData.photos?.[1];
+    const interiorPhoto = productData.photos?.find(p => p.photo_interior);
     
     return {
       id: productData.id,
@@ -80,7 +80,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       price: productData.price || 0,
       discountedPrice: productData.discounted_price,
       image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'null',
-      hoverImage: hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null,
+      hoverImage: interiorPhoto?.photo ? (interiorPhoto.photo.startsWith('http') ? interiorPhoto.photo : `https://aldalinde.ru${interiorPhoto.photo}`) : null,
       inStock: productData.in_stock !== undefined ? productData.in_stock : true,
       isBestseller: productData.bestseller || product.is_bestseller || false,
       available_colors: product.available_colors || [],
@@ -150,16 +150,17 @@ export default function ProductCard({ product, filtersOpen = false }) {
         
         if (data && data.id) {
           const mainPhoto = data.photos?.find(p => p.main_photo) || data.photos?.[0];
-          const hoverPhoto = data.photos?.find(p => !p.main_photo) || data.photos?.[1];
+          const interiorPhoto = data.photos?.find(p => p.photo_interior);
           
           setCurrentProduct(prev => {
             const newImage = mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : prev.image;
-            const newHoverImage = hoverPhoto?.photo ? (hoverPhoto.photo.startsWith('http') ? hoverPhoto.photo : `https://aldalinde.ru${hoverPhoto.photo}`) : null;
+            const newHoverImage = interiorPhoto?.photo ? (interiorPhoto.photo.startsWith('http') ? interiorPhoto.photo : `https://aldalinde.ru${interiorPhoto.photo}`) : null;
             
             const newProduct = {
               ...prev,
               id: data.id,
               name: data.title || prev.name,
+              description: data.short_description,
               price: data.price || 0,
               discountedPrice: data.discounted_price,
               image: newImage,

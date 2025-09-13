@@ -570,6 +570,7 @@
   border: none;
   cursor: pointer;
   padding: 0;
+  margin-left: auto;
   display: flex;
   align-items: center;
   justify-content: center;
