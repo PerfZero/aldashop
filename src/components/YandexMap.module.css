@@ -170,23 +170,23 @@
 }
 
 /* Стили для элементов управления карты */
-:global(.ymaps-2-1-79-controls__control) {
+.mapContainer :global(.ymaps-2-1-79-controls__control) {
   border-radius: 4px !important;
 }
 
-:global(.ymaps-2-1-79-searchbox) {
+.mapContainer :global(.ymaps-2-1-79-searchbox) {
   border-radius: 4px !important;
 }
 
-:global(.ymaps-2-1-79-searchbox__input) {
+.mapContainer :global(.ymaps-2-1-79-searchbox__input) {
   border-radius: 4px !important;
 }
 
 /* Стили для балунов */
-:global(.ymaps-2-1-79-balloon) {
+.mapContainer :global(.ymaps-2-1-79-balloon) {
   border-radius: 8px !important;
 }
 
-:global(.ymaps-2-1-79-balloon__content) {
+.mapContainer :global(.ymaps-2-1-79-balloon__content) {
   border-radius: 8px !important;
 }
