@@ -613,7 +613,7 @@ export default function AccountPage() {
             
             {!completedOrdersLoading && !completedOrdersError && completedOrders.length > 0 && (
               <>
-                <h3 className={styles.orders__title}>Завершенные</h3>
+                <h3 className={styles.orders_title}>Завершенные</h3>
                 {completedOrders.map((order, index) => {
                   const orderId = order.id || index + 1;
                   const orderNumber = order.order_number || `Заказ ${index + 1}`;

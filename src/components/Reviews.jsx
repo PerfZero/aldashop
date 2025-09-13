@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import Lightbox from 'react-image-lightbox';
-import 'react-image-lightbox/style.css';
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
 import styles from './Reviews.module.css';
 import SortSelect from './SortSelect';
 import { useAuth } from '../contexts/AuthContext';
@@ -463,16 +463,13 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
 
       {isOpen && (
         <Lightbox
-          mainSrc={images[photoIndex]}
-          nextSrc={images[(photoIndex + 1) % images.length]}
-          prevSrc={images[(photoIndex + images.length - 1) % images.length]}
-          onCloseRequest={() => setIsOpen(false)}
-          onMovePrevRequest={() =>
-            setPhotoIndex((photoIndex + images.length - 1) % images.length)
-          }
-          onMoveNextRequest={() =>
-            setPhotoIndex((photoIndex + 1) % images.length)
-          }
+          open={isOpen}
+          close={() => setIsOpen(false)}
+          index={photoIndex}
+          slides={images.map(src => ({ src }))}
+          on={{
+            view: ({ index }) => setPhotoIndex(index)
+          }}
         />
       )}
     </div>
