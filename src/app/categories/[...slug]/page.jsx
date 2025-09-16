@@ -142,7 +142,7 @@ function CategoryPageContent() {
       const defaultMaxPrice = priceFilter?.max || 100000;
       
       const requestBody = {
-        page: page - 1,
+        page: page,
         limit: pagination.page_size
       };
 

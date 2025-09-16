@@ -625,6 +625,7 @@ export default function ProductPage({ params }) {
                         alt={`${product.title} - фото ${index + 1}`}
                         width={80}
                         height={80}
+                        unoptimized={true}
                       />
                     </div>
                   </SwiperSlide>

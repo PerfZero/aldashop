@@ -64,7 +64,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
             <h1 className={styles.promo__title}>
               {mainPageData?.title || "ALDA — мебель, которую выбирают сердцем"}
             </h1>
-            <Link href="/products" className={styles.promo__button}>
+            <Link href="/categories" className={styles.promo__button}>
               Выбрать мебель <svg width="33" height="12" viewBox="0 0 33 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M1.5 5.25C1.08579 5.25 0.75 5.58579 0.75 6C0.75 6.41421 1.08579 6.75 1.5 6.75V5.25ZM32.0303 6.53033C32.3232 6.23744 32.3232 5.76256 32.0303 5.46967L27.2574 0.696699C26.9645 0.403806 26.4896 0.403806 26.1967 0.696699C25.9038 0.989593 25.9038 1.46447 26.1967 1.75736L30.4393 6L26.1967 10.2426C25.9038 10.5355 25.9038 11.0104 26.1967 11.3033C26.4896 11.5962 26.9645 11.5962 27.2574 11.3033L32.0303 6.53033ZM1.5 6.75H31.5V5.25H1.5V6.75Z" fill="#A45B38" />
               </svg>
@@ -74,7 +74,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
 
         {/* First section - Image on left, text on right */}
         <section className={styles.section}>
-          <Link href={mainPageData?.main_page_items?.[0]?.link || "/products"} className={styles.section__link}>
+          <Link href={mainPageData?.main_page_items?.[0]?.link || "/categories"} className={styles.section__link}>
             <div className={styles.section__container}>
               <div className={styles.section__image}>
                 <div className={styles.image_container}>
@@ -85,6 +85,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                     height={400}
                     priority
                     className={styles.base_image}
+                    unoptimized={true}
                   />
                   {mainPageData?.main_page_items?.[0]?.photo_interior && (
                     <Image
@@ -93,6 +94,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                       width={600}
                       height={400}
                       className={styles.hover_image}
+                      unoptimized={true}
                     />
                   )}
                 </div>
@@ -114,7 +116,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
         {/* Second section - Two rows with images and text */}
         <section className={styles.section}>
           <div className={styles.section__container}>
-            <Link href={mainPageData?.main_page_items?.[1]?.link || "/products"} className={styles.section__links}>
+            <Link href={mainPageData?.main_page_items?.[1]?.link || "/categories"} className={styles.section__links}>
               <div className={styles.section__row}>
                 <div className={styles.section__image}>
                   <div className={styles.image_container}>
@@ -124,6 +126,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                       width={600}
                       height={400}
                       className={styles.base_image}
+                      unoptimized={true}
                     />
                     {mainPageData?.main_page_items?.[1]?.photo_interior && (
                       <Image
@@ -132,6 +135,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                         width={600}
                         height={400}
                         className={styles.hover_image}
+                        unoptimized={true}
                       />
                     )}
                   </div>
@@ -146,7 +150,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                 </div>
               </div>
             </Link>
-            <Link href={mainPageData?.main_page_items?.[2]?.link || "/products"} className={styles.section__links}>
+            <Link href={mainPageData?.main_page_items?.[2]?.link || "/categories"} className={styles.section__links}>
               <div className={styles.section__row}>
                 <div className={styles.section__image}>
                   <div className={styles.image_container}>
@@ -156,6 +160,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                       width={600}
                       height={400}
                       className={styles.base_image}
+                      unoptimized={true}
                     />
                     {mainPageData?.main_page_items?.[2]?.photo_interior && (
                       <Image
@@ -164,6 +169,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                         width={600}
                         height={400}
                         className={styles.hover_image}
+                        unoptimized={true}
                       />
                     )}
                   </div>
@@ -183,7 +189,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
 
         {/* Third section - Text on left, image on right */}
         <section className={styles.section}>
-          <Link href={mainPageData?.main_page_items?.[3]?.link || "/products"} className={styles.section__link}>
+          <Link href={mainPageData?.main_page_items?.[3]?.link || "/categories"} className={styles.section__link}>
             <div className={styles.section__container}>
               <div className={styles.section__image}>
                 <div className={styles.image_container}>
@@ -194,6 +200,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                     height={400}
                     priority
                     className={styles.base_image}
+                    unoptimized={true}
                   />
                   {mainPageData?.main_page_items?.[3]?.photo_interior && (
                     <Image
@@ -202,6 +209,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                       width={600}
                       height={400}
                       className={styles.hover_image}
+                      unoptimized={true}
                     />
                   )}
                 </div>
@@ -255,6 +263,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                   width={715}
                   height={323}
                   priority
+                  unoptimized={true}
                 />
               </div>
             </div>
@@ -267,6 +276,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                   alt="Наше производство"
                   width={544}
                   height={317}
+                  unoptimized={true}
                 />
               </div>
               <div className={styles.about__content}>

@@ -34,7 +34,7 @@ function SearchPageContent() {
       setProductsLoading(true);
       
       const requestBody = {
-        page: page - 1,
+        page: page,
         limit: pagination.page_size,
         search: query,
         sort: sortBy
