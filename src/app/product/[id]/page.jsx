@@ -595,27 +595,8 @@ export default function ProductPage({ params }) {
                 freeMode={true}
                 watchSlidesProgress={true}
                 loop={false}
-                modules={[FreeMode, Navigation, Thumbs, Mousewheel]}
-                mousewheel={{
-                  forceToAxis: true,
-                  sensitivity: 1,
-                  releaseOnEdges: true
-                }}
-                
+                modules={[FreeMode, Thumbs]}
                 className={styles.product__thumbs_swiper}
-                onSlideChange={(swiper) => {
-                  setActiveThumbIndex(swiper.activeIndex);
-                  setTimeout(() => {
-                    const thumbnails = document.querySelectorAll(`.${styles.product__thumbnail}`);
-                    thumbnails.forEach((thumb, index) => {
-                      if (index === swiper.activeIndex) {
-                        thumb.classList.add('active');
-                      } else {
-                        thumb.classList.remove('active');
-                      }
-                    });
-                  }, 100);
-                }}
               >
                 {product.photos.map((photo, index) => (
                   <SwiperSlide key={index}>
@@ -638,12 +619,7 @@ export default function ProductPage({ params }) {
                 navigation={true}
                 thumbs={{ swiper: thumbsSwiper }}
                 loop={true}
-                modules={[FreeMode, Navigation, Thumbs, Mousewheel]}
-                mousewheel={{
-                  forceToAxis: true,
-                  sensitivity: 1,
-                  releaseOnEdges: true
-                }}
+                modules={[Navigation, Thumbs]}
                 className={styles.product__main_swiper}
               >
                 {product.photos.map((photo, index) => (
@@ -654,6 +630,7 @@ export default function ProductPage({ params }) {
                         alt={`${product.title} - фото ${index + 1}`}
                         width={600}
                         height={600}
+                        unoptimized={true}
                         priority
                       />
                     </div>
@@ -757,7 +734,7 @@ export default function ProductPage({ params }) {
           {product.available_sizes && product.available_sizes.length > 0 && (
             <div className={styles.product__sizes}>
               <h3 className={styles.product__section_title}>
-                Размер: <span className={styles.product__size_name}>{selectedSize?.title}</span>
+                Размер (ШхВхГ): <span className={styles.product__size_name}>{selectedSize?.title}</span>
               </h3>
               <div className={styles.product__sizes_list}>
                                  {product.available_sizes.map((size) => (
