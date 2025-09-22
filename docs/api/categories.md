@@ -1,7 +1,7 @@
 # API Документация - Страница категорий
 
 ## Получение информации о категории
-`GET /api/categories/{slug}`
+`GET https://aldalinde.ru/api/products/category-list//{slug}`
 
 Возвращает информацию о категории по её slug.
 
@@ -49,7 +49,7 @@
 ```
 
 ## Получение товаров категории
-`GET /api/categories/{slug}/products`
+`GET https://aldalinde.ru/api/products/category-list//{slug}/products`
 
 Возвращает список товаров в категории с возможностью фильтрации и сортировки.
 
@@ -159,7 +159,7 @@
 ```
 
 ## Получение фильтров для категории
-`GET /api/categories/{slug}/filters`
+`GET https://aldalinde.ru/api/products/category-list//{slug}/filters`
 
 Возвращает доступные фильтры для категории.
 
@@ -316,7 +316,7 @@
 ```
 
 ## Получение хлебных крошек для категории
-`GET /api/categories/{slug}/breadcrumbs`
+`GET https://aldalinde.ru/api/products/category-list//{slug}/breadcrumbs`
 
 Возвращает хлебные крошки для категории.
 

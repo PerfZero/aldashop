@@ -288,7 +288,7 @@ function CategoriesPageContent() {
       if (!categoryId) return;
       
       try {
-        const response = await fetch('/api/categories');
+        const response = await fetch('https://aldalinde.ru/api/products/category-list/');
         const categories = await response.json();
         const category = categories.find(c => c.id === parseInt(categoryId));
         if (category) {

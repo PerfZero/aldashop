@@ -309,7 +309,7 @@ function CategoryPageContent() {
   useEffect(() => {
     const resolveIds = async () => {
       try {
-        const res = await fetch('/api/categories');
+        const res = await fetch('https://aldalinde.ru/api/products/category-list/');
         const data = await res.json();
         
         const sortedData = data.sort((a, b) => {

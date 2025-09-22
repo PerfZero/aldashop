@@ -44,6 +44,13 @@ jobs:
           echo "🛑 Останавливаем приложение..."
           pm2 stop aldalinde || echo "Процесс не запущен"
           pm2 delete aldalinde || echo "Процесс не существует"
+          
+          echo "🧹 Очищаем зомби процессы..."
+          pkill -f "next-server" || echo "Next-server процессы не найдены"
+          pkill -f "npm.*start" || echo "NPM процессы не найдены"
+          sleep 2
+          
+          echo "✅ Порт 3000 освобожден"
 
     - name: Update code and build
       uses: appleboy/ssh-action@v1.0.3

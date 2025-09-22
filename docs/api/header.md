@@ -1,7 +1,7 @@
 # API Документация - Хедер
 
 ## Получение категорий
-`GET /api/categories`
+`GET https://aldalinde.ru/api/products/category-list/`
 
 Возвращает список всех категорий с подкатегориями для отображения в хедере.
 
