@@ -8,6 +8,7 @@ import Breadcrumbs from '@/components/Breadcrumbs';
 import Filters from '@/components/Filters';
 import ProductCard from '@/components/ProductCard';
 import SortSelect from '@/components/SortSelect';
+import { useScrollRestoration } from '@/hooks/useScrollRestoration';
 import styles from './page.module.css';
 
 function CategoryPageContent() {
@@ -41,6 +42,7 @@ function CategoryPageContent() {
   const [bestseller, setBestseller] = useQueryParam('bestseller', withDefault(StringParam, ''));
   
   const [dynamicFilters, setDynamicFilters] = useState({});
+  const { saveCurrentPosition } = useScrollRestoration(`categories-${slugDep}`);
 
   useEffect(() => {
     const handleResize = () => {
@@ -53,11 +55,17 @@ function CategoryPageContent() {
 
     handleResize();
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const updateUrlWithDynamicFilters = (filters) => {
-    const url = new URL(window.location.href);
+    try {
+      if (typeof window === 'undefined') return;
+      
+      const url = new URL(window.location.href);
     
     Object.keys(url.searchParams).forEach(key => {
       if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller'].includes(key)) {
@@ -74,12 +82,18 @@ function CategoryPageContent() {
       }
     });
 
-    window.history.replaceState({}, '', url.toString());
+      window.history.replaceState({}, '', url.toString());
+    } catch (error) {
+      console.error('Ошибка при обновлении URL:', error);
+    }
   };
 
   const parseDynamicFiltersFromUrl = () => {
-    const url = new URL(window.location.href);
-    const dynamicFilters = {};
+    try {
+      if (typeof window === 'undefined') return {};
+      
+      const url = new URL(window.location.href);
+      const dynamicFilters = {};
     
     Object.keys(url.searchParams).forEach(key => {
       if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller'].includes(key)) {
@@ -90,9 +104,13 @@ function CategoryPageContent() {
           dynamicFilters[key] = [parseInt(value)];
         }
       }
-    });
-    
-    return dynamicFilters;
+      });
+      
+      return dynamicFilters;
+    } catch (error) {
+      console.error('Ошибка при парсинге URL параметров:', error);
+      return {};
+    }
   };
 
 
@@ -236,6 +254,12 @@ function CategoryPageContent() {
 
       const data = await response.json();
       
+      console.log('[fetchProducts] Ответ сервера:', {
+        page: page,
+        resultsCount: data.results?.length || 0,
+        totalCount: data.count || 0,
+        currentProductsCount: products.length
+      });
       
       if (page === 1) {
         setProducts(data.results || []);
@@ -261,6 +285,8 @@ function CategoryPageContent() {
   const handleFiltersApply = (newFilters) => {
     setAppliedFilters(newFilters);
     setPagination(prev => ({ ...prev, page: 1 }));
+    
+    window.scrollTo(0, 0);
     
     const dynamicFilterData = {};
     Object.keys(newFilters).forEach(key => {
@@ -467,8 +493,13 @@ function CategoryPageContent() {
             <div className={styles.loading}>Загрузка товаров...</div>
           ) : products.length > 0 ? (
             <>
-              {products.map(product => (
-                <ProductCard key={product.id} product={transformProduct(product)} filtersOpen={showFilters} />
+              {products.map((product, index) => (
+                <ProductCard 
+                  key={`${product.id}-${index}`} 
+                  product={transformProduct(product)} 
+                  filtersOpen={showFilters}
+                  onProductClick={saveCurrentPosition}
+                />
               ))}
               {products.length < pagination.count && (
                 <div className={styles.loadMore}>
@@ -477,7 +508,7 @@ function CategoryPageContent() {
                     disabled={productsLoading}
                     className={styles.loadMoreButton}
                   >
-                    {productsLoading ? 'Загрузка...' : 'Показать еще'}
+                    {productsLoading ? 'Загрузка...' : `Показать еще (${products.length} из ${pagination.count})`}
                   </button>
                 </div>
               )}

@@ -39,8 +39,10 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
-        timeout: 600s
+        timeout: 300s
+        command_timeout: 60s
         script: |
+          set -e
           cd /var/www/aldalinde
           echo "🚀 Начинаем деплой..."
           
@@ -49,20 +51,25 @@ jobs:
           free -h
           df -h
           
-          # Останавливаем все процессы npm/node
+          # Останавливаем все процессы более мягко
           echo "🛑 Останавливаем все процессы..."
-          pkill -f npm || true
-          pkill -f node || true
-          pm2 stop aldalinde || true
-          pm2 delete aldalinde || true
+          pm2 stop aldalinde 2>/dev/null || echo "PM2 процесс не найден"
+          pm2 delete aldalinde 2>/dev/null || echo "PM2 процесс не существует"
+          sleep 2
+          
+          # Убиваем оставшиеся процессы node
+          pkill -f "node.*next" 2>/dev/null || echo "Node процессы не найдены"
+          pkill -f "npm.*start" 2>/dev/null || echo "NPM процессы не найдены"
+          sleep 2
           
           # Получаем код
           echo "📥 Получаем код..."
+          git stash push -m "Auto stash before deploy" || true
           git pull origin main
           
-          # Устанавливаем зависимости с ограничениями
+          # Устанавливаем зависимости
           echo "📦 Устанавливаем зависимости..."
-          npm ci --maxsockets 1 --prefer-offline
+          npm ci --silent --maxsockets 1 --prefer-offline
           
           # Собираем проект
           echo "🔨 Собираем проект..."
@@ -71,6 +78,7 @@ jobs:
           # Запускаем приложение
           echo "▶️ Запускаем приложение..."
           pm2 start npm --name "aldalinde" -- run start
+          sleep 5
           
           # Сохраняем конфигурацию
           echo "💾 Сохраняем конфигурацию PM2..."

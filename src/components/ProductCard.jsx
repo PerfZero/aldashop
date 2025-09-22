@@ -11,7 +11,7 @@ import styles from './ProductCard.module.css';
 import { useCart } from '../app/components/CartContext';
 import { useFavourites } from '../contexts/FavouritesContext';
 
-export default function ProductCard({ product, filtersOpen = false }) {
+export default function ProductCard({ product, filtersOpen = false, onProductClick }) {
   const [isHovered, setIsHovered] = useState(false);
   const [isAdded, setIsAdded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -58,7 +58,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       description: productData.short_description || product.description || 'Съемные чехлы, можно стирать в стиральной машине',
       price: productData.price || 0,
       discountedPrice: productData.discounted_price,
-      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'null',
+      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMyMCIgdmlld0JveD0iMCAwIDQwMCAzMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzIwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yMDAgMTYwTDE2MCAyMDBIMjQwTDIwMCAxNjBaTTE2MCAyMDBMMTIwIDI0MEgyODBMMTYwIDIwMFoiIGZpbGw9IiNEREREREQiLz4KPC9zdmc+',
       hoverImage: interiorPhoto?.photo ? (interiorPhoto.photo.startsWith('http') ? interiorPhoto.photo : `https://aldalinde.ru${interiorPhoto.photo}`) : null,
       inStock: productData.in_stock !== undefined ? productData.in_stock : true,
       isBestseller: productData.bestseller || product.is_bestseller || false,
@@ -79,7 +79,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       description: productData.short_description || product.description || 'Съемные чехлы, можно стирать в стиральной машине',
       price: productData.price || 0,
       discountedPrice: productData.discounted_price,
-      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'null',
+      image: mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMyMCIgdmlld0JveD0iMCAwIDQwMCAzMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzIwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yMDAgMTYwTDE2MCAyMDBIMjQwTDIwMCAxNjBaTTE2MCAyMDBMMTIwIDI0MEgyODBMMTYwIDIwMFoiIGZpbGw9IiNEREREREQiLz4KPC9zdmc+',
       hoverImage: interiorPhoto?.photo ? (interiorPhoto.photo.startsWith('http') ? interiorPhoto.photo : `https://aldalinde.ru${interiorPhoto.photo}`) : null,
       inStock: productData.in_stock !== undefined ? productData.in_stock : true,
       isBestseller: productData.bestseller || product.is_bestseller || false,
@@ -153,7 +153,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
           const interiorPhoto = data.photos?.find(p => p.photo_interior);
           
           setCurrentProduct(prev => {
-            const newImage = mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : prev.image;
+            const newImage = mainPhoto?.photo ? (mainPhoto.photo.startsWith('http') ? mainPhoto.photo : `https://aldalinde.ru${mainPhoto.photo}`) : 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMyMCIgdmlld0JveD0iMCAwIDQwMCAzMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzIwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0yMDAgMTYwTDE2MCAyMDBIMjQwTDIwMCAxNjBaTTE2MCAyMDBMMTIwIDI0MEgyODBMMTYwIDIwMFoiIGZpbGw9IiNEREREREQiLz4KPC9zdmc+';
             const newHoverImage = interiorPhoto?.photo ? (interiorPhoto.photo.startsWith('http') ? interiorPhoto.photo : `https://aldalinde.ru${interiorPhoto.photo}`) : null;
             
             const newProduct = {
@@ -249,7 +249,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
         <div className={styles.card__sale}>Sale</div>
       )}
       
-      <Link href={`/product/${currentProduct.id}`} className={styles.card__link}>
+      <Link href={`/product/${currentProduct.id}`} className={styles.card__link} onClick={onProductClick}>
         <div 
           className={`${styles.card__image} ${filtersOpen ? styles.card__image_filters_open : ''}`}
           onMouseEnter={handleMouseEnter}
@@ -267,18 +267,16 @@ export default function ProductCard({ product, filtersOpen = false }) {
               slidesPerView={1}
               className={styles.card__swiper}
             >
-              {currentProduct.image && (
-                <SwiperSlide className={styles.card__swiper_slide}>
-                  <Image
-                    src={currentProduct.image}
-                    alt={currentProduct.name || product.title || 'Товар'}
-                    width={398}
-                    height={320}
-                    priority
-                    className={styles.card__image_main}
-                  />
-                </SwiperSlide>
-              )}
+              <SwiperSlide className={styles.card__swiper_slide}>
+                <Image
+                  src={currentProduct.image}
+                  alt={currentProduct.name || product.title || 'Товар'}
+                  width={398}
+                  height={320}
+                  priority
+                  className={styles.card__image_main}
+                />
+              </SwiperSlide>
               {currentProduct.hoverImage && (
                 <SwiperSlide className={styles.card__swiper_slide}>
                   <Image
@@ -294,16 +292,14 @@ export default function ProductCard({ product, filtersOpen = false }) {
             </Swiper>
           ) : (
             <div className={`${styles.card__image_container} ${isHovered ? styles.card__image_container_hover : ''}`}>
-              {currentProduct.image && (
-                <Image
-                  src={currentProduct.image}
-                  alt={currentProduct.name || product.title || 'Товар'}
-                  width={398}
-                  height={320}
-                  priority
-                  className={styles.card__image_main}
-                />
-              )}
+              <Image
+                src={currentProduct.image}
+                alt={currentProduct.name || product.title || 'Товар'}
+                width={398}
+                height={320}
+                priority
+                className={styles.card__image_main}
+              />
               {currentProduct.hoverImage && (
                 <Image
                   src={currentProduct.hoverImage}
@@ -347,7 +343,7 @@ export default function ProductCard({ product, filtersOpen = false }) {
       </Link>
       
       <div className={styles.card__content}>
-        <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link}>
+        <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link} onClick={onProductClick}>
           <h3 className={styles.card__title}>
             {currentProduct.name || product.product?.title || 'Товар'}
           </h3>

@@ -36,7 +36,7 @@ export default function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch('/api/categories/', {
+        const response = await fetch('https://aldalinde.ru/api/products/category-list', {
           method: 'GET',
           headers: {
             'accept': 'application/json',
