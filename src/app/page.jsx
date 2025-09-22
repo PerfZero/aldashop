@@ -23,7 +23,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
         const data = await response.json();
         setMainPageData(data);
       } catch (error) {
-        // console.error('Ошибка загрузки данных главной страницы:', error);
+        // console.error('Ошибка загрузки данных главной страницы1:', error);
       } finally {
         setIsLoading(false);
       }
