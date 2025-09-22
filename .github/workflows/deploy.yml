@@ -58,11 +58,17 @@ jobs:
           git stash push -m "Auto stash before deploy" || echo "Нечего сохранять"
           git pull origin main
           
+          echo "🧹 Очищаем кеш..."
+          rm -rf .next node_modules/.cache
+          
           echo "📦 Устанавливаем зависимости..."
           npm ci --silent --maxsockets 1
           
           echo "🔨 Собираем проект..."
           npm run build
+          
+          echo "✅ Проверяем сборку..."
+          ls -la .next/static/chunks/app/ | head -10 || echo "Папка не найдена"
 
     - name: Start application
       uses: appleboy/ssh-action@v1.0.3
