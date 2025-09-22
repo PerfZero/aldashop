@@ -33,75 +33,49 @@ jobs:
     if: github.ref == 'refs/heads/main'
     
     steps:
-    - name: Deploy to server
+    - name: Stop application
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
-        timeout: 600s
-        command_timeout: 120s
+        timeout: 60s
         script: |
-          cd /var/www/aldalinde || exit 1
-          echo "🚀 Начинаем деплой..."
-          
-          # Проверяем доступность сервера
-          echo "🔍 Проверяем ресурсы сервера..."
-          free -h
-          df -h
-          
-          # Останавливаем процессы осторожно
-          echo "🛑 Останавливаем все процессы..."
-          if pm2 list | grep -q aldalinde; then
-            echo "Останавливаем PM2 процесс..."
-            pm2 stop aldalinde || true
-            sleep 3
-            pm2 delete aldalinde || true
-          else
-            echo "PM2 процесс не найден"
-          fi
-          
-          # Убиваем оставшиеся процессы
-          echo "Проверяем оставшиеся процессы..."
-          pkill -f "node.*next" || echo "Node процессы не найдены"
-          pkill -f "npm.*start" || echo "NPM процессы не найдены"
-          sleep 2
-          
-          # Получаем код
+          echo "🛑 Останавливаем приложение..."
+          pm2 stop aldalinde || echo "Процесс не запущен"
+          pm2 delete aldalinde || echo "Процесс не существует"
+
+    - name: Update code and build
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        timeout: 300s
+        script: |
+          cd /var/www/aldalinde
           echo "📥 Получаем код..."
-          git stash push -m "Auto stash before deploy" || echo "Нечего сохранять в stash"
-          git pull origin main || exit 1
+          git stash push -m "Auto stash before deploy" || echo "Нечего сохранять"
+          git pull origin main
           
-          # Устанавливаем зависимости
           echo "📦 Устанавливаем зависимости..."
-          if ! npm ci --silent --maxsockets 1 --prefer-offline; then
-            echo "Ошибка при установке зависимостей"
-            exit 1
-          fi
+          npm ci --silent --maxsockets 1
           
-          # Собираем проект
           echo "🔨 Собираем проект..."
-          if ! npm run build; then
-            echo "Ошибка при сборке проекта"
-            exit 1
-          fi
-          
-          # Запускаем приложение
+          npm run build
+
+    - name: Start application
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        timeout: 60s
+        script: |
+          cd /var/www/aldalinde
           echo "▶️ Запускаем приложение..."
-          if pm2 start npm --name "aldalinde" -- run start; then
-            echo "Приложение запущено успешно"
-          else
-            echo "Ошибка при запуске приложения"
-            exit 1
-          fi
-          
-          sleep 5
-          
-          # Сохраняем конфигурацию
-          echo "💾 Сохраняем конфигурацию PM2..."
+          pm2 start npm --name "aldalinde" -- run start
           pm2 save
           
-          # Проверяем статус
           echo "✅ Деплой завершен успешно!"
           pm2 status
-          echo "🌐 Приложение доступно по адресу: http://62.181.44.89:3000"
