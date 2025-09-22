@@ -16,7 +16,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
     const fetchMainPageData = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/main-page-info');
+        const response = await fetch('/api/main-page-info/');
         if (!response.ok) {
           throw new Error('Ошибка загрузки данных');
         }
