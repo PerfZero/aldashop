@@ -85,3 +85,26 @@ jobs:
           
           echo "✅ Деплой завершен успешно!"
           pm2 status
+
+    - name: Diagnostic check
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        timeout: 60s
+        script: |
+          cd /var/www/aldalinde
+          echo "🔍 Диагностика сервера..."
+          echo "Статус PM2:"
+          pm2 status
+          echo "Логи PM2:"
+          pm2 logs --lines 20
+          echo "Порты:"
+          netstat -tlnp | grep :3000 || echo "Порт 3000 не занят"
+          echo "Процессы Node:"
+          ps aux | grep node | head -5
+          echo "Размер .next:"
+          du -sh .next/
+          echo "Файлы в static/chunks:"
+          ls -la .next/static/chunks/ | head -10

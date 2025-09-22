@@ -12,7 +12,7 @@ const Footer = () => {
   useEffect(() => {
     const fetchFooterInfo = async () => {
       try {
-        const response = await fetch('/api/footer-info');
+        const response = await fetch('https://aldalinde.ru/api/footer-info/');
         if (response.ok) {
           const data = await response.json();
           setFooterInfo(data);
