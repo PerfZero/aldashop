@@ -39,11 +39,10 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
-        timeout: 300s
-        command_timeout: 60s
+        timeout: 600s
+        command_timeout: 120s
         script: |
-          set -e
-          cd /var/www/aldalinde
+          cd /var/www/aldalinde || exit 1
           echo "🚀 Начинаем деплой..."
           
           # Проверяем доступность сервера
@@ -51,33 +50,51 @@ jobs:
           free -h
           df -h
           
-          # Останавливаем все процессы более мягко
+          # Останавливаем процессы осторожно
           echo "🛑 Останавливаем все процессы..."
-          pm2 stop aldalinde 2>/dev/null || echo "PM2 процесс не найден"
-          pm2 delete aldalinde 2>/dev/null || echo "PM2 процесс не существует"
-          sleep 2
+          if pm2 list | grep -q aldalinde; then
+            echo "Останавливаем PM2 процесс..."
+            pm2 stop aldalinde || true
+            sleep 3
+            pm2 delete aldalinde || true
+          else
+            echo "PM2 процесс не найден"
+          fi
           
-          # Убиваем оставшиеся процессы node
-          pkill -f "node.*next" 2>/dev/null || echo "Node процессы не найдены"
-          pkill -f "npm.*start" 2>/dev/null || echo "NPM процессы не найдены"
+          # Убиваем оставшиеся процессы
+          echo "Проверяем оставшиеся процессы..."
+          pkill -f "node.*next" || echo "Node процессы не найдены"
+          pkill -f "npm.*start" || echo "NPM процессы не найдены"
           sleep 2
           
           # Получаем код
           echo "📥 Получаем код..."
-          git stash push -m "Auto stash before deploy" || true
-          git pull origin main
+          git stash push -m "Auto stash before deploy" || echo "Нечего сохранять в stash"
+          git pull origin main || exit 1
           
           # Устанавливаем зависимости
           echo "📦 Устанавливаем зависимости..."
-          npm ci --silent --maxsockets 1 --prefer-offline
+          if ! npm ci --silent --maxsockets 1 --prefer-offline; then
+            echo "Ошибка при установке зависимостей"
+            exit 1
+          fi
           
           # Собираем проект
           echo "🔨 Собираем проект..."
-          npm run build
+          if ! npm run build; then
+            echo "Ошибка при сборке проекта"
+            exit 1
+          fi
           
           # Запускаем приложение
           echo "▶️ Запускаем приложение..."
-          pm2 start npm --name "aldalinde" -- run start
+          if pm2 start npm --name "aldalinde" -- run start; then
+            echo "Приложение запущено успешно"
+          else
+            echo "Ошибка при запуске приложения"
+            exit 1
+          fi
+          
           sleep 5
           
           # Сохраняем конфигурацию
