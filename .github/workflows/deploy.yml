@@ -39,18 +39,12 @@ jobs:
         host: ${{ secrets.SERVER_HOST }}
         username: ${{ secrets.SERVER_USER }}
         password: ${{ secrets.SERVER_PASSWORD }}
-        timeout: 60s
+        timeout: 30s
         script: |
           echo "🛑 Останавливаем приложение..."
-          pm2 stop aldalinde || echo "Процесс не запущен"
-          pm2 delete aldalinde || echo "Процесс не существует"
-          
-          echo "🧹 Очищаем зомби процессы..."
-          pkill -f "next-server" || echo "Next-server процессы не найдены"
-          pkill -f "npm.*start" || echo "NPM процессы не найдены"
-          sleep 2
-          
-          echo "✅ Порт 3000 освобожден"
+          pm2 stop aldalinde 2>/dev/null || echo "Процесс не запущен"
+          pm2 delete aldalinde 2>/dev/null || echo "Процесс не существует"
+          sleep 3
 
     - name: Update code and build
       uses: appleboy/ssh-action@v1.0.3
