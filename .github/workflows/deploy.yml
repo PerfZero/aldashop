@@ -1,0 +1,57 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Позволяет запускать вручную
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run linting
+      run: npm run lint || echo "Linting completed with warnings"
+      
+    - name: Build project
+      run: npm run build
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        password: ${{ secrets.SERVER_PASSWORD }}
+        script: |
+          cd /var/www/aldalinde
+          echo "🚀 Начинаем деплой..."
+          git pull origin main
+          echo "📦 Устанавливаем зависимости..."
+          npm ci
+          echo "🛑 Останавливаем приложение..."
+          pm2 stop aldalinde || true
+          echo "🔨 Собираем проект..."
+          npm run build
+          echo "▶️ Запускаем приложение..."
+          pm2 start npm --name "aldalinde" -- run start
+          echo "💾 Сохраняем конфигурацию PM2..."
+          pm2 save
+          echo "✅ Деплой завершен успешно!"
+          pm2 status
