@@ -606,7 +606,14 @@ margin-bottom: 30px;
     margin-bottom: 20px;
     gap: 0;
     justify-content: space-between;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+
+  .account__menu::-webkit-scrollbar {
+    display: none;
+  }
+
 
   .account__title{
     font-size: 24px;

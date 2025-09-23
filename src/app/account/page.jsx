@@ -8,6 +8,7 @@ import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFavourites } from '../../contexts/FavouritesContext';
 import ProductCard from '../../components/ProductCard';
+import ChangePasswordModal from '../../components/ChangePasswordModal';
 
 const menuItems = [
   {
@@ -66,6 +67,7 @@ export default function AccountPage() {
   const [completedOrdersError, setCompletedOrdersError] = useState('');
   const [completedOrdersPage, setCompletedOrdersPage] = useState(1);
   const [completedOrdersTotalPages, setCompletedOrdersTotalPages] = useState(1);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
 
   const toggleOrderExpand = async (orderId) => {
     if (expandedOrderId === orderId) {
@@ -261,6 +263,7 @@ export default function AccountPage() {
                     profileData={profileData}
                     onEdit={() => setIsEditing(true)}
                     onLogout={handleLogout}
+                    onChangePassword={() => setIsChangePasswordModalOpen(true)}
                   />
                 )}
               </>
@@ -613,7 +616,7 @@ export default function AccountPage() {
             
             {!completedOrdersLoading && !completedOrdersError && completedOrders.length > 0 && (
               <>
-                <h3 className={styles.orders_title}>Завершенные</h3>
+                <h3 className={styles.orders__title}>Завершенные</h3>
                 {completedOrders.map((order, index) => {
                   const orderId = order.id || index + 1;
                   const orderNumber = order.order_number || `Заказ ${index + 1}`;
@@ -716,11 +719,16 @@ export default function AccountPage() {
           {renderContent()}
         </div>
       </div>
+      
+      <ChangePasswordModal 
+        isOpen={isChangePasswordModalOpen}
+        onClose={() => setIsChangePasswordModalOpen(false)}
+      />
     </main>
   );
 }
 
-const ProfileView = ({ profileData, onEdit, onLogout }) => {
+const ProfileView = ({ profileData, onEdit, onLogout, onChangePassword }) => {
   const user_data = profileData?.user_data || {};
   const can_edit = profileData?.can_edit || false;
   
@@ -753,9 +761,9 @@ const ProfileView = ({ profileData, onEdit, onLogout }) => {
         <button className={styles.account__button} onClick={onEdit}>
           Редактировать данные
         </button>
-        <Link href="/auth/change-password" className={styles.account__button}>
+        <button className={styles.account__button} onClick={onChangePassword}>
           Обновить пароль
-        </Link>
+        </button>
         <button className={styles.account__button_logout} onClick={onLogout}>
           Выйти
         </button>
