@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import FiltersSkeleton from './FiltersSkeleton';
 import styles from './Filters.module.css';
 
 export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {} }) {
@@ -56,17 +57,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
   };
 
   if (loading) {
-    return (
-      <div className={styles.filters}>
-        <div className={styles.filters__header}>
-          <h2 className={styles.filters__title}>Фильтры</h2>
-          <button className={styles.filters__close} onClick={onClose}>×</button>
-        </div>
-        <div className={styles.filters__content}>
-          <div className={styles.loading}>Загрузка фильтров...</div>
-        </div>
-      </div>
-    );
+    return <FiltersSkeleton onClose={onClose} />;
   }
 
   if (error) {

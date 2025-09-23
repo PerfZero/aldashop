@@ -93,9 +93,7 @@ export function FavouritesProvider({ children }) {
   const loadFavouritesForUnauthenticated = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('https://aldalinde.ru/api/user/favourites/', {
-        credentials: 'include',
-      });
+      const response = await fetch('https://aldalinde.ru/api/user/favourites/');
 
       if (response.ok) {
         const data = await response.json();
@@ -198,7 +196,6 @@ export function FavouritesProvider({ children }) {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include',
           body: JSON.stringify({
             product_id: product.id,
           }),
@@ -242,9 +239,8 @@ export function FavouritesProvider({ children }) {
     } else {
       // Для неавторизованных пользователей работаем через API с сессией
       try {
-        const response = await fetch(`https://aldalinde.ru/api/user/favourites//${productId}`, {
+        const response = await fetch(`https://aldalinde.ru/api/user/favourites/${productId}/`, {
           method: 'DELETE',
-          credentials: 'include',
         });
 
         if (response.ok || response.status === 204) {

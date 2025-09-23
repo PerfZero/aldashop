@@ -1,33 +1,27 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
 import Image from 'next/image';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Filters from '@/components/Filters';
 import ProductCard from '@/components/ProductCard';
+import ProductSkeleton from '@/components/ProductSkeleton';
 import SortSelect from '@/components/SortSelect';
-import { useScrollRestoration } from '@/hooks/useScrollRestoration';
+import { useInfiniteProducts } from '@/hooks/useInfiniteProducts';
+import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { useCategories } from '@/hooks/useCategories';
+import { useFilters } from '@/hooks/useFilters';
 import styles from './page.module.css';
 
 function CategoryPageContent() {
   const params = useParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
   const [sortBy, setSortBy] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState([]);
-  const [products, setProducts] = useState([]);
-  
-  const [loading, setLoading] = useState(true);
-  const [productsLoading, setProductsLoading] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({});
-  const [pagination, setPagination] = useState({
-    page: 1,
-    page_size: 12,
-    count: 0
-  });
   const [categoryId, setCategoryId] = useState(null);
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
@@ -42,7 +36,45 @@ function CategoryPageContent() {
   const [bestseller, setBestseller] = useQueryParam('bestseller', withDefault(StringParam, ''));
   
   const [dynamicFilters, setDynamicFilters] = useState({});
-  const { saveCurrentPosition } = useScrollRestoration(`categories-${slugDep}`);
+  const loadMoreRef = useRef(null);
+
+  // Загружаем категории и фильтры через TanStack Query
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const { data: filters = [], isLoading: filtersLoading } = useFilters(categoryId, subcategoryId);
+
+  // Используем TanStack Query для загрузки товаров
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading: isProductsLoading,
+    isError: isProductsError,
+    error: productsError
+  } = useInfiniteProducts(appliedFilters, categoryId, subcategoryId, sortBy);
+  
+  // Объединяем все страницы товаров в один массив
+  const products = useMemo(() => {
+    if (!data?.pages) return [];
+    return data.pages.flatMap(page => page.products);
+  }, [data]);
+  
+  const totalCount = data?.pages?.[0]?.totalCount || 0;
+  const loading = categoriesLoading || filtersLoading || isProductsLoading;
+  
+  // Intersection Observer для бесконечного скролла
+  useIntersectionObserver({
+    target: loadMoreRef,
+    onIntersect: () => {
+      if (hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    },
+    threshold: 0.1,
+    rootMargin: '100px',
+    enabled: hasNextPage && !isFetchingNextPage
+  });
+  
 
   useEffect(() => {
     const handleResize = () => {
@@ -115,177 +147,8 @@ function CategoryPageContent() {
 
 
 
-  const fetchFilters = async () => {
-    try {
-      setLoading(true);
-      if (!categoryId && !subcategoryId) return;
-      const requestBody = {};
-      if (categoryId) {
-        requestBody.category_id = categoryId;
-      }
-      
-      if (subcategoryId) {
-        requestBody.subcategory_id = subcategoryId;
-      }
-      const response = await fetch('/api/products/subcategory-filters', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('[fetchFilters] API error:', errorData);
-        throw new Error(errorData.error || 'Failed to fetch filters');
-      }
-      const data = await response.json();
-      setFilters(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('[fetchFilters] Error:', error);
-      setError(`Ошибка загрузки фильтров: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchProducts = async (appliedFilters = {}, page = 1) => {
-    try {
-      setProductsLoading(true);
-      
-      const priceFilter = filters.find(f => f.slug === 'price');
-      const sizesFilter = filters.find(f => f.slug === 'sizes');
-      const defaultMinPrice = priceFilter?.min || 0;
-      const defaultMaxPrice = priceFilter?.max || 100000;
-      
-      const requestBody = {
-        page: page,
-        limit: pagination.page_size
-      };
-
-      if (categoryId) {
-        requestBody.category_id = categoryId;
-      }
-      
-      if (subcategoryId) {
-        requestBody.subcategory_id = subcategoryId;
-      }
-
-      if (typeof sortBy === 'number') {
-        requestBody.sort = sortBy;
-      }
-
-      requestBody.in_stock = appliedFilters.in_stock === true;
-
-      if (Array.isArray(appliedFilters.material) && appliedFilters.material.length > 0) {
-        requestBody.material = appliedFilters.material;
-      }
-
-      if (appliedFilters.bestseller === true) {
-        requestBody.bestseller = true;
-      }
-
-      if (Array.isArray(appliedFilters.colors) && appliedFilters.colors.length > 0) {
-        requestBody.colors = appliedFilters.colors.map(color => parseInt(color));
-      }
-
-      if (
-        appliedFilters.sizes &&
-        (
-          (Number(appliedFilters.sizes.width) || 0) > 0 ||
-          (Number(appliedFilters.sizes.height) || 0) > 0 ||
-          (Number(appliedFilters.sizes.depth) || 0) > 0
-        )
-      ) {
-        requestBody.sizes = {
-          width: Number(appliedFilters.sizes.width) || 0,
-          height: Number(appliedFilters.sizes.height) || 0,
-          depth: Number(appliedFilters.sizes.depth) || 0
-        };
-      }
-
-      const selectedMinPrice = appliedFilters.price?.min;
-      const selectedMaxPrice = appliedFilters.price?.max;
-      if (
-        (typeof selectedMinPrice === 'number' && selectedMinPrice !== defaultMinPrice) ||
-        (typeof selectedMaxPrice === 'number' && selectedMaxPrice !== defaultMaxPrice)
-      ) {
-        requestBody.price = {
-          min: typeof selectedMinPrice === 'number' ? selectedMinPrice : defaultMinPrice,
-          max: typeof selectedMaxPrice === 'number' ? selectedMaxPrice : defaultMaxPrice
-        };
-      }
-
-      if (appliedFilters.search && appliedFilters.search.trim() !== "") {
-        requestBody.search = appliedFilters.search.trim();
-      }
-
-      const selectFilters = (filters || []).filter(f => f && f.type === 'select');
-      for (const f of selectFilters) {
-        if (!f.slug || f.slug === 'colors' || f.slug === 'sort') continue;
-        const value = appliedFilters?.[f.slug];
-        if (Array.isArray(value) && value.length > 0) {
-          requestBody[f.slug] = value;
-        }
-      }
-
-      
-
-      console.log('[fetchProducts] request body:', JSON.stringify(requestBody, null, 2));
-      
-      const response = await fetch('/api/products/models-list', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(localStorage.getItem('accessToken') && {
-            'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
-          }),
-        },
-        credentials: 'include',
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        console.error('[fetchProducts] API error:', errorData);
-        throw new Error(errorData.error || 'Failed to fetch products');
-      }
-
-      const data = await response.json();
-      
-      console.log('[fetchProducts] Ответ сервера:', {
-        page: page,
-        resultsCount: data.results?.length || 0,
-        totalCount: data.count || 0,
-        currentProductsCount: products.length
-      });
-      
-      if (page === 1) {
-        setProducts(data.results || []);
-      } else {
-        setProducts(prev => [...prev, ...(data.results || [])]);
-      }
-      
-      setPagination(prev => ({
-        ...prev,
-        page: page,
-        count: data.count || 0
-      }));
-    } catch (error) {
-      console.error('[fetchProducts] Error:', error);
-      setError(`Ошибка загрузки товаров: ${error.message}`);
-    } finally {
-      setProductsLoading(false);
-    }
-  };
-
-  
-
   const handleFiltersApply = (newFilters) => {
     setAppliedFilters(newFilters);
-    setPagination(prev => ({ ...prev, page: 1 }));
-    
     window.scrollTo(0, 0);
     
     const dynamicFilterData = {};
@@ -295,100 +158,68 @@ function CategoryPageContent() {
       }
     });
     setDynamicFilters(dynamicFilterData);
-    
-    
-    fetchProducts(newFilters, 1);
   };
 
-  const handleLoadMore = () => {
-    if (products.length < pagination.count) {
-      fetchProducts(appliedFilters, pagination.page + 1);
+  useEffect(() => {
+    if (!categories.length) return;
+    
+    const sortedData = categories.sort((a, b) => {
+      const aDisplayId = a.display_id || 999;
+      const bDisplayId = b.display_id || 999;
+      return aDisplayId - bDisplayId;
+    }).map(category => ({
+      ...category,
+      subcategories: category.subcategories?.sort((a, b) => {
+        const aDisplayId = a.display_id || 999;
+        const bDisplayId = b.display_id || 999;
+        return aDisplayId - bDisplayId;
+      }) || []
+    }));
+    
+    const slugArr = Array.isArray(params?.slug) ? params.slug : params?.slug ? [params.slug] : [];
+    if (!slugArr || slugArr.length === 0) return;
+
+    if (slugArr.length >= 2) {
+      const [catSlug, subSlug] = slugArr;
+      const cat = sortedData.find(c => c.slug === catSlug);
+      if (cat) {
+        const sub = (cat.subcategories || []).find(s => s.slug === subSlug && subSlug !== 'all');
+        setCategoryId(cat.id);
+        setSubcategoryId(sub ? sub.id : null);
+        setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
+        setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title, description: sub.description, photo_cover: sub.photo_cover } : null);
+        return;
+      }
     }
-  };
 
-  useEffect(() => {
-    const resolveIds = async () => {
-      try {
-        const res = await fetch('https://aldalinde.ru/api/products/category-list/');
-        const data = await res.json();
-        
-        const sortedData = data.sort((a, b) => {
-          const aDisplayId = a.display_id || 999;
-          const bDisplayId = b.display_id || 999;
-          return aDisplayId - bDisplayId;
-        }).map(category => ({
-          ...category,
-          subcategories: category.subcategories?.sort((a, b) => {
-            const aDisplayId = a.display_id || 999;
-            const bDisplayId = b.display_id || 999;
-            return aDisplayId - bDisplayId;
-          }) || []
-        }));
-        const slugArr = Array.isArray(params?.slug) ? params.slug : params?.slug ? [params.slug] : [];
-        if (!slugArr || slugArr.length === 0) return;
+    const currentSlug = slugArr[0];
+    
+    const cat = sortedData.find(c => c.slug === currentSlug);
+    if (cat) {
+      setCategoryId(cat.id);
+      setSubcategoryId(null);
+      setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
+      setCurrentSubcategory(null);
+      return;
+    } else {
+    }
 
-        if (slugArr.length >= 2) {
-          const [catSlug, subSlug] = slugArr;
-          const cat = sortedData.find(c => c.slug === catSlug);
-          if (cat) {
-            const sub = (cat.subcategories || []).find(s => s.slug === subSlug && subSlug !== 'all');
-            setCategoryId(cat.id);
-            setSubcategoryId(sub ? sub.id : null);
-            setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
-            setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title, description: sub.description, photo_cover: sub.photo_cover } : null);
-            return;
-          }
-        }
+    for (const c of sortedData) {
+      const sub = (c.subcategories || []).find(s => s.slug === currentSlug);
+      if (sub) {
+        setCategoryId(c.id);
+        setSubcategoryId(sub.id);
+        setCurrentCategory({ id: c.id, slug: c.slug, title: c.title, description: c.description, photo_cover: c.photo_cover });
+        setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title, description: sub.description, photo_cover: sub.photo_cover });
+        return;
+      }
+    }
+  }, [categories, slugDep]);
 
-        const currentSlug = slugArr[0];
-        console.log('Looking for category with slug:', currentSlug);
-        console.log('Available categories:', sortedData.map(c => ({ id: c.id, slug: c.slug, title: c.title })));
-        
-        const cat = sortedData.find(c => c.slug === currentSlug);
-        if (cat) {
-          console.log('Found category:', cat);
-          setCategoryId(cat.id);
-          setSubcategoryId(null);
-          setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
-          setCurrentSubcategory(null);
-          return;
-        } else {
-          console.log('Category not found for slug:', currentSlug);
-        }
 
-        console.log('Searching for subcategory with slug:', currentSlug);
-        for (const c of sortedData) {
-          console.log('Checking category:', c.title, 'subcategories:', c.subcategories?.map(s => s.slug));
-          const sub = (c.subcategories || []).find(s => s.slug === currentSlug);
-          if (sub) {
-            console.log('Found subcategory:', sub);
-            setCategoryId(c.id);
-            setSubcategoryId(sub.id);
-            setCurrentCategory({ id: c.id, slug: c.slug, title: c.title, description: c.description, photo_cover: c.photo_cover });
-            setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title, description: sub.description, photo_cover: sub.photo_cover });
-            return;
-          }
-        }
-      } catch (e) {}
-    };
-    resolveIds();
-  }, [slugDep]);
-
-  useEffect(() => {
-    if (categoryId === null && subcategoryId === null) return;
-    fetchFilters();
-  }, [categoryId, subcategoryId]);
-
-  useEffect(() => {
-    if (categoryId === null && subcategoryId === null) return;
-    setProducts([]);
-    setPagination(prev => ({ ...prev, page: 1 }));
-    fetchProducts(appliedFilters, 1);
-  }, [sortBy, categoryId, subcategoryId]);
 
   useEffect(() => {
     const urlDynamicFilters = parseDynamicFiltersFromUrl();
-    console.log('Динамические фильтры из URL:', urlDynamicFilters);
     setDynamicFilters(urlDynamicFilters);
   }, []);
 
@@ -415,11 +246,8 @@ function CategoryPageContent() {
       };
       
       setAppliedFilters(urlFilters);
-      fetchProducts(urlFilters, 1);
     }
   }, [filters, priceMin, priceMax, inStock, sort, material, colors, bestseller, dynamicFilters]);
-
-
 
   const breadcrumbs = [
     { text: 'Главная', href: '/' },
@@ -489,8 +317,12 @@ function CategoryPageContent() {
           appliedFilters={appliedFilters}
         />
         <div className={`${styles.products} ${showFilters ? styles.filtersOpen : ''}`}>
-          {productsLoading && products.length === 0 ? (
-            <div className={styles.loading}>Загрузка товаров...</div>
+          {isProductsLoading && products.length === 0 ? (
+            <ProductSkeleton count={8} />
+          ) : isProductsError ? (
+            <div className={styles.noProducts}>
+              Ошибка загрузки товаров: {productsError?.message}
+            </div>
           ) : products.length > 0 ? (
             <>
               {products.map((product, index) => (
@@ -498,19 +330,13 @@ function CategoryPageContent() {
                   key={`${product.id}-${index}`} 
                   product={transformProduct(product)} 
                   filtersOpen={showFilters}
-                  onProductClick={saveCurrentPosition}
                 />
               ))}
-              {products.length < pagination.count && (
-                <div className={styles.loadMore}>
-                  <button 
-                    onClick={handleLoadMore}
-                    disabled={productsLoading}
-                    className={styles.loadMoreButton}
-                  >
-                    {productsLoading ? 'Загрузка...' : `Показать еще (${products.length} из ${pagination.count})`}
-                  </button>
-                </div>
+              {isFetchingNextPage && (
+                <ProductSkeleton count={4} />
+              )}
+              {hasNextPage && (
+                <div ref={loadMoreRef} className={styles.loadMore}></div>
               )}
             </>
           ) : (

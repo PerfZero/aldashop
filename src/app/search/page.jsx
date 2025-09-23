@@ -40,7 +40,6 @@ function SearchPageContent() {
         sort: sortBy
       };
 
-      console.log('[fetchProducts] request body:', JSON.stringify(requestBody, null, 2));
       
       const response = await fetch('/api/products/models-list', {
         method: 'POST',

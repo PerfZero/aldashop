@@ -249,7 +249,7 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
         <div className={styles.card__sale}>Sale</div>
       )}
       
-      <Link href={`/product/${currentProduct.id}`} className={styles.card__link} onClick={onProductClick}>
+      <Link href={`/product/${currentProduct.id}`} className={styles.card__link} onClick={onProductClick} scroll={false}>
         <div 
           className={`${styles.card__image} ${filtersOpen ? styles.card__image_filters_open : ''}`}
           onMouseEnter={handleMouseEnter}
@@ -343,7 +343,7 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
       </Link>
       
       <div className={styles.card__content}>
-        <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link} onClick={onProductClick}>
+        <Link href={`/product/${currentProduct.id}`} className={styles.card__title_link} onClick={onProductClick} scroll={false}>
           <h3 className={styles.card__title}>
             {currentProduct.name || product.product?.title || 'Товар'}
           </h3>

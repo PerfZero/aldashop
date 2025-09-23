@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Filters from '@/components/Filters';
 import ProductCard from '@/components/ProductCard';
+import ProductSkeleton from '@/components/ProductSkeleton';
 import SortSelect from '@/components/SortSelect';
 import styles from './[...slug]/page.module.css';
 
@@ -15,7 +16,7 @@ function CategoriesPageContent() {
   const categoryId = searchParams.get('category_id');
   
   const [sortBy, setSortBy] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
   const [filters, setFilters] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -139,7 +140,7 @@ function CategoriesPageContent() {
     }
   };
 
-  const fetchProducts = async (appliedFilters = {}, page = 1) => {
+  const fetchProducts = useCallback(async (appliedFilters = {}, page = 1) => {
     try {
       setProductsLoading(true);
       
@@ -215,7 +216,6 @@ function CategoriesPageContent() {
         }
       }
 
-      console.log('[fetchProducts] request body:', JSON.stringify(requestBody, null, 2));
       
       const response = await fetch('/api/products/models-list', {
         method: 'POST',
@@ -250,7 +250,7 @@ function CategoriesPageContent() {
     } finally {
       setProductsLoading(false);
     }
-  };
+  }, [filters, categoryId, flagType]);
 
   const handleFiltersApply = (newFilters) => {
     console.log('Применяем фильтры:', newFilters);
@@ -465,20 +465,23 @@ function CategoriesPageContent() {
         />
         <div className={styles.products}>
           {productsLoading && products.length === 0 ? (
-            <div className={styles.loading}>Загрузка товаров...</div>
+            <ProductSkeleton count={8} />
           ) : products.length > 0 ? (
             <>
               {products.map(product => (
                 <ProductCard key={product.id} product={transformProduct(product)} />
               ))}
-              {products.length < pagination.count && (
+              {productsLoading && products.length > 0 && (
+                <ProductSkeleton count={4} />
+              )}
+              {products.length < pagination.count && !productsLoading && (
                 <div className={styles.loadMore}>
                   <button 
                     onClick={handleLoadMore}
                     disabled={productsLoading}
                     className={styles.loadMoreButton}
                   >
-                    {productsLoading ? 'Загрузка...' : 'Показать еще'}
+                    Показать еще
                   </button>
                 </div>
               )}

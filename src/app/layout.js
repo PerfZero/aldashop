@@ -5,6 +5,7 @@ import Footer from '../components/Footer';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider } from '../contexts/AuthContext';
 import { FavouritesProvider } from '../contexts/FavouritesContext';
+import QueryClientProviderWrapper from '../components/QueryClientProvider';
 
 import QueryParamProviderWrapper from '../components/QueryParamProvider';
 import './globals.css';
@@ -42,20 +43,22 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${montserrat.variable} ${tenorSans.variable}`}>
-        <QueryParamProviderWrapper>
-          <AuthProvider>
-            <CartProvider>
-              <FavouritesProvider>
-                <Header />
-                <main>
-                  {children}
-                </main>
-                <Footer />
+        <QueryClientProviderWrapper>
+          <QueryParamProviderWrapper>
+            <AuthProvider>
+              <CartProvider>
+                <FavouritesProvider>
+                  <Header />
+                  <main>
+                    {children}
+                  </main>
+                  <Footer />
 
-              </FavouritesProvider>
-            </CartProvider>
-          </AuthProvider>
-        </QueryParamProviderWrapper>
+                </FavouritesProvider>
+              </CartProvider>
+            </AuthProvider>
+          </QueryParamProviderWrapper>
+        </QueryClientProviderWrapper>
       </body>
     </html>
   );

@@ -57,9 +57,7 @@ export function CartProvider({ children }) {
         } else {
           // Если пользователь не авторизован, загружаем через API с сессией
           try {
-            const response = await fetch('https://aldalinde.ru/api/user/cart/', {
-              credentials: 'include',
-            });
+            const response = await fetch('https://aldalinde.ru/api/user/cart/');
             
             if (response.ok) {
               const data = await response.json();
@@ -104,7 +102,6 @@ export function CartProvider({ children }) {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include',
           body: JSON.stringify({
             product_id: product.id,
             quantity: product.quantity || 1,
@@ -113,9 +110,7 @@ export function CartProvider({ children }) {
 
         if (response.ok) {
           // После успешного добавления перезагружаем корзину
-          const cartResponse = await fetch('https://aldalinde.ru/api/user/cart/', {
-            credentials: 'include',
-          });
+          const cartResponse = await fetch('https://aldalinde.ru/api/user/cart/');
           
           if (cartResponse.ok) {
             const cartData = await cartResponse.json();
@@ -229,19 +224,16 @@ export function CartProvider({ children }) {
       // Для неавторизованных пользователей используем API через сессию
       try {
         const url = removeAll 
-          ? `https://aldalinde.ru/api/user/cart//${productId}/?all=true`
-          : `https://aldalinde.ru/api/user/cart//${productId}/`;
+          ? `https://aldalinde.ru/api/user/cart/${productId}/?all=true`
+          : `https://aldalinde.ru/api/user/cart/${productId}/`;
           
         const response = await fetch(url, {
           method: 'DELETE',
-          credentials: 'include',
         });
 
         if (response.ok) {
           // После успешного удаления перезагружаем корзину
-          const cartResponse = await fetch('https://aldalinde.ru/api/user/cart/', {
-            credentials: 'include',
-          });
+          const cartResponse = await fetch('https://aldalinde.ru/api/user/cart/');
           
           if (cartResponse.ok) {
             const cartData = await cartResponse.json();
@@ -387,7 +379,6 @@ export function CartProvider({ children }) {
             headers: {
               'Content-Type': 'application/json',
             },
-            credentials: 'include',
             body: JSON.stringify({
               product_id: productId,
               quantity: difference,
@@ -410,9 +401,8 @@ export function CartProvider({ children }) {
           let allRequestsSuccessful = true;
           
           for (let i = 0; i < difference; i++) {
-            const response = await fetch(`https://aldalinde.ru/api/user/cart//${productId}`, {
+            const response = await fetch(`https://aldalinde.ru/api/user/cart/${productId}`, {
               method: 'DELETE',
-              credentials: 'include',
             });
             
             if (!response.ok && response.status !== 204) {
