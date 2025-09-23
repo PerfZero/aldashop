@@ -95,15 +95,15 @@ export default function ProductPage({ params }) {
       
       // Если это первая загрузка, получаем товар по product_id
       if (!modelId && !sizeId && !colorId) {
-        const response = await fetch('/api/products/product-page/', {
+        const response = await fetch('https://aldalinde.ru/api/products/product-page/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'accept': 'application/json',
             ...(localStorage.getItem('accessToken') && {
               'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
             }),
           },
-          credentials: 'include',
           body: JSON.stringify({
             product_id: parseInt(productId || resolvedParams.id),
           }),
@@ -120,6 +120,36 @@ export default function ProductPage({ params }) {
           throw new Error(data.error);
         }
 
+        // Добавляем базовый URL к фотографиям только если они относительные
+        if (data.photos && Array.isArray(data.photos)) {
+          data.photos = data.photos.map(photo => ({
+            ...photo,
+            photo: photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`
+          }));
+        }
+        
+        // Добавляем title к размерам
+        if (data.available_sizes && Array.isArray(data.available_sizes)) {
+          data.available_sizes = data.available_sizes.map(size => ({
+            ...size,
+            title: size.value || size.title || size.name || size.dimensions || `${size.width}x${size.height}x${size.depth}` || 'Размер'
+          }));
+        }
+
+        // Получаем количество отзывов для продукта
+        try {
+          const reviewsResponse = await fetch(`https://aldalinde.ru/api/products/reviews/${parseInt(productId || resolvedParams.id)}/?limit=1&page=1`);
+          if (reviewsResponse.ok) {
+            const reviewsData = await reviewsResponse.json();
+            data.reviews_count = reviewsData.count || 0;
+          }
+        } catch (reviewsError) {
+          console.error('Ошибка получения количества отзывов:', reviewsError);
+          data.reviews_count = 0;
+        }
+
+        console.log('🔍 FRONTEND Received product data:', JSON.stringify(data, null, 2));
+        
         setProduct(data);
         
         // Сохраняем model_id из ответа для дальнейших запросов
@@ -133,10 +163,15 @@ export default function ProductPage({ params }) {
           setSelectedColor(data.available_colors[0]);
         }
         
+        console.log('🔍 FRONTEND Available sizes:', data.available_sizes);
+        console.log('🔍 FRONTEND Current sizes:', data.sizes);
+        
         if (data.sizes && data.available_sizes) {
           const matchingSize = data.available_sizes.find(s => s.id === data.sizes.id);
+          console.log('🔍 FRONTEND Matching size found:', matchingSize);
           setSelectedSize(matchingSize || data.available_sizes[0]);
         } else if (data.available_sizes?.length > 0) {
+          console.log('🔍 FRONTEND Setting first available size:', data.available_sizes[0]);
           setSelectedSize(data.available_sizes[0]);
         }
         
@@ -156,15 +191,15 @@ export default function ProductPage({ params }) {
         ...(colorId && { color_id: colorId }),
       };
       
-      const response = await fetch('/api/products/product-detail/', {
+      const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'accept': 'application/json',
           ...(localStorage.getItem('accessToken') && {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
           }),
         },
-        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
 
@@ -216,15 +251,15 @@ export default function ProductPage({ params }) {
       };
       // console.log('Отправляем запрос на прямой API:', requestBody);
       
-      const response = await fetch('/api/products/product-detail/', {
+      const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'accept': 'application/json',
           ...(localStorage.getItem('accessToken') && {
             'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
           }),
         },
-        credentials: 'include',
         body: JSON.stringify(requestBody),
       });
 
@@ -282,16 +317,34 @@ export default function ProductPage({ params }) {
     };
     
     try {
-      const response = await fetch('/api/products/product-detail/', {
+      const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'accept': 'application/json',
         },
         body: JSON.stringify(requestData),
       });
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Добавляем базовый URL к фотографиям только если они относительные
+        if (data.photos && Array.isArray(data.photos)) {
+          data.photos = data.photos.map(photo => ({
+            ...photo,
+            photo: photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`
+          }));
+        }
+        
+        // Добавляем title к размерам
+        if (data.available_sizes && Array.isArray(data.available_sizes)) {
+          data.available_sizes = data.available_sizes.map(size => ({
+            ...size,
+            title: size.value || size.title || size.name || size.dimensions || `${size.width}x${size.height}x${size.depth}` || 'Размер'
+          }));
+        }
+        
         setProduct(prevProduct => ({
           ...prevProduct,
           ...data
@@ -315,16 +368,34 @@ export default function ProductPage({ params }) {
     };
     
     try {
-      const response = await fetch('/api/products/product-detail/', {
+      const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'accept': 'application/json',
         },
         body: JSON.stringify(requestData),
       });
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Добавляем базовый URL к фотографиям только если они относительные
+        if (data.photos && Array.isArray(data.photos)) {
+          data.photos = data.photos.map(photo => ({
+            ...photo,
+            photo: photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`
+          }));
+        }
+        
+        // Добавляем title к размерам
+        if (data.available_sizes && Array.isArray(data.available_sizes)) {
+          data.available_sizes = data.available_sizes.map(size => ({
+            ...size,
+            title: size.value || size.title || size.name || size.dimensions || `${size.width}x${size.height}x${size.depth}` || 'Размер'
+          }));
+        }
+        
         setProduct(prevProduct => ({
           ...prevProduct,
           ...data
@@ -347,10 +418,11 @@ export default function ProductPage({ params }) {
     };
     
     try {
-      const response = await fetch('/api/products/product-detail/', {
+      const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'accept': 'application/json',
         },
         body: JSON.stringify(requestData),
       });
@@ -738,8 +810,12 @@ export default function ProductPage({ params }) {
               <h3 className={styles.product__section_title}>
                 Размер (ШхВхГ): <span className={styles.product__size_name}>{selectedSize?.title}</span>
               </h3>
+              {console.log('🔍 FRONTEND RENDER selectedSize:', selectedSize)}
+              {console.log('🔍 FRONTEND RENDER available_sizes:', product.available_sizes)}
               <div className={styles.product__sizes_list}>
-                                 {product.available_sizes.map((size) => (
+                                 {product.available_sizes.map((size) => {
+                   console.log('🔍 FRONTEND RENDER mapping size:', size);
+                   return (
                    <button
                      key={size.id}
                      className={`${styles.product__size} ${selectedSize?.id === size.id ? styles.product__size_active : ''}`}
@@ -748,7 +824,8 @@ export default function ProductPage({ params }) {
                    >
                      {size.title}
                    </button>
-                 ))}
+                   );
+                 })}
               </div>
             </div>
           )}

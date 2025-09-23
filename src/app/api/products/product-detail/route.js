@@ -53,10 +53,16 @@ export async function POST(request) {
       }
       
       if (data.available_sizes && Array.isArray(data.available_sizes)) {
-        data.available_sizes = data.available_sizes.map(size => ({
-          ...size,
-          title: size.value || size.title || size.name || size.dimensions || `${size.width}x${size.height}x${size.depth}` || 'Размер'
-        }));
+        console.log('🔍 DETAIL ORIGINAL available_sizes:', JSON.stringify(data.available_sizes, null, 2));
+        data.available_sizes = data.available_sizes.map(size => {
+          const title = size.value || size.title || size.name || size.dimensions || `${size.width}x${size.height}x${size.depth}` || 'Размер';
+          console.log('🔍 DETAIL Size mapping:', { original: size, title });
+          return {
+            ...size,
+            title
+          };
+        });
+        console.log('🔍 DETAIL PROCESSED available_sizes:', JSON.stringify(data.available_sizes, null, 2));
       }
       
       data.in_cart = data.in_cart || false;

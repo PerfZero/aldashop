@@ -64,10 +64,16 @@ export async function POST(request) {
       
       // Добавляем title к размерам
       if (data.available_sizes && Array.isArray(data.available_sizes)) {
-        data.available_sizes = data.available_sizes.map(size => ({
-          ...size,
-          title: size.value || size.title || size.name || size.dimensions || `${size.width}x${size.height}x${size.depth}` || 'Размер'
-        }));
+        console.log('🔍 ORIGINAL available_sizes:', JSON.stringify(data.available_sizes, null, 2));
+        data.available_sizes = data.available_sizes.map(size => {
+          const title = size.value || size.title || size.name || size.dimensions || `${size.width}x${size.height}x${size.depth}` || 'Размер';
+          console.log('🔍 Size mapping:', { original: size, title });
+          return {
+            ...size,
+            title
+          };
+        });
+        console.log('🔍 PROCESSED available_sizes:', JSON.stringify(data.available_sizes, null, 2));
       }
       
       data.in_cart = data.in_cart || false;
