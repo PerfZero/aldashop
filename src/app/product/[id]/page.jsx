@@ -40,6 +40,7 @@ export default function ProductPage({ params }) {
   const { toggleFavourite, isFavourite } = useFavourites();
 
 
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
@@ -52,6 +53,7 @@ export default function ProductPage({ params }) {
   }, []);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     fetchProductDetails();
   }, [resolvedParams.id]);
 

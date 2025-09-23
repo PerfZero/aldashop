@@ -4,10 +4,12 @@ import React, { useState, useEffect } from 'react';
 import styles from './Footer.module.css';
 import Link from 'next/link';
 import Image from 'next/image';
+import LegalModal from './LegalModal';
 
 const Footer = () => {
   const [footerInfo, setFooterInfo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [modalData, setModalData] = useState({ isOpen: false, title: '', content: '', type: '' });
 
   useEffect(() => {
     const fetchFooterInfo = async () => {
@@ -28,6 +30,25 @@ const Footer = () => {
 
     fetchFooterInfo();
   }, []);
+
+  const openModal = async (type) => {
+    const titles = {
+      terms: 'Правила пользования',
+      privacy: 'Политика конфиденциальности',
+      offer: 'Публичная оферта'
+    };
+
+    setModalData({
+      isOpen: true,
+      title: titles[type] || 'Документ',
+      content: '<p>Пока нет текста</p>',
+      type: type
+    });
+  };
+
+  const closeModal = () => {
+    setModalData({ isOpen: false, title: '', content: '', type: '' });
+  };
 
   if (loading) {
     return (
@@ -127,10 +148,25 @@ const Footer = () => {
           ©2025 ALDA. Все права защищены
         </div>
         <nav className={styles.bottomNav}>
-          <Link href="/terms">Правила пользования</Link>
-          <Link href="/privacy">Политика конфиденциальности</Link>
+          <button onClick={() => openModal('terms')} className={styles.legalLink}>
+            Правила пользования
+          </button>
+          <button onClick={() => openModal('privacy')} className={styles.legalLink}>
+            Политика конфиденциальности
+          </button>
+          <button onClick={() => openModal('offer')} className={styles.legalLink}>
+            Публичная оферта
+          </button>
         </nav>
       </div>
+
+      <LegalModal
+        isOpen={modalData.isOpen}
+        onClose={closeModal}
+        title={modalData.title}
+        content={modalData.content}
+        type={modalData.type}
+      />
     </footer>
   );
 };

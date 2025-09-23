@@ -75,7 +75,7 @@ export default function Reviews({ hasReviews = true, avgRating = 0, reviewsCount
     
     try {
       setLoading(true);
-      const response = await fetch(`/api/products/reviews?product_id=${productId}&sort_by=${sortBy}&limit=10&page=1`);
+      const response = await fetch(`https://aldalinde.ru/api/products/reviews/${productId}/?sort_by=${sortBy}&limit=10&page=1`);
       
       if (!response.ok) {
         throw new Error('Ошибка загрузки отзывов');

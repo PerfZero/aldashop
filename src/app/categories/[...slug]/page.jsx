@@ -93,6 +93,18 @@ function CategoryPageContent() {
     };
   }, []);
 
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('catalogScrollPosition');
+    if (savedPosition) {
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedPosition));
+        sessionStorage.removeItem('catalogScrollPosition');
+      }, 100);
+    }
+  }, []);
+
+
+
   const updateUrlWithDynamicFilters = (filters) => {
     try {
       if (typeof window === 'undefined') return;

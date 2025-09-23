@@ -55,7 +55,7 @@ export async function POST(request) {
       if (data.available_sizes && Array.isArray(data.available_sizes)) {
         data.available_sizes = data.available_sizes.map(size => ({
           ...size,
-          title: size.value
+          title: size.value || size.title || size.name || size.dimensions || `${size.width}x${size.height}x${size.depth}` || 'Размер'
         }));
       }
       
