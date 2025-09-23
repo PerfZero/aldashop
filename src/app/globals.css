@@ -161,6 +161,6 @@ html {
 
 @media (max-width: 768px) {
   .swiper-thumbs .swiper-slide {
-    width: auto;
+    width: 22%;
   }
   }
