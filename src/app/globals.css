@@ -112,7 +112,7 @@ input[type='file'] {
 }
 
 html {
-    scroll-behavior: smooth;
+    scroll-behavior: auto;
 }
 
 /* Стили для стрелок Swiper */

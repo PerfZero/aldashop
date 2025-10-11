@@ -76,7 +76,7 @@ border-radius: 100px;
 
 .filter {
   border-bottom: 1px solid rgba(193, 175, 134, 0.8);
-  padding: 20px;
+  padding: 20px 0; 
   display: flex;
   gap: 10px;
   flex-direction: column;
@@ -245,16 +245,6 @@ border-radius: 100px;
 
 .filter__select {
   margin-top: 10px;
-}
-
-.filter__select select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid rgba(50, 52, 51, 0.3);
-  border-radius: 4px;
-  font-family: "Montserrat", sans-serif;
-  font-size: 14px;
-  background: #fff;
 }
 
 .customSelect {

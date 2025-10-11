@@ -273,8 +273,6 @@ export function CartProvider({ children }) {
         ? `/api/user/cart/${productId}/?all=true`
         : `/api/user/cart/${productId}`;
       
-      console.log('[CartContext] Making DELETE request to:', url);
-      console.log('[CartContext] shouldRemoveAll:', shouldRemoveAll);
         
       let response = await fetch(url, {
         method: 'DELETE',

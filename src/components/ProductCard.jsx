@@ -117,7 +117,6 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
     
     const modelId = product.id;
     if (!modelId) {
-      // console.log('Нет model_id для запроса');
       return;
     }
     
@@ -128,7 +127,6 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
         color_id: color.id,
       };
       
-      // console.log('Отправляем запрос на смену цвета:', requestBody, 'Model ID:', product.id);
       
       const response = await fetch('/api/products/product-detail-list/', {
         method: 'POST',
@@ -142,11 +140,9 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
         body: JSON.stringify(requestBody),
       });
 
-      // console.log('Ответ сервера:', response.status);
 
       if (response.ok) {
         const data = await response.json();
-        // console.log('Полученные данные:', data);
         
         if (data && data.id) {
           const mainPhoto = data.photos?.find(p => p.main_photo) || data.photos?.[0];
@@ -169,18 +165,14 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
               photos: data.photos || []
             };
             
-            // console.log('Товар обновлен:', data.id, data.price, 'Старый ID:', prev.id, 'Новый ID:', newProduct.id);
-            // console.log('Изображения:', { oldImage: prev.image, newImage, oldHover: prev.hoverImage, newHover: newHoverImage });
             
             if (prev.id === newProduct.id && prev.price === newProduct.price && prev.image === newImage) {
-              // console.log('Данные не изменились, пропускаем обновление');
               return prev;
             }
             
             return newProduct;
           });
         } else {
-          // console.log('Получены пустые данные или нет ID');
         }
       } else {
         const errorText = await response.text();
@@ -209,7 +201,6 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
       quantity: 1
     };
     
-    // console.log('Добавляем в корзину:', productToAdd);
     await addToCart(productToAdd);
     setIsAdded(true);
     
@@ -234,7 +225,6 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
       isBestseller: currentProduct.isBestseller,
     };
     
-    // console.log('Переключаем избранное:', productToToggle);
     await toggleFavourite(productToToggle);
   };
 
@@ -253,7 +243,6 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
         href={`/product/${currentProduct.id}`} 
         className={styles.card__link} 
         onClick={(e) => {
-          sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
           if (onProductClick) onProductClick(e);
         }}
       >
@@ -354,7 +343,6 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
           href={`/product/${currentProduct.id}`} 
           className={styles.card__title_link} 
           onClick={(e) => {
-            sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
             if (onProductClick) onProductClick(e);
           }}
         >
@@ -387,7 +375,6 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    // console.log('Клик по цвету:', color);
                     handleColorChange(color);
                   }}
                   disabled={isLoading}

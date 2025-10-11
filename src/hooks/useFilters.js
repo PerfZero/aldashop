@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
-const fetchFilters = async (categoryId, subcategoryId) => {
+const fetchFilters = async (categoryId, subcategoryId, dynamicFilters = {}) => {
   const requestBody = {};
   
   if (categoryId) {
@@ -10,6 +10,13 @@ const fetchFilters = async (categoryId, subcategoryId) => {
   if (subcategoryId) {
     requestBody.subcategory_id = subcategoryId;
   }
+  
+  // Добавляем динамические фильтры (включая флаги)
+  Object.keys(dynamicFilters).forEach(key => {
+    if (!['category_id', 'subcategory_id'].includes(key)) {
+      requestBody[key] = dynamicFilters[key];
+    }
+  });
   
   const response = await fetch('/api/products/subcategory-filters', {
     method: 'POST',
@@ -32,10 +39,10 @@ const fetchFilters = async (categoryId, subcategoryId) => {
   return Array.isArray(data) ? data : [];
 };
 
-export const useFilters = (categoryId, subcategoryId) => {
+export const useFilters = (categoryId, subcategoryId, dynamicFilters = {}) => {
   return useQuery({
     queryKey: ['filters', categoryId, subcategoryId],
-    queryFn: () => fetchFilters(categoryId, subcategoryId),
+    queryFn: () => fetchFilters(categoryId, subcategoryId, dynamicFilters),
     enabled: !!(categoryId || subcategoryId), // Запускать только если есть ID
     staleTime: 15 * 60 * 1000, // 15 минут
     gcTime: 60 * 60 * 1000, // 1 час

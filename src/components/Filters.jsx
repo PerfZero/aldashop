@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import FiltersSkeleton from './FiltersSkeleton';
+import CustomSelect from './CustomSelect';
 import styles from './Filters.module.css';
 
 export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {} }) {
@@ -39,13 +40,17 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
   };
 
   const handleApply = () => {
-    const finalFilters = {
-      ...tempFilters
-    };
+    const finalFilters = { ...tempFilters };
     
     if (inStockDelivery) {
       finalFilters.in_stock = true;
     }
+    
+    Object.keys(finalFilters).forEach(key => {
+      if (finalFilters[key] === '' || finalFilters[key] === undefined || finalFilters[key] === null) {
+        delete finalFilters[key];
+      }
+    });
     
     if (onApply) {
       onApply(finalFilters);
@@ -114,28 +119,18 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
             {expandedFilters[filter.slug] && (
               <>
                 {filter.type === 'select' && filter.options && filter.slug !== 'colors' && filter.slug !== 'in_stock' && filter.slug !== 'designer' && (
-                  <div className={styles.filter__options}>
-                    {filter.options.map((option, optionIndex) => (
-                      <label key={optionIndex} className={styles.checkboxLabel}>
-                        <input
-                          type="checkbox"
-                          checked={tempFilters[filter.slug]?.includes(option.id || option.title) || false}
-                          onChange={(e) => {
-                            const currentValues = tempFilters[filter.slug] || [];
-                            const optionValue = option.id || option.title;
-                            const newValues = e.target.checked
-                              ? [...currentValues, optionValue]
-                              : currentValues.filter(val => val !== optionValue);
-                            setTempFilters(prev => ({
-                              ...prev,
-                              [filter.slug]: newValues
-                            }));
-                          }}
-                          className={styles.checkboxInput}
-                        />
-                        <span className={styles.checkboxText}>{option.title}</span>
-                      </label>
-                    ))}
+                  <div className={styles.filter__select}>
+                    <CustomSelect
+                      value={tempFilters[filter.slug] || ''}
+                      onChange={(value) => {
+                        setTempFilters(prev => ({
+                          ...prev,
+                          [filter.slug]: value || undefined
+                        }));
+                      }}
+                      options={filter.options}
+                      placeholder={`Выберите ${filter.title.toLowerCase()}`}
+                    />
                   </div>
                 )}
 
@@ -427,12 +422,14 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
 
       <div className={styles.filters__footer}>
         <button 
+          type="button"
           className={`${styles.filters__button} ${styles.filters__button_cancel}`}
           onClick={handleReset}
         >
           Сброс
         </button>
         <button 
+          type="button"
           className={`${styles.filters__button} ${styles.filters__button_apply}`}
           onClick={handleApply}
         >

@@ -47,9 +47,12 @@ export async function POST(request) {
     const cookieHeader = request.headers.get('cookie');
     const authHeader = request.headers.get('authorization');
     
-    console.log('[models-list] request body:', JSON.stringify(body, null, 2));
-    console.log('[models-list] category_id:', body.category_id);
-    console.log('[models-list] subcategory_id:', body.subcategory_id);
+    console.log('📡 API received request:', {
+      body,
+      hasAuth: !!authHeader,
+      hasCookie: !!cookieHeader
+    });
+    
     
     const headers = {
       'Content-Type': 'application/json',
@@ -70,12 +73,9 @@ export async function POST(request) {
       body: JSON.stringify(body),
     });
 
-    console.log('[models-list] response status:', response.status);
-    console.log('[models-list] response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('[models-list] error response body:', errorText);
       
       if (response.status === 500 && errorText.includes('average_rating')) {
         return Response.json({ 
@@ -94,12 +94,10 @@ export async function POST(request) {
     const contentType = response.headers.get('content-type');
     if (!contentType || !contentType.includes('application/json')) {
       const text = await response.text();
-      console.log('[models-list] non-json response:', text);
       return Response.json({ error: 'Внешний API вернул не JSON' }, { status: 500 });
     }
 
     const data = await response.json();
-    console.log('[models-list] success response:', { count: data.count, resultsLength: data.results?.length });
     
     return Response.json(data);
   } catch (error) {

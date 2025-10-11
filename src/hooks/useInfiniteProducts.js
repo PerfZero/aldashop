@@ -25,7 +25,8 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
     requestBody.in_stock = filters.in_stock === true;
 
     if (Array.isArray(filters.material) && filters.material.length > 0) {
-      requestBody.material = filters.material;
+      // Для материалов отправляем как строку поиска, так как сервер ожидает поиск по названию
+      requestBody.material_search = filters.material.join(' ');
     }
 
     if (filters.bestseller === true) {
@@ -61,15 +62,24 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
 
     // Динамические фильтры
     Object.keys(filters).forEach(key => {
-      if (!['price', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'sizes', 'search'].includes(key)) {
+      if (!['price', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'sizes', 'search', 'category_id', 'subcategory_id'].includes(key)) {
         const value = filters[key];
-        if (Array.isArray(value) && value.length > 0) {
+        if (key === 'flag_type') {
+          requestBody[key] = value;
+        } else if (Array.isArray(value) && value.length > 0) {
+          requestBody[key] = value;
+        } else if (value !== undefined && value !== null && value !== '') {
           requestBody[key] = value;
         }
       }
     });
   }
 
+  console.log('🚀 Sending request to API:', {
+    url: '/api/products/models-list',
+    requestBody,
+    filters
+  });
 
   const response = await fetch('/api/products/models-list', {
     method: 'POST',

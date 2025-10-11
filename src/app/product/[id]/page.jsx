@@ -148,7 +148,6 @@ export default function ProductPage({ params }) {
           data.reviews_count = 0;
         }
 
-        console.log('🔍 FRONTEND Received product data:', JSON.stringify(data, null, 2));
         
         setProduct(data);
         
@@ -163,15 +162,11 @@ export default function ProductPage({ params }) {
           setSelectedColor(data.available_colors[0]);
         }
         
-        console.log('🔍 FRONTEND Available sizes:', data.available_sizes);
-        console.log('🔍 FRONTEND Current sizes:', data.sizes);
         
         if (data.sizes && data.available_sizes) {
           const matchingSize = data.available_sizes.find(s => s.id === data.sizes.id);
-          console.log('🔍 FRONTEND Matching size found:', matchingSize);
           setSelectedSize(matchingSize || data.available_sizes[0]);
         } else if (data.available_sizes?.length > 0) {
-          console.log('🔍 FRONTEND Setting first available size:', data.available_sizes[0]);
           setSelectedSize(data.available_sizes[0]);
         }
         
@@ -810,11 +805,8 @@ export default function ProductPage({ params }) {
               <h3 className={styles.product__section_title}>
                 Размер (ШхВхГ): <span className={styles.product__size_name}>{selectedSize?.title}</span>
               </h3>
-              {console.log('🔍 FRONTEND RENDER selectedSize:', selectedSize)}
-              {console.log('🔍 FRONTEND RENDER available_sizes:', product.available_sizes)}
               <div className={styles.product__sizes_list}>
                                  {product.available_sizes.map((size) => {
-                   console.log('🔍 FRONTEND RENDER mapping size:', size);
                    return (
                    <button
                      key={size.id}
@@ -853,24 +845,24 @@ export default function ProductPage({ params }) {
           <div className={styles.product__details}>
             {product.production_time && (
               <div className={styles.product__detail}>
-                <span className={styles.product__detail_label}>Сроки изготовления:</span>
+                <span className={styles.product__detail_label}>Сроки изготовления от:</span>
                 <span className={styles.product__detail_value}>{product.production_time} дней</span>
               </div>
             )}
             
-            {product.weight && (
+            {/* {product.weight && (
               <div className={styles.product__detail}>
                 <span className={styles.product__detail_label}>Вес: </span>
                 <span className={styles.product__detail_value}>{product.weight} кг</span>
               </div>
-            )}
+            )} */}
             
-            {product.material?.title && (
+            {/* {product.material?.title && (
               <div className={styles.product__detail}>
                 <span className={styles.product__detail_label}>Материал: </span>
                 <span className={styles.product__detail_value}>{product.material.title}</span>
               </div>
-            )}
+            )} */}
             
             {product.country && (
               <div className={styles.product__detail}>

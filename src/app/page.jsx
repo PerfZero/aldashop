@@ -32,6 +32,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
     fetchMainPageData();
   }, []);
 
+
   if (isLoading) {
     return <div className={styles.loadingScreen}></div>;
   }

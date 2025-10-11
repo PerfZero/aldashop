@@ -10,8 +10,6 @@ export default function CartClient() {
   const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart } = useCart();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   
-  console.log('[CartClient] Auth state:', { isAuthenticated, authLoading });
-  console.log('[CartClient] LocalStorage tokens:', {
     accessToken: localStorage.getItem('accessToken') ? 'exists' : 'not found',
     refreshToken: localStorage.getItem('refreshToken') ? 'exists' : 'not found'
   });
@@ -59,10 +57,8 @@ export default function CartClient() {
       const checkMapElement = () => {
         const mapElement = document.getElementById('map');
         if (mapElement) {
-          console.log('Элемент карты найден, инициализируем');
           initMap();
         } else {
-          console.log('Элемент карты еще не создан, ждем...');
           setTimeout(checkMapElement, 200);
         }
       };
@@ -80,19 +76,15 @@ export default function CartClient() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    console.log('Начинаем загрузку Яндекс карт');
     
     const loadYandexMaps = () => {
       if (typeof window !== 'undefined' && window.ymaps) {
-        console.log('ymaps доступен, инициализируем карту');
         window.ymaps.ready(() => {
-          console.log('ymaps готов, создаем карту');
           setTimeout(() => {
             initMap();
           }, 500);
         });
       } else {
-        console.log('ymaps не загружен, повторная попытка через 500ms');
         setTimeout(loadYandexMaps, 500);
       }
     };
@@ -111,7 +103,6 @@ export default function CartClient() {
           setMapCenter([latitude, longitude]);
         },
         (error) => {
-          console.log('Ошибка получения геолокации:', error);
         }
       );
     }

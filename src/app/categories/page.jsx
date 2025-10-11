@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
 import Image from 'next/image';
 import Breadcrumbs from '@/components/Breadcrumbs';
@@ -17,12 +17,25 @@ import styles from './[...slug]/page.module.css';
 
 function CategoryPageContent() {
   const params = useParams();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
   const [sortBy, setSortBy] = useState(null);
   const [showFilters, setShowFilters] = useState(true);
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [categoryId, setCategoryId] = useState(null);
+  
+  // Отслеживание изменений URL параметров
+  useEffect(() => {
+    const urlDynamicFilters = parseDynamicFiltersFromUrl();
+    setDynamicFilters(urlDynamicFilters);
+    
+    const categoryIdFromUrl = searchParams.get('category_id');
+    if (categoryIdFromUrl) {
+      setCategoryId(parseInt(categoryIdFromUrl));
+    }
+  }, [pathname, searchParams]);
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [currentSubcategory, setCurrentSubcategory] = useState(null);
@@ -40,9 +53,10 @@ function CategoryPageContent() {
 
   // Загружаем категории и фильтры через TanStack Query
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-  const { data: filters = [], isLoading: filtersLoading } = useFilters(categoryId, subcategoryId);
+  const { data: filters = [], isLoading: filtersLoading } = useFilters(categoryId, subcategoryId, dynamicFilters);
 
   // Используем TanStack Query для загрузки товаров
+  
   const {
     data,
     fetchNextPage,
@@ -56,7 +70,8 @@ function CategoryPageContent() {
   // Объединяем все страницы товаров в один массив
   const products = useMemo(() => {
     if (!data?.pages) return [];
-    return data.pages.flatMap(page => page.products);
+    const allProducts = data.pages.flatMap(page => page.products);
+    return allProducts;
   }, [data]);
   
   const totalCount = data?.pages?.[0]?.totalCount || 0;
@@ -93,42 +108,40 @@ function CategoryPageContent() {
     };
   }, []);
 
-  useEffect(() => {
-    const savedPosition = sessionStorage.getItem('catalogScrollPosition');
-    if (savedPosition) {
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedPosition));
-        sessionStorage.removeItem('catalogScrollPosition');
-      }, 100);
-    }
-  }, []);
 
 
 
-  const updateUrlWithDynamicFilters = (filters) => {
+  const updateUrlWithDynamicFilters = (filters, isReset = false) => {
     try {
       if (typeof window === 'undefined') return;
       
       const url = new URL(window.location.href);
+      console.log('🔧 updateUrlWithDynamicFilters called with:', { filters, isReset });
     
+    // Удаляем все динамические параметры
     Object.keys(url.searchParams).forEach(key => {
-      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller'].includes(key)) {
+      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id'].includes(key)) {
+        console.log('🗑️ Deleting dynamic param:', key);
         url.searchParams.delete(key);
       }
     });
 
-    Object.keys(filters).forEach(key => {
-      const value = filters[key];
-      if (Array.isArray(value) && value.length > 0) {
-        url.searchParams.set(key, value.join(','));
-      } else if (value !== undefined && value !== null && value !== '') {
-        url.searchParams.set(key, value.toString());
-      }
-    });
+    // Если это не сброс, добавляем новые динамические фильтры
+    if (!isReset) {
+      Object.keys(filters).forEach(key => {
+        const value = filters[key];
+        if (Array.isArray(value) && value.length > 0) {
+          url.searchParams.set(key, value.join(','));
+        } else if (value !== undefined && value !== null && value !== '') {
+          url.searchParams.set(key, value.toString());
+        }
+      });
+    }
 
+      console.log('🔧 Final URL:', url.toString());
       window.history.replaceState({}, '', url.toString());
     } catch (error) {
-      console.error('Ошибка при обновлении URL:', error);
+      console.error('Error in updateUrlWithDynamicFilters:', error);
     }
   };
 
@@ -139,20 +152,24 @@ function CategoryPageContent() {
       const url = new URL(window.location.href);
       const dynamicFilters = {};
     
-    Object.keys(url.searchParams).forEach(key => {
-      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller'].includes(key)) {
-        const value = url.searchParams.get(key);
-        if (value && value.includes(',')) {
-          dynamicFilters[key] = value.split(',').map(v => parseInt(v));
+    for (const [key, value] of url.searchParams.entries()) {
+      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id'].includes(key)) {
+        if (key === 'flag_type') {
+          dynamicFilters[key] = value;
+        } else if (value && value.includes(',')) {
+          dynamicFilters[key] = value.split(',').map(v => {
+            const num = parseInt(v);
+            return isNaN(num) ? v : num;
+          });
         } else if (value) {
-          dynamicFilters[key] = [parseInt(value)];
+          const num = parseInt(value);
+          dynamicFilters[key] = isNaN(num) ? value : num;
         }
       }
-      });
+    }
       
       return dynamicFilters;
     } catch (error) {
-      console.error('Ошибка при парсинге URL параметров:', error);
       return {};
     }
   };
@@ -161,15 +178,90 @@ function CategoryPageContent() {
 
   const handleFiltersApply = (newFilters) => {
     setAppliedFilters(newFilters);
-    window.scrollTo(0, 0);
+    
+    // Проверяем, является ли это сбросом фильтров
+    const hasActiveFilters = Object.values(newFilters).some(value => {
+      if (Array.isArray(value)) return value.length > 0;
+      if (typeof value === 'boolean') return value === true;
+      if (typeof value === 'object' && value !== null) {
+        return Object.values(value).some(v => v !== undefined && v !== null && v !== '');
+      }
+      return value !== undefined && value !== null && value !== '';
+    });
+    
+    const isReset = !hasActiveFilters;
+    
+    console.log('🔄 handleFiltersApply called with:', { 
+      newFilters, 
+      hasActiveFilters, 
+      isReset,
+      values: Object.values(newFilters)
+    });
     
     const dynamicFilterData = {};
     Object.keys(newFilters).forEach(key => {
-      if (!['price', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'sizes', 'search'].includes(key)) {
+      if (!['price', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'sizes', 'search', 'category_id', 'subcategory_id'].includes(key)) {
         dynamicFilterData[key] = newFilters[key];
       }
     });
     setDynamicFilters(dynamicFilterData);
+    
+    // Обновляем URL с новыми фильтрами
+    updateUrlWithDynamicFilters(dynamicFilterData, isReset);
+    
+    // Обновляем URL параметры для обычных фильтров
+    try {
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        
+        if (isReset) {
+          // Очищаем все параметры фильтров
+          url.searchParams.delete('material');
+          url.searchParams.delete('colors');
+          url.searchParams.delete('bestseller');
+          url.searchParams.delete('in_stock');
+          url.searchParams.delete('price_min');
+          url.searchParams.delete('price_max');
+        } else {
+          // Обновляем параметры фильтров
+          if (newFilters.material && Array.isArray(newFilters.material) && newFilters.material.length > 0) {
+            url.searchParams.set('material', newFilters.material.join(','));
+          } else {
+            url.searchParams.delete('material');
+          }
+          
+          if (newFilters.colors && Array.isArray(newFilters.colors) && newFilters.colors.length > 0) {
+            url.searchParams.set('colors', newFilters.colors.join(','));
+          } else {
+            url.searchParams.delete('colors');
+          }
+          
+          if (newFilters.bestseller === true) {
+            url.searchParams.set('bestseller', 'true');
+          } else {
+            url.searchParams.delete('bestseller');
+          }
+          
+          if (newFilters.in_stock === true) {
+            url.searchParams.set('in_stock', 'true');
+          } else {
+            url.searchParams.delete('in_stock');
+          }
+          
+          if (newFilters.price && (newFilters.price.min || newFilters.price.max)) {
+            if (newFilters.price.min) url.searchParams.set('price_min', newFilters.price.min.toString());
+            if (newFilters.price.max) url.searchParams.set('price_max', newFilters.price.max.toString());
+          } else {
+            url.searchParams.delete('price_min');
+            url.searchParams.delete('price_max');
+          }
+        }
+        
+        window.history.replaceState({}, '', url.toString());
+      }
+    } catch (error) {
+      console.error('Ошибка при обновлении URL:', error);
+    }
   };
 
   useEffect(() => {
@@ -233,12 +325,26 @@ function CategoryPageContent() {
   useEffect(() => {
     const urlDynamicFilters = parseDynamicFiltersFromUrl();
     setDynamicFilters(urlDynamicFilters);
+    
+    // Проверяем, есть ли category_id в URL
+    const url = new URL(window.location.href);
+    const categoryIdFromUrl = url.searchParams.get('category_id');
+    if (categoryIdFromUrl) {
+      setCategoryId(parseInt(categoryIdFromUrl));
+    }
   }, []);
 
   useEffect(() => {
     const handleUrlChange = () => {
       const urlDynamicFilters = parseDynamicFiltersFromUrl();
       setDynamicFilters(urlDynamicFilters);
+      
+      // Проверяем, есть ли category_id в URL
+      const url = new URL(window.location.href);
+      const categoryIdFromUrl = url.searchParams.get('category_id');
+      if (categoryIdFromUrl) {
+        setCategoryId(parseInt(categoryIdFromUrl));
+      }
     };
 
     window.addEventListener('popstate', handleUrlChange);
@@ -246,7 +352,7 @@ function CategoryPageContent() {
   }, []);
 
   useEffect(() => {
-    if (filters.length > 0 && !appliedFilters.colors) {
+    if (filters.length > 0) {
       const urlFilters = {
         price: priceMin || priceMax ? { min: priceMin, max: priceMax } : undefined,
         in_stock: inStock === 'true',
@@ -288,7 +394,6 @@ function CategoryPageContent() {
             src={(currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null) ? (currentSubcategory?.photo_cover?.startsWith('http') ? (currentSubcategory?.photo_cover || currentCategory?.photo_cover) : `https://aldalinde.ru${currentSubcategory?.photo_cover || currentCategory?.photo_cover}`) : "/category.png"} 
             alt={currentSubcategory?.title || currentCategory?.title || 'Категория'} 
             onError={(e) => {
-              console.log('Ошибка загрузки изображения:', e.target.src);
               e.target.src = "/category.png";
             }}
           />
@@ -337,13 +442,15 @@ function CategoryPageContent() {
             </div>
           ) : products.length > 0 ? (
             <>
-              {products.map((product, index) => (
-                <ProductCard 
-                  key={`${product.id}-${index}`} 
-                  product={transformProduct(product)} 
-                  filtersOpen={showFilters}
-                />
-              ))}
+              {products.map((product, index) => {
+                return (
+                  <ProductCard 
+                    key={`${product.id}-${index}`} 
+                    product={transformProduct(product)} 
+                    filtersOpen={showFilters}
+                  />
+                );
+              })}
               {isFetchingNextPage && (
                 <ProductSkeleton count={4} />
               )}
