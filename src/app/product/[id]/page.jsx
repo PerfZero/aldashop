@@ -53,7 +53,6 @@ export default function ProductPage({ params }) {
   }, []);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
     fetchProductDetails();
   }, [resolvedParams.id]);
 

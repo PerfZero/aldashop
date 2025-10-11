@@ -1,6 +1,10 @@
 .filters {
   width: 248px;
   overflow: hidden;
+  display: none;
+}
+
+.filters.visible {
   display: block;
 }
 
@@ -422,8 +426,12 @@ border-radius: 100px;
     height: 100vh;
     background: #fff;
     z-index: 1000;
-    display: flex;
+    display: none;
     flex-direction: column;
+  }
+  
+  .filters.visible {
+    display: flex;
   }
 
   .filters__header {

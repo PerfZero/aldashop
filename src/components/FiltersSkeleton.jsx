@@ -4,7 +4,7 @@ import styles from './Filters.module.css';
 
 export default function FiltersSkeleton({ onClose }) {
   return (
-    <div className={styles.filters}>
+    <div className={`${styles.filters} ${styles.visible}`}>
       <div className={styles.filters__header}>
         <h2 className={styles.filters__title}>Фильтры</h2>
         <button className={styles.filters__close} onClick={onClose}>×</button>

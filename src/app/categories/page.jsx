@@ -21,7 +21,13 @@ function CategoryPageContent() {
   const searchParams = useSearchParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
   const [sortBy, setSortBy] = useState(null);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('showFilters');
+      return saved === 'true';
+    }
+    return false;
+  });
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [categoryId, setCategoryId] = useState(null);
@@ -50,6 +56,13 @@ function CategoryPageContent() {
   
   const [dynamicFilters, setDynamicFilters] = useState({});
   const loadMoreRef = useRef(null);
+
+  // Сохраняем состояние showFilters в sessionStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('showFilters', showFilters.toString());
+    }
+  }, [showFilters]);
 
   // Загружаем категории и фильтры через TanStack Query
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
@@ -91,22 +104,6 @@ function CategoryPageContent() {
   });
   
 
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 768) {
-        setShowFilters(true);
-      } else {
-        setShowFilters(false);
-      }
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
 
 
 

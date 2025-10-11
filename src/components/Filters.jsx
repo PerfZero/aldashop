@@ -1,25 +1,56 @@
 import { useState, useEffect } from 'react';
 import FiltersSkeleton from './FiltersSkeleton';
-import CustomSelect from './CustomSelect';
 import styles from './Filters.module.css';
 
 export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {} }) {
   const [inStockDelivery, setInStockDelivery] = useState(appliedFilters.in_stock || false);
   const [tempFilters, setTempFilters] = useState(appliedFilters);
-  const [expandedFilters, setExpandedFilters] = useState({});
+  const [expandedFilters, setExpandedFilters] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('expandedFilters');
+      return saved ? JSON.parse(saved) : {};
+    }
+    return {};
+  });
 
-  const filteredFilters = filters.filter(filter => filter.slug !== 'sort');
+  const filteredFilters = filters.filter(filter => filter.slug !== 'sort' && filter.slug !== 'in_stock');
 
   useEffect(() => {
     setInStockDelivery(appliedFilters.in_stock || false);
     setTempFilters(appliedFilters);
   }, [appliedFilters]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('expandedFilters');
+      if (saved) {
+        setExpandedFilters(JSON.parse(saved));
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isVisible && typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('expandedFilters');
+      if (saved) {
+        setExpandedFilters(JSON.parse(saved));
+      }
+    }
+  }, [isVisible]);
+
   const toggleFilter = (filterSlug) => {
-    setExpandedFilters(prev => ({
-      ...prev,
-      [filterSlug]: !prev[filterSlug]
-    }));
+    setExpandedFilters(prev => {
+      const newState = {
+        ...prev,
+        [filterSlug]: !prev[filterSlug]
+      };
+      
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('expandedFilters', JSON.stringify(newState));
+      }
+      
+      return newState;
+    });
   };
 
   if (!isVisible) return null;
@@ -80,7 +111,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
   }
 
   return (
-    <div className={styles.filters}>
+    <div className={`${styles.filters} ${isVisible ? styles.visible : ''}`}>
       <div className={styles.filters__header}>
         <h2 className={styles.filters__title}>Фильтры</h2>
         <button className={styles.filters__close} onClick={onClose}>×</button>
@@ -119,18 +150,27 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
             {expandedFilters[filter.slug] && (
               <>
                 {filter.type === 'select' && filter.options && filter.slug !== 'colors' && filter.slug !== 'in_stock' && filter.slug !== 'designer' && (
-                  <div className={styles.filter__select}>
-                    <CustomSelect
-                      value={tempFilters[filter.slug] || ''}
-                      onChange={(value) => {
-                        setTempFilters(prev => ({
-                          ...prev,
-                          [filter.slug]: value || undefined
-                        }));
-                      }}
-                      options={filter.options}
-                      placeholder={`Выберите ${filter.title.toLowerCase()}`}
-                    />
+                  <div className={styles.filter__options}>
+                    {filter.options.map((option, optionIndex) => (
+                      <label key={optionIndex} className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={tempFilters[filter.slug]?.includes(option.id) || false}
+                          onChange={(e) => {
+                            const currentValues = tempFilters[filter.slug] || [];
+                            const newValues = e.target.checked
+                              ? [...currentValues, option.id]
+                              : currentValues.filter(val => val !== option.id);
+                            setTempFilters(prev => ({
+                              ...prev,
+                              [filter.slug]: newValues.length > 0 ? newValues : undefined
+                            }));
+                          }}
+                          className={styles.checkboxInput}
+                        />
+                        <span className={styles.checkboxText}>{option.title}</span>
+                      </label>
+                    ))}
                   </div>
                 )}
 
