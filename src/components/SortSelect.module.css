@@ -54,7 +54,7 @@
 .sortSelect__dropdown {
   position: absolute;
   top: 100%;
-  left: 0;
+  left: auto;
   width: max-content;
   
   display: flex;
@@ -94,6 +94,7 @@
 @media (max-width: 768px) {
   .sortSelect__label {
     font-size: 12px;
+    display: none;
   }
 
   .sortSelect__button {
@@ -107,9 +108,18 @@
 
 
   .sortSelect{
-    justify-content: space-between;
+    justify-content: flex-end;
     width: 100%;
 
+
+  }
+
+  .sortSelect__dropdown{
+    left: auto;
+  }
+
+  .sortSelect__option {
+    font-size: 12px;
   }
   
 

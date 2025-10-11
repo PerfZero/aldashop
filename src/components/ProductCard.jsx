@@ -367,7 +367,7 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
         {currentProduct.available_colors && currentProduct.available_colors.length > 0 && (
           <div className={styles.card__colors}>
             <div className={styles.card__colors_preview}>
-              {currentProduct.available_colors.slice(0, 6).map((color) => (
+              {currentProduct.available_colors.slice(0, 4).map((color) => (
                 <button
                   key={color.id}
                   className={`${styles.card__color} ${selectedColor.hex === `#${color.code_hex}` ? styles.card__color_selected : ''} ${isLoading ? styles.card__color_loading : ''}`}
@@ -381,8 +381,8 @@ export default function ProductCard({ product, filtersOpen = false, onProductCli
                   title={color.title || 'Цвет'}
                 />
               ))}
-              {currentProduct.available_colors.length > 6 && (
-                <div className={styles.card__color_more}>+{currentProduct.available_colors.length - 6}</div>
+              {currentProduct.available_colors.length > 4 && (
+                <div className={styles.card__color_more}>+{currentProduct.available_colors.length - 4}</div>
               )}
             </div>
           </div>

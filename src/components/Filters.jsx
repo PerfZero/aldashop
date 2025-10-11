@@ -3,7 +3,11 @@ import FiltersSkeleton from './FiltersSkeleton';
 import styles from './Filters.module.css';
 
 export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {} }) {
-  const [inStockDelivery, setInStockDelivery] = useState(appliedFilters.in_stock || false);
+  const [inStockDelivery, setInStockDelivery] = useState(() => {
+    const inStockFilter = filters.find(filter => filter.slug === 'in_stock');
+    const hasDefault = inStockFilter?.default === true;
+    return appliedFilters.in_stock || hasDefault || false;
+  });
   const [tempFilters, setTempFilters] = useState(appliedFilters);
   const [expandedFilters, setExpandedFilters] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -16,9 +20,11 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
   const filteredFilters = filters.filter(filter => filter.slug !== 'sort' && filter.slug !== 'in_stock');
 
   useEffect(() => {
-    setInStockDelivery(appliedFilters.in_stock || false);
+    const inStockFilter = filters.find(filter => filter.slug === 'in_stock');
+    const hasDefault = inStockFilter?.default === true;
+    setInStockDelivery(appliedFilters.in_stock || hasDefault || false);
     setTempFilters(appliedFilters);
-  }, [appliedFilters]);
+  }, [appliedFilters, filters]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

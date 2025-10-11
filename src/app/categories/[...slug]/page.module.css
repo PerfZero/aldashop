@@ -166,6 +166,7 @@ align-items: flex-start;
   .filters__button {
     font-size: 14px;
     display: block;
+    width: 100%;
   }
 
   .filters__button::before {
