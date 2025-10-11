@@ -35,6 +35,7 @@ export default function ProductPage({ params }) {
   const [isAdded, setIsAdded] = useState(false);
   const [showMaterialInfo, setShowMaterialInfo] = useState(true);
   const [showProductInfo, setShowProductInfo] = useState(true);
+  const [showActualSizes, setShowActualSizes] = useState(true);
   const [isChangingOptions, setIsChangingOptions] = useState(false);
   const { addToCart, cartItems } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
@@ -926,6 +927,45 @@ export default function ProductPage({ params }) {
                     <span className={styles.product__param_value}>{param.value_param}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+          
+          {product.photos && product.photos.some(photo => photo.photo_sizes === true) && (
+            <div className={styles.product__actual_sizes}>
+              <div 
+                className={styles.product__section_header}
+                onClick={() => setShowActualSizes(!showActualSizes)}
+              >
+                <h2 className={styles.product__actual_sizes_title}>Фактические размеры</h2>
+                <div className={styles.product__toggle_button}>
+                  {showActualSizes ? (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M4 8H12" stroke="#323433" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 4V12M4 8H12" stroke="#323433" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <div className={`${styles.product__actual_sizes_content} ${showActualSizes ? styles.product__content_visible : styles.product__content_hidden}`}>
+                <div className={styles.product__actual_sizes_photos}>
+                  {product.photos
+                    .filter(photo => photo.photo_sizes === true)
+                    .map((photo, index) => (
+                      <div key={index} className={styles.product__actual_size_photo}>
+                        <Image
+                          src={photo.photo}
+                          alt={`Фактические размеры - фото ${index + 1}`}
+                          width={300}
+                          height={300}
+                          unoptimized={true}
+                        />
+                      </div>
+                    ))}
+                </div>
               </div>
             </div>
           )}

@@ -175,8 +175,8 @@ align-items: flex-start;
   }
 
   .hero__content{
-    padding: 0 16px;
-    height: 150px;
+    padding: 32px 16px;
+    height: auto;
   }
 
   
