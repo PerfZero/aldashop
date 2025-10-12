@@ -630,6 +630,11 @@
   margin: 0;
 }
 
+.product__actual_size_photo img{
+  width: 70% !important;
+  margin: 0 auto !important;
+}
+
 .product__actual_sizes {
   display: flex;
   flex-direction: column;
@@ -661,12 +666,21 @@
   width: 100%;
   height: auto;
   overflow: hidden;
+  text-align: center;
 }
 
 .product__actual_size_photo img {
   width: 100%;
   height: auto;
   object-fit: cover;
+}
+
+.product__actual_sizes_disclaimer {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: #666;
+  margin: 16px 0 0;
+  line-height: 1.4;
 }
 
 .product__infos {

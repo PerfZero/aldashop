@@ -10,10 +10,6 @@ export default function CartClient() {
   const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart } = useCart();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   
-    accessToken: localStorage.getItem('accessToken') ? 'exists' : 'not found',
-    refreshToken: localStorage.getItem('refreshToken') ? 'exists' : 'not found'
-  });
-  
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [showPromoCodeInput, setShowPromoCodeInput] = useState(false);
@@ -390,11 +386,9 @@ export default function CartClient() {
               
               <div className={styles.productDetails}>
                 <div className={styles.colorMaterial}>
-                  <span>{item.color || 'Не указан'}</span>
+                  <span>Цвет: {item.color || 'Не указан'}</span>
                   <span className={styles.detailDivider}></span>
-                  <span>{item.material || 'Не указан'}</span>
-                  <span className={styles.detailDivider}></span>
-                  <span>{item.dimensions || 'Не указаны'}</span>
+                  <span>Размер: {item.dimensions || 'Не указаны'}</span>
                 </div>
                 
                 <div className={styles.quantityBlock}>

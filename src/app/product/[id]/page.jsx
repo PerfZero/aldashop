@@ -667,7 +667,9 @@ export default function ProductPage({ params }) {
                 modules={[FreeMode, Thumbs]}
                 className={styles.product__thumbs_swiper}
               >
-                {product.photos.map((photo, index) => (
+                {product.photos
+                  .filter(photo => photo.photo_sizes !== true)
+                  .map((photo, index) => (
                   <SwiperSlide key={index}>
                     <div className={styles.product__thumbnail}>
                       <Image
@@ -691,7 +693,9 @@ export default function ProductPage({ params }) {
                 modules={[Navigation, Thumbs]}
                 className={styles.product__main_swiper}
               >
-                {product.photos.map((photo, index) => (
+                {product.photos
+                  .filter(photo => photo.photo_sizes !== true)
+                  .map((photo, index) => (
                   <SwiperSlide key={index}>
                     <div className={styles.product__main_image}>
                       <Image
@@ -966,6 +970,9 @@ export default function ProductPage({ params }) {
                       </div>
                     ))}
                 </div>
+                <p className={styles.product__actual_sizes_disclaimer}>
+                  Все размеры изделий указаны вручную. Возможна незначительная погрешность (1–3 см).
+                </p>
               </div>
             </div>
           )}

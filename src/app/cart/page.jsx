@@ -599,11 +599,9 @@ export default function CartPage() {
                   
                   <div className={styles.productDetails}>
                     <div className={styles.colorMaterial}>
-                      <span>{item.color || 'Не указан'}</span>
+                      <span>Цвет: {item.color || 'Не указан'}</span>
                       <span className={styles.detailDivider}></span>
-                      <span>{item.material || 'Не указан'}</span>
-                      <span className={styles.detailDivider}></span>
-                      <span>{item.dimensions || 'Не указаны'}</span>
+                      <span>Размер: {item.dimensions || 'Не указаны'}</span>
                     </div>
                     
                     <div className={styles.quantityPrice}>
