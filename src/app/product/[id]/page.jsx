@@ -971,7 +971,7 @@ export default function ProductPage({ params }) {
                     ))}
                 </div>
                 <p className={styles.product__actual_sizes_disclaimer}>
-                  Все размеры изделий указаны вручную. Возможна незначительная погрешность (1–3 см).
+                  Все изделия измерены вручную. Возможна незначительная погрешность 1–3 см.
                 </p>
               </div>
             </div>
