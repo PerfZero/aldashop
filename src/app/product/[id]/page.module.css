@@ -633,10 +633,7 @@
   margin: 0;
 }
 
-.product__actual_size_photo img{
-  width: 70% !important;
-  margin: 0 auto !important;
-}
+
 
 .product__actual_sizes {
   display: flex;
