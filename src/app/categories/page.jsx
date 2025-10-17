@@ -64,6 +64,47 @@ function CategoryPageContent() {
     }
   }, [showFilters]);
 
+  // Сохраняем позицию скролла при уходе со страницы
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
+    };
+
+    const handleRouteChange = () => {
+      sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Сохраняем позицию при клике на ссылку продукта
+    const productLinks = document.querySelectorAll('a[href*="/product/"]');
+    productLinks.forEach(link => {
+      link.addEventListener('click', handleRouteChange);
+    });
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      productLinks.forEach(link => {
+        link.removeEventListener('click', handleRouteChange);
+      });
+    };
+  }, []);
+
+  // Восстанавливаем позицию скролла при загрузке страницы
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('catalogScrollPosition');
+    if (savedPosition) {
+      // Увеличиваем задержку и принудительно отключаем smooth scroll
+      setTimeout(() => {
+        const originalScrollBehavior = document.documentElement.style.scrollBehavior;
+        document.documentElement.style.scrollBehavior = 'auto';
+        window.scrollTo(0, parseInt(savedPosition));
+        document.documentElement.style.scrollBehavior = originalScrollBehavior;
+        sessionStorage.removeItem('catalogScrollPosition');
+      }, 300);
+    }
+  }, []);
+
   // Загружаем категории и фильтры через TanStack Query
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
   const { data: filters = [], isLoading: filtersLoading } = useFilters(categoryId, subcategoryId, dynamicFilters);

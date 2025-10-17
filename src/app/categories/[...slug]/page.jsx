@@ -87,6 +87,44 @@ function CategoryPageContent() {
     rootMargin: '100px',
     enabled: hasNextPage && !isFetchingNextPage
   });
+
+  // Сохраняем позицию скролла при уходе со страницы
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
+    };
+
+    const handleRouteChange = () => {
+      sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    // Сохраняем позицию при клике на ссылку продукта
+    const productLinks = document.querySelectorAll('a[href*="/product/"]');
+    productLinks.forEach(link => {
+      link.addEventListener('click', handleRouteChange);
+    });
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      productLinks.forEach(link => {
+        link.removeEventListener('click', handleRouteChange);
+      });
+    };
+  }, []);
+
+  // Восстанавливаем позицию скролла при загрузке страницы
+  useEffect(() => {
+    const savedPosition = sessionStorage.getItem('catalogScrollPosition');
+    if (savedPosition) {
+      // Небольшая задержка для корректного восстановления
+      setTimeout(() => {
+        window.scrollTo(0, parseInt(savedPosition));
+        sessionStorage.removeItem('catalogScrollPosition');
+      }, 100);
+    }
+  }, []);
   
 
 
