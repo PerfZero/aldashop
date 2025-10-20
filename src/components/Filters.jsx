@@ -1,48 +1,30 @@
+
 import { useState, useEffect } from 'react';
 import FiltersSkeleton from './FiltersSkeleton';
 import styles from './Filters.module.css';
 
 export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {} }) {
-  const [inStockDelivery, setInStockDelivery] = useState(() => {
-    const inStockFilter = filters.find(filter => filter.slug === 'in_stock');
-    const hasDefault = inStockFilter?.default === true;
-    return appliedFilters.in_stock || hasDefault || false;
-  });
+  const [inStockDelivery, setInStockDelivery] = useState(() => appliedFilters.in_stock === true);
   const [tempFilters, setTempFilters] = useState(appliedFilters);
-  const [expandedFilters, setExpandedFilters] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('expandedFilters');
-      return saved ? JSON.parse(saved) : {};
-    }
-    return {};
-  });
+  const [expandedFilters, setExpandedFilters] = useState({});
 
   const filteredFilters = filters.filter(filter => filter.slug !== 'sort' && filter.slug !== 'in_stock');
 
   useEffect(() => {
-    const inStockFilter = filters.find(filter => filter.slug === 'in_stock');
-    const hasDefault = inStockFilter?.default === true;
-    setInStockDelivery(appliedFilters.in_stock || hasDefault || false);
+    setInStockDelivery(appliedFilters.in_stock === true);
     setTempFilters(appliedFilters);
-  }, [appliedFilters, filters]);
+  }, [appliedFilters]);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('expandedFilters');
-      if (saved) {
+    const saved = sessionStorage.getItem('expandedFilters');
+    if (saved) {
+      try {
         setExpandedFilters(JSON.parse(saved));
+      } catch (e) {
+        console.error('Error parsing expandedFilters:', e);
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (isVisible && typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('expandedFilters');
-      if (saved) {
-        setExpandedFilters(JSON.parse(saved));
-      }
-    }
-  }, [isVisible]);
 
   const toggleFilter = (filterSlug) => {
     setExpandedFilters(prev => {
@@ -51,9 +33,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
         [filterSlug]: !prev[filterSlug]
       };
       
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('expandedFilters', JSON.stringify(newState));
-      }
+      sessionStorage.setItem('expandedFilters', JSON.stringify(newState));
       
       return newState;
     });
@@ -81,6 +61,8 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
     
     if (inStockDelivery) {
       finalFilters.in_stock = true;
+    } else {
+      delete finalFilters.in_stock;
     }
     
     Object.keys(finalFilters).forEach(key => {
@@ -88,6 +70,8 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
         delete finalFilters[key];
       }
     });
+    
+    console.log('🟢 Filters handleApply:', finalFilters);
     
     if (onApply) {
       onApply(finalFilters);
@@ -129,7 +113,9 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
             <input
               type="checkbox"
               checked={inStockDelivery}
-              onChange={() => setInStockDelivery(!inStockDelivery)}
+              onChange={() => {
+                setInStockDelivery(!inStockDelivery);
+              }}
               className={styles.toggleInput}
             />
             <span className={styles.toggleSwitch}></span>

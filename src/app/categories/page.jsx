@@ -21,13 +21,8 @@ function CategoryPageContent() {
   const searchParams = useSearchParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
   const [sortBy, setSortBy] = useState(null);
-  const [showFilters, setShowFilters] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = sessionStorage.getItem('showFilters');
-      return saved === 'true';
-    }
-    return false;
-  });
+  const [showFilters, setShowFilters] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({});
   const [categoryId, setCategoryId] = useState(null);
@@ -46,23 +41,54 @@ function CategoryPageContent() {
   const [currentCategory, setCurrentCategory] = useState(null);
   const [currentSubcategory, setCurrentSubcategory] = useState(null);
 
-  const [priceMin, setPriceMin] = useQueryParam('price_min', NumberParam);
-  const [priceMax, setPriceMax] = useQueryParam('price_max', NumberParam);
-  const [inStock, setInStock] = useQueryParam('in_stock', withDefault(StringParam, ''));
   const [sort, setSort] = useQueryParam('sort', NumberParam);
-  const [material, setMaterial] = useQueryParam('material', StringParam);
-  const [colors, setColors] = useQueryParam('colors', StringParam);
-  const [bestseller, setBestseller] = useQueryParam('bestseller', withDefault(StringParam, ''));
   
   const [dynamicFilters, setDynamicFilters] = useState({});
   const loadMoreRef = useRef(null);
 
-  // Сохраняем состояние showFilters в sessionStorage
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    setIsClient(true);
+    const saved = sessionStorage.getItem('showFilters');
+    if (saved === 'true') {
+      setShowFilters(true);
+    }
+    
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        const currentSaved = sessionStorage.getItem('showFilters');
+        if (currentSaved !== null) {
+          setShowFilters(currentSaved === 'true');
+        }
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
       sessionStorage.setItem('showFilters', showFilters.toString());
     }
-  }, [showFilters]);
+  }, [showFilters, isClient]);
+
+  useEffect(() => {
+    const handlePageShow = (e) => {
+      if (typeof window === 'undefined') return;
+      if (e.persisted) {
+        const saved = sessionStorage.getItem('showFilters');
+        console.log('pageshow (persisted) sync showFilters (root):', saved);
+        if (saved !== null) {
+          setShowFilters(saved === 'true');
+        }
+      }
+    };
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   // Сохраняем позицию скролла при уходе со страницы
   useEffect(() => {
@@ -94,14 +120,11 @@ function CategoryPageContent() {
   useEffect(() => {
     const savedPosition = sessionStorage.getItem('catalogScrollPosition');
     if (savedPosition) {
-      // Увеличиваем задержку и принудительно отключаем smooth scroll
+      // Небольшая задержка для корректного восстановления
       setTimeout(() => {
-        const originalScrollBehavior = document.documentElement.style.scrollBehavior;
-        document.documentElement.style.scrollBehavior = 'auto';
         window.scrollTo(0, parseInt(savedPosition));
-        document.documentElement.style.scrollBehavior = originalScrollBehavior;
         sessionStorage.removeItem('catalogScrollPosition');
-      }, 300);
+      }, 100);
     }
   }, []);
 
@@ -215,92 +238,111 @@ function CategoryPageContent() {
 
 
   const handleFiltersApply = (newFilters) => {
+    console.log('🟡 handleFiltersApply received:', newFilters);
     setAppliedFilters(newFilters);
     
-    // Проверяем, является ли это сбросом фильтров
-    const hasActiveFilters = Object.values(newFilters).some(value => {
-      if (Array.isArray(value)) return value.length > 0;
-      if (typeof value === 'boolean') return value === true;
-      if (typeof value === 'object' && value !== null) {
-        return Object.values(value).some(v => v !== undefined && v !== null && v !== '');
-      }
-      return value !== undefined && value !== null && value !== '';
-    });
-    
-    const isReset = !hasActiveFilters;
-    
-    console.log('🔄 handleFiltersApply called with:', { 
-      newFilters, 
-      hasActiveFilters, 
-      isReset,
-      values: Object.values(newFilters)
-    });
-    
-    const dynamicFilterData = {};
-    Object.keys(newFilters).forEach(key => {
-      if (!['price', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'sizes', 'search', 'category_id', 'subcategory_id'].includes(key)) {
-        dynamicFilterData[key] = newFilters[key];
-      }
-    });
-    setDynamicFilters(dynamicFilterData);
-    
-    // Обновляем URL с новыми фильтрами
-    updateUrlWithDynamicFilters(dynamicFilterData, isReset);
-    
-    // Обновляем URL параметры для обычных фильтров
-    try {
-      if (typeof window !== 'undefined') {
-        const url = new URL(window.location.href);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      
+      const isReset = Object.keys(newFilters).length === 0;
+      
+      if (isReset) {
+        url.searchParams.delete('in_stock');
+        url.searchParams.delete('bestseller');
+        url.searchParams.delete('price_min');
+        url.searchParams.delete('price_max');
+        url.searchParams.delete('colors');
+        url.searchParams.delete('material');
+        url.searchParams.delete('width_min');
+        url.searchParams.delete('width_max');
+        url.searchParams.delete('height_min');
+        url.searchParams.delete('height_max');
+        url.searchParams.delete('depth_min');
+        url.searchParams.delete('depth_max');
+        url.searchParams.delete('sort');
         
-        if (isReset) {
-          // Очищаем все параметры фильтров
-          url.searchParams.delete('material');
-          url.searchParams.delete('colors');
-          url.searchParams.delete('bestseller');
-          url.searchParams.delete('in_stock');
-          url.searchParams.delete('price_min');
-          url.searchParams.delete('price_max');
+        const paramsToDelete = [];
+        for (const [key] of url.searchParams.entries()) {
+          paramsToDelete.push(key);
+        }
+        paramsToDelete.forEach(key => url.searchParams.delete(key));
+        
+        setSortBy(null);
+        setSort(undefined);
+      } else {
+        if (newFilters.in_stock === true) {
+          url.searchParams.set('in_stock', 'true');
         } else {
-          // Обновляем параметры фильтров
-          if (newFilters.material && Array.isArray(newFilters.material) && newFilters.material.length > 0) {
-            url.searchParams.set('material', newFilters.material.join(','));
-          } else {
-            url.searchParams.delete('material');
-          }
-          
-          if (newFilters.colors && Array.isArray(newFilters.colors) && newFilters.colors.length > 0) {
-            url.searchParams.set('colors', newFilters.colors.join(','));
-          } else {
-            url.searchParams.delete('colors');
-          }
-          
-          if (newFilters.bestseller === true) {
-            url.searchParams.set('bestseller', 'true');
-          } else {
-            url.searchParams.delete('bestseller');
-          }
-          
-          if (newFilters.in_stock === true) {
-            url.searchParams.set('in_stock', 'true');
-          } else {
-            url.searchParams.delete('in_stock');
-          }
-          
-          if (newFilters.price && (newFilters.price.min || newFilters.price.max)) {
-            if (newFilters.price.min) url.searchParams.set('price_min', newFilters.price.min.toString());
-            if (newFilters.price.max) url.searchParams.set('price_max', newFilters.price.max.toString());
-          } else {
-            url.searchParams.delete('price_min');
-            url.searchParams.delete('price_max');
-          }
+          url.searchParams.delete('in_stock');
         }
         
-        window.history.replaceState({}, '', url.toString());
+        if (newFilters.bestseller === true) {
+          url.searchParams.set('bestseller', 'true');
+        } else {
+          url.searchParams.delete('bestseller');
+        }
+        
+        if (newFilters.price) {
+          if (newFilters.price.min) url.searchParams.set('price_min', newFilters.price.min.toString());
+          if (newFilters.price.max) url.searchParams.set('price_max', newFilters.price.max.toString());
+        } else {
+          url.searchParams.delete('price_min');
+          url.searchParams.delete('price_max');
+        }
+        
+        if (newFilters.colors && Array.isArray(newFilters.colors) && newFilters.colors.length > 0) {
+          url.searchParams.set('colors', newFilters.colors.join(','));
+        } else {
+          url.searchParams.delete('colors');
+        }
+        
+        if (newFilters.material && Array.isArray(newFilters.material) && newFilters.material.length > 0) {
+          url.searchParams.set('material', newFilters.material.join(','));
+        } else {
+          url.searchParams.delete('material');
+        }
+        
+        if (newFilters.sizes) {
+          if (newFilters.sizes.width) {
+            if (newFilters.sizes.width.min) url.searchParams.set('width_min', newFilters.sizes.width.min.toString());
+            if (newFilters.sizes.width.max) url.searchParams.set('width_max', newFilters.sizes.width.max.toString());
+          }
+          if (newFilters.sizes.height) {
+            if (newFilters.sizes.height.min) url.searchParams.set('height_min', newFilters.sizes.height.min.toString());
+            if (newFilters.sizes.height.max) url.searchParams.set('height_max', newFilters.sizes.height.max.toString());
+          }
+          if (newFilters.sizes.depth) {
+            if (newFilters.sizes.depth.min) url.searchParams.set('depth_min', newFilters.sizes.depth.min.toString());
+            if (newFilters.sizes.depth.max) url.searchParams.set('depth_max', newFilters.sizes.depth.max.toString());
+          }
+        } else {
+          url.searchParams.delete('width_min');
+          url.searchParams.delete('width_max');
+          url.searchParams.delete('height_min');
+          url.searchParams.delete('height_max');
+          url.searchParams.delete('depth_min');
+          url.searchParams.delete('depth_max');
+        }
+        
+        Object.keys(newFilters).forEach(key => {
+          if (!['in_stock', 'bestseller', 'price', 'colors', 'material', 'sizes', 'sort'].includes(key)) {
+            const value = newFilters[key];
+            if (Array.isArray(value) && value.length > 0) {
+              url.searchParams.set(key, value.join(','));
+            } else if (value) {
+              url.searchParams.set(key, value.toString());
+            }
+          }
+        });
       }
-    } catch (error) {
-      console.error('Ошибка при обновлении URL:', error);
+      
+      window.history.replaceState({}, '', url.toString());
     }
   };
+
+  useEffect(() => {
+    console.log('🟠 appliedFilters changed:', appliedFilters);
+  }, [appliedFilters]);
 
   useEffect(() => {
     if (!categories.length) return;
@@ -383,27 +425,15 @@ function CategoryPageContent() {
       if (categoryIdFromUrl) {
         setCategoryId(parseInt(categoryIdFromUrl));
       }
+
+      const saved = sessionStorage.getItem('showFilters');
+      if (saved !== null) setShowFilters(saved === 'true');
     };
 
     window.addEventListener('popstate', handleUrlChange);
     return () => window.removeEventListener('popstate', handleUrlChange);
   }, []);
 
-  useEffect(() => {
-    if (filters.length > 0) {
-      const urlFilters = {
-        price: priceMin || priceMax ? { min: priceMin, max: priceMax } : undefined,
-        in_stock: inStock === 'true',
-        sort: sort,
-        material: material && material.trim() !== '' ? [material] : undefined,
-        colors: colors && colors.trim() !== '' ? colors.split(',').map(c => parseInt(c)).filter(c => !isNaN(c)) : undefined,
-        bestseller: bestseller === 'true',
-        ...dynamicFilters
-      };
-      
-      setAppliedFilters(urlFilters);
-    }
-  }, [filters, priceMin, priceMax, inStock, sort, material, colors, bestseller, dynamicFilters]);
 
   const breadcrumbs = [
     { text: 'Главная', href: '/' },
@@ -441,9 +471,16 @@ function CategoryPageContent() {
       <div className={styles.controls}>
         <button 
           className={styles.filters__button}
-          onClick={() => setShowFilters(!showFilters)}
+          onClick={() => {
+            const next = !showFilters;
+            setShowFilters(next);
+            try { console.log('showFilters toggle:', { from: showFilters, to: next }); } catch {}
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('showFilters', next.toString());
+            }
+          }}
         >
-          {showFilters ? 'Скрыть фильтры' : 'Показать фильтры'}
+          {(isClient && showFilters) ? 'Скрыть фильтры' : 'Показать фильтры'}
         </button>
         
         <SortSelect 
@@ -463,8 +500,14 @@ function CategoryPageContent() {
 
       <div className={styles.content}>
         <Filters 
-          isVisible={showFilters} 
-          onClose={() => setShowFilters(false)}
+          isVisible={isClient ? showFilters : false} 
+          onClose={() => {
+            setShowFilters(false);
+            try { console.log('Filters onClose: set showFilters to false'); } catch {}
+            if (typeof window !== 'undefined') {
+              sessionStorage.setItem('showFilters', 'false');
+            }
+          }}
           filters={filters}
           loading={loading}
           error={error}

@@ -96,6 +96,7 @@ border-radius: 100px;
 
 .filter__arrow {
   transition: transform 0.2s ease;
+  margin-right: 3px;
 }
 
 .filter__arrow_expanded {

@@ -643,9 +643,8 @@ export default function ProductPage({ params }) {
           <div className={styles.product__price}>
             {hasDiscount ? (
               <>
-                              <span className={styles.product__price_new}>{discountedPrice} ₽</span>
-
                 <span className={styles.product__price_old}>{originalPrice} ₽</span>
+                <span className={styles.product__price_new}>{discountedPrice} ₽</span>
               </>
             ) : (
               <span>{originalPrice} ₽</span>
@@ -775,9 +774,8 @@ export default function ProductPage({ params }) {
           <div className={styles.product__price}>
             {hasDiscount ? (
               <>
-                              <span className={styles.product__price_new}>{discountedPrice} ₽</span>
-
-                <span className={styles.product__price_old}>{originalPrice} ₽</span>
+                <span className={styles.product__price_old}>{discountedPrice} ₽</span>
+                <span className={styles.product__price_new}>{originalPrice} ₽</span>
               </>
             ) : (
               <span>{originalPrice} ₽</span>

@@ -22,7 +22,9 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
 
   // Применяем фильтры
   if (filters) {
-    requestBody.in_stock = filters.in_stock === true;
+    if (filters.in_stock === true) {
+      requestBody.in_stock = true;
+    }
 
     if (Array.isArray(filters.material) && filters.material.length > 0) {
       // Для материалов отправляем как строку поиска, так как сервер ожидает поиск по названию
@@ -37,16 +39,33 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
       requestBody.colors = filters.colors.map(color => parseInt(color));
     }
 
-    if (filters.sizes && (
-      (Number(filters.sizes.width) || 0) > 0 ||
-      (Number(filters.sizes.height) || 0) > 0 ||
-      (Number(filters.sizes.depth) || 0) > 0
-    )) {
-      requestBody.sizes = {
-        width: Number(filters.sizes.width) || 0,
-        height: Number(filters.sizes.height) || 0,
-        depth: Number(filters.sizes.depth) || 0
-      };
+    if (filters.sizes) {
+      const sizesData = {};
+      
+      if (filters.sizes.width) {
+        sizesData.width = {
+          min: Number(filters.sizes.width.min) || 0,
+          max: Number(filters.sizes.width.max) || 0
+        };
+      }
+      
+      if (filters.sizes.height) {
+        sizesData.height = {
+          min: Number(filters.sizes.height.min) || 0,
+          max: Number(filters.sizes.height.max) || 0
+        };
+      }
+      
+      if (filters.sizes.depth) {
+        sizesData.depth = {
+          min: Number(filters.sizes.depth.min) || 0,
+          max: Number(filters.sizes.depth.max) || 0
+        };
+      }
+      
+      if (Object.keys(sizesData).length > 0) {
+        requestBody.sizes = sizesData;
+      }
     }
 
     if (filters.price && (filters.price.min || filters.price.max)) {
@@ -110,7 +129,10 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
 };
 
 export const useInfiniteProducts = (filters, categoryId, subcategoryId, sortBy) => {
-  const queryKey = ['products', filters, categoryId, subcategoryId, sortBy];
+  const serializedFilters = JSON.stringify(filters || {});
+  const queryKey = ['products', filters, categoryId, subcategoryId, sortBy, serializedFilters];
+  
+  console.log('🔵 useInfiniteProducts query key:', queryKey);
   
   return useInfiniteQuery({
     queryKey,
@@ -122,7 +144,9 @@ export const useInfiniteProducts = (filters, categoryId, subcategoryId, sortBy) 
       }
       return undefined;
     },
-    refetchOnMount: false, // Не перезагружать при возврате
-    refetchOnWindowFocus: false, // Не перезагружать при фокусе окна
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   });
 };

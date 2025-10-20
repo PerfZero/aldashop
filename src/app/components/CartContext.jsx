@@ -57,7 +57,7 @@ export function CartProvider({ children }) {
         } else {
           // Если пользователь не авторизован, загружаем через локальный API с сессией
           try {
-            const response = await fetch('/api/cart');
+            const response = await fetch('/api/user/cart');
             
             if (response.ok) {
               const data = await response.json();
@@ -97,7 +97,7 @@ export function CartProvider({ children }) {
     if (!isAuthenticated) {
       // Для неавторизованных пользователей используем локальный API через сессию
       try {
-        const response = await fetch('/api/cart', {
+        const response = await fetch('/api/user/cart', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ export function CartProvider({ children }) {
 
         if (response.ok) {
           // После успешного добавления перезагружаем корзину
-          const cartResponse = await fetch('/api/cart');
+          const cartResponse = await fetch('/api/user/cart');
           
           if (cartResponse.ok) {
             const cartData = await cartResponse.json();
@@ -224,8 +224,8 @@ export function CartProvider({ children }) {
       // Для неавторизованных пользователей используем локальный API через сессию
       try {
         const url = removeAll 
-          ? `/api/cart/${productId}/?all=true`
-          : `/api/cart/${productId}/`;
+          ? `/api/user/cart/${productId}/?all=true`
+          : `/api/user/cart/${productId}/`;
           
         const response = await fetch(url, {
           method: 'DELETE',
@@ -233,7 +233,7 @@ export function CartProvider({ children }) {
 
         if (response.ok) {
           // После успешного удаления перезагружаем корзину
-          const cartResponse = await fetch('/api/cart');
+          const cartResponse = await fetch('/api/user/cart');
           
           if (cartResponse.ok) {
             const cartData = await cartResponse.json();
@@ -372,7 +372,7 @@ export function CartProvider({ children }) {
         if (newQuantity > currentQuantity) {
           // Увеличиваем количество - добавляем разницу
           const difference = newQuantity - currentQuantity;
-          const response = await fetch('/api/cart', {
+          const response = await fetch('/api/user/cart', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -399,7 +399,7 @@ export function CartProvider({ children }) {
           let allRequestsSuccessful = true;
           
           for (let i = 0; i < difference; i++) {
-            const response = await fetch(`/api/cart/${productId}`, {
+            const response = await fetch(`/api/user/cart/${productId}`, {
               method: 'DELETE',
             });
             
