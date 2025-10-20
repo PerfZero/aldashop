@@ -223,6 +223,87 @@ function CategoryPageContent() {
     }
   };
 
+  const parseAllFiltersFromUrl = () => {
+    try {
+      if (typeof window === 'undefined') return {};
+      
+      const url = new URL(window.location.href);
+      const filters = {};
+      
+      if (url.searchParams.get('in_stock') === 'true') {
+        filters.in_stock = true;
+      }
+      
+      if (url.searchParams.get('bestseller') === 'true') {
+        filters.bestseller = true;
+      }
+      
+      const priceMin = url.searchParams.get('price_min');
+      const priceMax = url.searchParams.get('price_max');
+      if (priceMin || priceMax) {
+        filters.price = {};
+        if (priceMin) filters.price.min = parseInt(priceMin);
+        if (priceMax) filters.price.max = parseInt(priceMax);
+      }
+      
+      const colors = url.searchParams.get('colors');
+      if (colors) {
+        filters.colors = colors.split(',').map(c => parseInt(c)).filter(c => !isNaN(c));
+      }
+      
+      const material = url.searchParams.get('material');
+      if (material) {
+        filters.material = material.split(',').map(m => parseInt(m)).filter(m => !isNaN(m));
+      }
+      
+      const widthMin = url.searchParams.get('width_min');
+      const widthMax = url.searchParams.get('width_max');
+      const heightMin = url.searchParams.get('height_min');
+      const heightMax = url.searchParams.get('height_max');
+      const depthMin = url.searchParams.get('depth_min');
+      const depthMax = url.searchParams.get('depth_max');
+      
+      if (widthMin || widthMax || heightMin || heightMax || depthMin || depthMax) {
+        filters.sizes = {};
+        if (widthMin || widthMax) {
+          filters.sizes.width = {};
+          if (widthMin) filters.sizes.width.min = parseInt(widthMin);
+          if (widthMax) filters.sizes.width.max = parseInt(widthMax);
+        }
+        if (heightMin || heightMax) {
+          filters.sizes.height = {};
+          if (heightMin) filters.sizes.height.min = parseInt(heightMin);
+          if (heightMax) filters.sizes.height.max = parseInt(heightMax);
+        }
+        if (depthMin || depthMax) {
+          filters.sizes.depth = {};
+          if (depthMin) filters.sizes.depth.min = parseInt(depthMin);
+          if (depthMax) filters.sizes.depth.max = parseInt(depthMax);
+        }
+      }
+      
+      for (const [key, value] of url.searchParams.entries()) {
+        if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id', 'width_min', 'width_max', 'height_min', 'height_max', 'depth_min', 'depth_max'].includes(key)) {
+          if (value && value.includes(',')) {
+            filters[key] = value.split(',').map(v => {
+              const num = parseInt(v);
+              return isNaN(num) ? v : num;
+            });
+          } else if (value) {
+            const num = parseInt(value);
+            filters[key] = isNaN(num) ? [value] : [num];
+          }
+        }
+      }
+      
+      console.log('🔍 Parsed all filters from URL:', filters);
+      return filters;
+    } catch (error) {
+      console.error('Ошибка при парсинге всех фильтров из URL:', error);
+      return {};
+    }
+  };
+
 
 
   const handleFiltersApply = (newFilters) => {
@@ -393,12 +474,21 @@ function CategoryPageContent() {
   useEffect(() => {
     const urlDynamicFilters = parseDynamicFiltersFromUrl();
     setDynamicFilters(urlDynamicFilters);
+    
+    const urlFilters = parseAllFiltersFromUrl();
+    if (Object.keys(urlFilters).length > 0) {
+      setAppliedFilters(urlFilters);
+    }
   }, []);
 
   useEffect(() => {
     const handleUrlChange = () => {
       const urlDynamicFilters = parseDynamicFiltersFromUrl();
       setDynamicFilters(urlDynamicFilters);
+      
+      const urlFilters = parseAllFiltersFromUrl();
+      setAppliedFilters(urlFilters);
+      
       const saved = sessionStorage.getItem('showFilters');
       console.log('popstate sync showFilters (slug):', saved);
       if (saved !== null) {
@@ -414,6 +504,12 @@ function CategoryPageContent() {
     const handlePageShow = (e) => {
       if (typeof window === 'undefined') return;
       if (e.persisted) {
+        const urlDynamicFilters = parseDynamicFiltersFromUrl();
+        setDynamicFilters(urlDynamicFilters);
+        
+        const urlFilters = parseAllFiltersFromUrl();
+        setAppliedFilters(urlFilters);
+        
         const saved = sessionStorage.getItem('showFilters');
         console.log('pageshow (persisted) sync showFilters (slug):', saved);
         if (saved !== null) {
