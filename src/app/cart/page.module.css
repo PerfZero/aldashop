@@ -122,12 +122,22 @@ flex: 1;
     position: relative;
   }
   
+  .productNameLink {
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .productNameLink:hover .productName {
+    color: #A45B38;
+  }
+
   .productName {
     font-family: "Montserrat", sans-serif;
     font-weight: 500;
     font-size: 18px;
     line-height: 135%;
     color: #323433;
+    transition: color 0.3s ease;
   }
   
   .productArticle {
@@ -640,7 +650,7 @@ color: #a45b38;
 
     .productImage{
       width: 100%;
-      height: 70px;
+      height: auto;
     }
 
     .currency{
