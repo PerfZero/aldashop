@@ -324,6 +324,7 @@ border-radius: 100px;
 
 .filter__colors {
   display: flex;
+  padding: 0 10px;
   flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
@@ -339,7 +340,7 @@ border-radius: 100px;
 }
 
 .colorOption:hover {
-  transform: scale(1.1);
+  transform: scale(1.2);
 }
 
 .colorOptionActive {
@@ -426,10 +427,17 @@ border-radius: 100px;
     width: 100%;
     height: 100vh;
     background: #fff;
+ 
     z-index: 1000;
     display: none;
     flex-direction: column;
   }
+
+  .filters__content .filter{
+    padding: 20px;
+  }
+
+  
   
   .filters.visible {
     display: flex;

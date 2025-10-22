@@ -24,7 +24,7 @@ function CategoryPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState(null);
-  const [appliedFilters, setAppliedFilters] = useState({});
+  const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
   const [categoryId, setCategoryId] = useState(null);
   
   // Отслеживание изменений URL параметров
