@@ -58,36 +58,27 @@ export default function ProductPage({ params }) {
   }, [resolvedParams.id]);
 
   useEffect(() => {
-    if (thumbsSwiper) {
-      const thumbnails = document.querySelectorAll(`.${styles.product__thumbnail}`);
-      thumbnails.forEach((thumb, index) => {
-        if (index === 0) {
-          thumb.classList.add('active');
-        } else {
-          thumb.classList.remove('active');
-        }
-      });
+    if (thumbsSwiper && mainSwiper && !thumbsSwiper.destroyed && !mainSwiper.destroyed) {
+      if (mainSwiper.thumbs) {
+        mainSwiper.thumbs.swiper = thumbsSwiper;
+        mainSwiper.thumbs.init();
+        mainSwiper.thumbs.update();
+      }
     }
-  }, [thumbsSwiper, styles.product__thumbnail]);
+  }, [thumbsSwiper, mainSwiper]);
 
   useEffect(() => {
-    if (product && mainSwiper && thumbsSwiper) {
-      setTimeout(() => {
-        mainSwiper.slideTo(0);
-        thumbsSwiper.slideTo(0);
-        setActiveThumbIndex(0);
-        
-        const thumbnails = document.querySelectorAll(`.${styles.product__thumbnail}`);
-        thumbnails.forEach((thumb, index) => {
-          if (index === 0) {
-            thumb.classList.add('active');
-          } else {
-            thumb.classList.remove('active');
-          }
-        });
-      }, 50);
+    if (product && mainSwiper && thumbsSwiper && !mainSwiper.destroyed && !thumbsSwiper.destroyed) {
+      if (mainSwiper.thumbs) {
+        mainSwiper.thumbs.swiper = thumbsSwiper;
+        mainSwiper.thumbs.init();
+        mainSwiper.thumbs.update();
+      }
+      mainSwiper.slideTo(0);
+      thumbsSwiper.slideTo(0);
+      setActiveThumbIndex(0);
     }
-  }, [product?.id, mainSwiper, thumbsSwiper]);
+  }, [product?.id, selectedColor?.id, mainSwiper, thumbsSwiper]);
 
   const fetchProductDetails = async (productId = null, sizeId = null, colorId = null) => {
     try {
@@ -319,6 +310,8 @@ export default function ProductPage({ params }) {
           'accept': 'application/json',
         },
         body: JSON.stringify(requestData),
+        cache: 'force-cache',
+        next: { revalidate: 300 }
       });
 
       if (response.ok) {
@@ -345,15 +338,21 @@ export default function ProductPage({ params }) {
           ...data
         }));
         
+        if (data.id && data.id !== resolvedParams.id) {
+          const newUrl = `/product/${data.id}`;
+          window.history.replaceState(null, '', newUrl);
+        }
+        
+        setIsChangingOptions(false);
       }
     } catch (error) {
       console.error('Ошибка при получении товара:', error);
-    } finally {
       setIsChangingOptions(false);
     }
   };
 
   const handleColorChange = async (color) => {
+    console.log('🔄 handleColorChange started:', color);
     setIsChangingOptions(true);
     setSelectedColor(color);
     const requestData = {
@@ -361,6 +360,7 @@ export default function ProductPage({ params }) {
       size_id: selectedSize?.id,
       color_id: color.id,
     };
+    console.log('📤 Request data:', requestData);
     
     try {
       const response = await fetch('https://aldalinde.ru/api/products/product-detail/', {
@@ -370,10 +370,13 @@ export default function ProductPage({ params }) {
           'accept': 'application/json',
         },
         body: JSON.stringify(requestData),
+        cache: 'force-cache',
+        next: { revalidate: 300 }
       });
 
       if (response.ok) {
         const data = await response.json();
+        console.log('📥 Response data:', data);
         
         // Добавляем базовый URL к фотографиям только если они относительные
         if (data.photos && Array.isArray(data.photos)) {
@@ -391,14 +394,23 @@ export default function ProductPage({ params }) {
           }));
         }
         
+        console.log('🔄 Setting product with new data');
         setProduct(prevProduct => ({
           ...prevProduct,
           ...data
         }));
+        
+        if (data.id && data.id !== resolvedParams.id) {
+          const newUrl = `/product/${data.id}`;
+          console.log('🔗 URL change:', resolvedParams.id, '->', data.id, newUrl);
+          window.history.replaceState(null, '', newUrl);
+        }
+        
+        console.log('✅ handleColorChange completed');
+        setIsChangingOptions(false);
       }
     } catch (error) {
-      console.error('Ошибка при получении товара:', error);
-    } finally {
+      console.error('❌ Ошибка при получении товара:', error);
       setIsChangingOptions(false);
     }
   };
@@ -429,10 +441,10 @@ export default function ProductPage({ params }) {
           ...data
         }));
         
+        setIsChangingOptions(false);
       }
     } catch (error) {
       console.error('Ошибка при получении товара:', error);
-    } finally {
       setIsChangingOptions(false);
     }
   };
@@ -656,13 +668,16 @@ export default function ProductPage({ params }) {
           {product.photos && product.photos.length > 0 && (
             <>
               <Swiper
+                key={`thumbs-${product.id}-${selectedColor?.id || 'default'}`}
                 onSwiper={setThumbsSwiper}
                 direction={isMobile ? "horizontal" : "vertical"}
                 spaceBetween={10}
-                slidesPerView="auto"
+                slidesPerView={isMobile ? 5 : 4}
                 freeMode={true}
                 watchSlidesProgress={true}
                 loop={false}
+                observer={true}
+                observeParents={true}
                 modules={[FreeMode, Thumbs]}
                 className={styles.product__thumbs_swiper}
               >
@@ -684,11 +699,17 @@ export default function ProductPage({ params }) {
               </Swiper>
               
               <Swiper
+                key={`main-${product.id}-${selectedColor?.id || 'default'}`}
                 onSwiper={setMainSwiper}
+                onSlideChange={(swiper) => {
+                  const realIndex = swiper.realIndex || swiper.activeIndex;
+                  setActiveThumbIndex(realIndex);
+                }}
                 spaceBetween={10}
                 navigation={true}
-                thumbs={{ swiper: thumbsSwiper }}
-                loop={true}
+                watchSlidesProgress={true}
+                observer={true}
+                observeParents={true}
                 modules={[Navigation, Thumbs]}
                 className={styles.product__main_swiper}
               >
@@ -714,12 +735,6 @@ export default function ProductPage({ params }) {
         </div>
         
         <div className={styles.product__info}>
-          {isChangingOptions && (
-            <div className={styles.product__loader}>
-              <div className={styles.product__spinner}></div>
-              <span>Обновление товара...</span>
-            </div>
-          )}
           <div className={styles.product__header}>
             <h1 className={styles.product__title}>
               {product.title} 
