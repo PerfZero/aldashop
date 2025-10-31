@@ -35,6 +35,16 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
         if (data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject) {
           const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
           const address = geoObject.metaDataProperty.GeocoderMetaData.text;
+          const components = geoObject.metaDataProperty.GeocoderMetaData.Address?.Components || [];
+          
+          const country = components.find(c => c.kind === 'country')?.name || '';
+          
+          if (country !== 'Россия') {
+            alert('Доставка возможна только по территории России');
+            setSelectedLocation(null);
+            return;
+          }
+          
           setSelectedAddress(address);
           
           if (onLocationSelect) {
@@ -88,6 +98,16 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
               if (data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject) {
                 const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
                 const address = geoObject.metaDataProperty.GeocoderMetaData.text;
+                const components = geoObject.metaDataProperty.GeocoderMetaData.Address?.Components || [];
+                
+                const country = components.find(c => c.kind === 'country')?.name || '';
+                
+                if (country !== 'Россия') {
+                  alert('Доставка возможна только по территории России');
+                  setSelectedLocation(null);
+                  return;
+                }
+                
                 setSelectedAddress(address);
                 
                 if (onLocationSelect) {
@@ -140,6 +160,9 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
           state={{
             center: mapCenter,
             zoom: 15
+          }}
+          options={{
+            restrictMapArea: [[41.185096, 19.616318], [81.858710, 180.000000]]
           }}
           onClick={handleMapClick}
           instanceRef={mapRef}

@@ -672,7 +672,29 @@ export default function ProductPage({ params }) {
                 onSwiper={setThumbsSwiper}
                 direction={isMobile ? "horizontal" : "vertical"}
                 spaceBetween={10}
-                slidesPerView={isMobile ? 5 : 4}
+                slidesPerView={isMobile ? 4 : 7}
+                breakpoints={{
+                  230: {
+                    slidesPerView: 4,
+                    direction: "horizontal"
+                  },
+                  430: {
+                    slidesPerView: 4,
+                    direction: "horizontal"
+                  },
+                  768: {
+                    slidesPerView: 6,
+                    direction: "vertical"
+                  },
+                  1440: {
+                    slidesPerView: 5,
+                    direction: "vertical"
+                  },
+                  1441: {
+                    slidesPerView: 7,
+                    direction: "vertical"
+                  }
+                }}
                 freeMode={true}
                 watchSlidesProgress={true}
                 loop={false}

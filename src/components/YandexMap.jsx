@@ -306,6 +306,9 @@ const YandexMap = ({
             zoom: initialZoom,
             controls: []
           }}
+          options={{
+            restrictMapArea: [[41.185096, 19.616318], [81.858710, 180.000000]]
+          }}
           width="100%"
           height={height}
           onClick={handleMapClick}

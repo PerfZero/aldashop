@@ -40,48 +40,55 @@ const AddressSelector = ({
       if (window.ymaps) {
         const geocoder = window.ymaps.geocode(query, {
           results: 5,
-          boundedBy: [[43.0, 39.0], [44.0, 40.0]], // Ограничиваем поиск Сочи и окрестностями
-          strictBounds: false
+          boundedBy: [[41.185096, 19.616318], [81.858710, 180.000000]],
+          strictBounds: true
         });
 
         geocoder.then((res) => {
-          const suggestions = res.geoObjects.toArray().map((geoObject) => {
-            const address = geoObject.getAddressLine();
-            const coords = geoObject.geometry.getCoordinates();
-            const components = geoObject.properties.get('metaDataProperty')?.GeocoderMetaData?.Address?.Components || [];
-            
-            let region = '';
-            let city = '';
-            let street = '';
-            let house = '';
-            
-            components.forEach(component => {
-              switch (component.kind) {
-                case 'administrative_area_level_1':
-                  region = component.name;
-                  break;
-                case 'locality':
-                  city = component.name;
-                  break;
-                case 'route':
-                  street = component.name;
-                  break;
-                case 'street_number':
-                  house = component.name;
-                  break;
-              }
-            });
+          const suggestions = res.geoObjects.toArray()
+            .map((geoObject) => {
+              const address = geoObject.getAddressLine();
+              const coords = geoObject.geometry.getCoordinates();
+              const components = geoObject.properties.get('metaDataProperty')?.GeocoderMetaData?.Address?.Components || [];
+              
+              let country = '';
+              let region = '';
+              let city = '';
+              let street = '';
+              let house = '';
+              
+              components.forEach(component => {
+                switch (component.kind) {
+                  case 'country':
+                    country = component.name;
+                    break;
+                  case 'administrative_area_level_1':
+                    region = component.name;
+                    break;
+                  case 'locality':
+                    city = component.name;
+                    break;
+                  case 'route':
+                    street = component.name;
+                    break;
+                  case 'street_number':
+                    house = component.name;
+                    break;
+                }
+              });
 
-            return {
-              address,
-              coordinates: coords,
-              region,
-              city,
-              street,
-              house,
-              components
-            };
-          });
+              return {
+                address,
+                coordinates: coords,
+                country,
+                region,
+                city,
+                street,
+                house,
+                components
+              };
+            })
+            .filter(suggestion => suggestion.country === 'Россия');
           
           setSuggestions(suggestions);
           setIsLoading(false);

@@ -63,6 +63,17 @@ const CartMap = ({ onLocationSelect }) => {
         if (data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject) {
           const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
           const address = geoObject.metaDataProperty.GeocoderMetaData.text;
+          const components = geoObject.metaDataProperty.GeocoderMetaData.Address?.Components || [];
+          
+          const country = components.find(c => c.kind === 'country')?.name || '';
+          
+          if (country !== 'Россия') {
+            alert('Доставка возможна только по территории России');
+            setSelectedLocation(null);
+            setSelectedAddress('');
+            return;
+          }
+          
           console.log('CartMap: Адрес клика получен:', address);
           setSelectedAddress(address);
           
@@ -126,10 +137,20 @@ const CartMap = ({ onLocationSelect }) => {
               if (data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject) {
                 const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
                 const address = geoObject.metaDataProperty.GeocoderMetaData.text;
+                const components = geoObject.metaDataProperty.GeocoderMetaData.Address?.Components || [];
+                
+                const country = components.find(c => c.kind === 'country')?.name || '';
+                
+                if (country !== 'Россия') {
+                  alert('Доставка возможна только по территории России');
+                  setSelectedLocation(null);
+                  setSelectedAddress('');
+                  return;
+                }
+                
                 console.log('CartMap: HTTP адрес получен:', address);
                 setSelectedAddress(address);
                 
-                // Также вызываем callback если есть
                 if (onLocationSelect) {
                   const locationData = {
                     coordinates: userCoords,
@@ -268,6 +289,9 @@ const CartMap = ({ onLocationSelect }) => {
             state={{
               center: mapCenter,
               zoom: 15
+            }}
+            options={{
+              restrictMapArea: [[41.185096, 19.616318], [81.858710, 180.000000]]
             }}
             width="100%"
             height="100%"
