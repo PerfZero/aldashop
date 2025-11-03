@@ -73,10 +73,10 @@ export default function OrderDetailsPage({ params }) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch('/api/admin/manager/products/search-by-article', {
+      const response = await fetch('https://aldalinde.ru/api/admin_backend/manager/products/search-by-article', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ data: { article: article.trim() } }),
+        body: JSON.stringify({ article: article.trim() }),
       });
 
       if (!response.ok) {
@@ -146,7 +146,7 @@ export default function OrderDetailsPage({ params }) {
       };
 
       // Пробуем запрос к API менеджера
-      const response = await fetch(`/api/admin/manager/order/${id}`, {
+      const response = await fetch(`https://aldalinde.ru/api/admin_backend/manager/order/${id}`, {
         headers
       });
 
@@ -200,8 +200,8 @@ export default function OrderDetailsPage({ params }) {
       }
 
       const apiUrl = isManager 
-        ? `/api/admin/manager/order/${id}`
-        : `/api/admin/storage/order/${id}`;
+        ? `https://aldalinde.ru/api/admin_backend/manager/order/${id}`
+        : `https://aldalinde.ru/api/admin_backend/storage/order/${id}`;
 
       const response = await fetch(apiUrl, {
         headers
@@ -317,8 +317,8 @@ export default function OrderDetailsPage({ params }) {
       }
 
       const apiUrl = isManager 
-        ? `/api/admin/manager/order/${id}/update`
-        : `/api/admin/storage/order/${id}/update`;
+        ? `https://aldalinde.ru/api/admin_backend/manager/order/${id}/update`
+        : `https://aldalinde.ru/api/admin_backend/storage/order/${id}/update`;
 
       const response = await fetch(apiUrl, {
         method: 'PATCH',

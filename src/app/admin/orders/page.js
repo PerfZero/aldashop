@@ -66,7 +66,7 @@ export default function OrdersPage() {
       };
 
       // Пробуем запрос к API менеджера
-      const response = await fetch('/api/admin/manager/orders?page=1&page_size=1', {
+      const response = await fetch('https://aldalinde.ru/api/admin_backend/manager/orders?page=1&page_size=1', {
         headers
       });
 
@@ -127,7 +127,7 @@ export default function OrdersPage() {
         if (showCancelled) params.append('is_canceled', 'true');
         if (showManagerProcessed) params.append('processed', 'true');
 
-        const response = await fetch(`/api/admin/manager/orders?${params.toString()}`, {
+        const response = await fetch(`https://aldalinde.ru/api/admin_backend/manager/orders?${params.toString()}`, {
           headers
         });
 
@@ -152,7 +152,7 @@ export default function OrdersPage() {
         if (deliveryDate) params.append('delivery_date', deliveryDate);
         if (comment) params.append('comment', comment);
 
-        const response = await fetch(`/api/admin/storage/orders?${params.toString()}`, {
+        const response = await fetch(`https://aldalinde.ru/api/admin_backend/storage/orders?${params.toString()}`, {
           headers
         });
 
