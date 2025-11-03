@@ -60,7 +60,7 @@ const YandexMap = ({
           const address = firstGeoObject.getAddressLine();
           const components = firstGeoObject.properties.get('metaDataProperty')?.GeocoderMetaData?.Address?.Components || [];
           
-          // Извлекаем компоненты адреса
+          let country = '';
           let region = '';
           let city = '';
           let street = '';
@@ -68,6 +68,9 @@ const YandexMap = ({
           
           components.forEach(component => {
             switch (component.kind) {
+              case 'country':
+                country = component.name;
+                break;
               case 'administrative_area_level_1':
                 region = component.name;
                 break;
@@ -82,6 +85,12 @@ const YandexMap = ({
                 break;
             }
           });
+          
+          if (country !== 'Россия') {
+            alert('Доставка возможна только по территории России');
+            setSelectedLocation(null);
+            return;
+          }
           
           const locationData = {
             coordinates: coords,

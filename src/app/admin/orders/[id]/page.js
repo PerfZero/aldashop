@@ -1,66 +1,404 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, use, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import YandexMap from '../../../../components/YandexMap';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
 import styles from './orderDetails.module.css';
 
-// Имитация данных заказа
-const getMockOrderData = (id) => {
-  return {
-    id: id,
-    status: 'Оплачен',
-    deliveryDate: '23.09.2025',
-    address: '',
-    customer: 'Иванов Иван Иванович',
-    phone: '+7 (999) 123-45-67',
-    email: 'ivanov@example.com',
-    total: '50 000 руб.',
-    items: [
-      {
-        id: 1,
-        name: 'Диван-кровать Скаген бежевого цвета',
-        sku: 'IMR-1798647',
-        color: 'Велюр',
-        size: '235x90x135 см',
-        price: '25 000 ₽',
-        quantity: 1,
-        image: '/products/sofa.jpg'
-      },
-      {
-        id: 2,
-        name: 'Диван-кровать Скаген бежевого цвета',
-        sku: 'IMR-1798647',
-        color: 'Велюр',
-        size: '235x90x135 см',
-        price: '25 000 ₽',
-        quantity: 1,
-        image: '/products/sofa.jpg'
-      }
-    ],
-    comment: ''
-  };
+const statusMap = {
+  'awaiting': 'Новый',
+  'accept': 'Подтвержден',
+  'paid': 'Оплачен',
+  'assembled': 'Собран',
+  'sent': 'Отправлен',
+  'received': 'Получен',
+  'canceled': 'Отменен'
 };
 
 export default function OrderDetailsPage({ params }) {
-  const { id } = params;
-  const order = getMockOrderData(id);
+  const { id } = use(params);
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   
-  const [status, setStatus] = useState(order.status);
-  const [deliveryDate, setDeliveryDate] = useState(order.deliveryDate);
-  const [address, setAddress] = useState(order.address);
-  const [comment, setComment] = useState(order.comment);
-  
-  const handleSaveStatus = () => {
-    // Логика сохранения статуса заказа
-    alert('Статус заказа обновлен');
+  const [isManager, setIsManager] = useState(null); // null = проверка, true = менеджер, false = склад
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [status, setStatus] = useState('');
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [address, setAddress] = useState('');
+  const [comment, setComment] = useState('');
+  const [clientFirstName, setClientFirstName] = useState('');
+  const [clientLastName, setClientLastName] = useState('');
+  const [clientPatronymic, setClientPatronymic] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [inn, setInn] = useState('');
+  const [isProcessed, setIsProcessed] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [productsToRemove, setProductsToRemove] = useState([]);
+  const [newProductArticle, setNewProductArticle] = useState('');
+  const [productsToAdd, setProductsToAdd] = useState([]);
+  const [searchResults, setSearchResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
+
+  const formatPrice = (price) => {
+    if (!price) return '0';
+    return price.toLocaleString('ru-RU');
+  };
+
+  const searchProductByArticle = async (article) => {
+    if (!article.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch('/api/admin/manager/products/search-by-article', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ data: { article: article.trim() } }),
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          setSearchResults([]);
+          return;
+        } else {
+          const errorData = await response.json();
+          console.error('Ошибка поиска товара:', errorData);
+          throw new Error(errorData.error || errorData.details || 'Ошибка при поиске товара');
+        }
+      }
+
+      const data = await response.json();
+      setSearchResults(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setSearchResults([]);
+      console.error('Ошибка поиска товара:', err);
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const searchTimeoutRef = useRef(null);
+
+  const handleArticleChange = (value) => {
+    setNewProductArticle(value);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (value.trim()) {
+      searchTimeoutRef.current = setTimeout(() => {
+        searchProductByArticle(value);
+      }, 500);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const addProductToOrder = (product) => {
+    const article = product.generated_article || product.article;
+    if (article && !productsToAdd.includes(article)) {
+      setProductsToAdd([...productsToAdd, article]);
+      setNewProductArticle('');
+      setSearchResults([]);
+    }
+  };
+
+  const checkUserRole = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return false;
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+
+      // Пробуем запрос к API менеджера
+      const response = await fetch(`/api/admin/manager/order/${id}`, {
+        headers
+      });
+
+      if (response.ok || response.status === 400) {
+        setIsManager(true);
+        return true;
+      } else if (response.status === 403) {
+        setIsManager(false);
+        return false;
+      } else {
+        setIsManager(false);
+        return false;
+      }
+    } catch (err) {
+      setIsManager(false);
+      return false;
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/');
+      return;
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    const initialize = async () => {
+      if (!authLoading && isAuthenticated) {
+        if (isManager === null) {
+          await checkUserRole();
+        }
+        if (isManager !== null) {
+          await fetchOrder();
+        }
+      }
+    };
+    initialize();
+  }, [id, isManager, authLoading, isAuthenticated]);
+
+  const fetchOrder = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const apiUrl = isManager 
+        ? `/api/admin/manager/order/${id}`
+        : `/api/admin/storage/order/${id}`;
+
+      const response = await fetch(apiUrl, {
+        headers
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка при загрузке заказа');
+      }
+
+      const data = await response.json();
+      setOrder(data);
+      setStatus(data.status || '');
+      setAddress(data.address || '');
+      setComment(data.comment || '');
+      
+      if (isManager) {
+        // Поля только для менеджера
+        setClientFirstName(data.client_first_name || '');
+        setClientLastName(data.client_last_name || '');
+        setClientPatronymic(data.client_patronymic || '');
+        setPhone(data.phone || '');
+        setEmail(data.email || '');
+        setInn(data.inn || '');
+        setIsProcessed(data.is_processed || false);
+        if (data.order_date) {
+          setDeliveryDate(formatDate(data.order_date));
+        }
+      } else {
+        // Для склада используем received_date если есть
+        if (data.received_date) {
+          setDeliveryDate(formatDate(data.received_date));
+        }
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const handleSaveStatus = async () => {
+    setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+    
+    try {
+      const updateData = {};
+      
+      if (status && status !== order.status) {
+        updateData.status = status;
+      }
+      
+      if (comment !== undefined && comment !== (order.comment || '')) {
+        updateData.comment = comment;
+      }
+
+      if (isManager) {
+        // Поля только для менеджера
+        if (address !== undefined && address !== (order.address || '')) {
+          updateData.address = typeof address === 'string' ? address : address;
+        }
+
+        if (productsToRemove.length > 0) {
+          updateData.remove_products = productsToRemove;
+        }
+
+        if (productsToAdd.length > 0) {
+          updateData.add_products = productsToAdd;
+        }
+
+        if (clientFirstName !== undefined && clientFirstName !== (order.client_first_name || '')) {
+          updateData.client_first_name = clientFirstName;
+        }
+
+        if (clientLastName !== undefined && clientLastName !== (order.client_last_name || '')) {
+          updateData.client_last_name = clientLastName;
+        }
+
+        if (clientPatronymic !== undefined && clientPatronymic !== (order.client_patronymic || '')) {
+          updateData.client_patronymic = clientPatronymic;
+        }
+
+        if (phone !== undefined && phone !== (order.phone || '')) {
+          updateData.phone = phone;
+        }
+
+        if (email !== undefined && email !== (order.email || '')) {
+          updateData.email = email;
+        }
+
+        if (inn !== undefined && inn !== (order.inn || '')) {
+          updateData.inn = inn;
+        }
+
+        if (isProcessed !== undefined && isProcessed !== (order.is_processed || false)) {
+          updateData.is_processed = isProcessed;
+        }
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+        return;
+      }
+
+      const token = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const apiUrl = isManager 
+        ? `/api/admin/manager/order/${id}/update`
+        : `/api/admin/storage/order/${id}/update`;
+
+      const response = await fetch(apiUrl, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(updateData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Ошибка при обновлении заказа');
+      }
+
+      const data = await response.json();
+      setSaveSuccess(true);
+      
+      if (data.order) {
+        setOrder(data.order);
+        setStatus(data.order.status || '');
+        setAddress(data.order.address || '');
+        setComment(data.order.comment || '');
+        
+        if (isManager) {
+          setClientFirstName(data.order.client_first_name || '');
+          setClientLastName(data.order.client_last_name || '');
+          setClientPatronymic(data.order.client_patronymic || '');
+          setPhone(data.order.phone || '');
+          setEmail(data.order.email || '');
+          setInn(data.order.inn || '');
+          setIsProcessed(data.order.is_processed || false);
+          setProductsToRemove([]);
+          setProductsToAdd([]);
+          setNewProductArticle('');
+        }
+      } else {
+        // Если API склада возвращает заказ напрямую
+        setOrder(data);
+        setStatus(data.status || '');
+        setComment(data.comment || '');
+      }
+      
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      setSaveError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (authLoading || !isAuthenticated || isManager === null || loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.content}>
+          <p>Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.content}>
+          <p style={{ color: 'red' }}>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.content}>
+          <p>Заказ не найден</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className={styles.container}>
-      
-    
-    
       <div className={styles.content}>
         <div className={styles.orderHeader}>
           <Link href="/admin/orders" className={styles.backButton}>
@@ -69,8 +407,8 @@ export default function OrderDetailsPage({ params }) {
             </svg>
             Вернуться
           </Link>
-          <h1 className={styles.title}>Заказ №{id}</h1>
-          <div className={styles.orderTime}>Прошло: 00 ч 00 м</div>
+          <h1 className={styles.title}>Заказ №{order.order_number || id}</h1>
+          <div className={styles.orderTime}>Прошло: {order.processing_time || '00 ч 00 м'}</div>
         </div>
         
         <div className={styles.orderDetails}>
@@ -113,14 +451,19 @@ export default function OrderDetailsPage({ params }) {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 className={styles.formInput}
+                disabled={!isManager && order.can_change_status === false}
               >
-                <option value="Новый">Новый</option>
-                <option value="Подтвержден">Подтвержден</option>
-                <option value="Оплачен">Оплачен</option>
-                <option value="Отправлен">Отправлен</option>
-                <option value="Доставлен">Доставлен</option>
-                <option value="Получен">Получен</option>
-                <option value="Отменен">Отменен</option>
+                {order.available_statuses && order.available_statuses.length > 0 ? (
+                  order.available_statuses.map(statusVal => (
+                    <option key={statusVal} value={statusVal}>
+                      {statusMap[statusVal] || statusVal}
+                    </option>
+                  ))
+                ) : (
+                  Object.entries(statusMap).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))
+                )}
               </select>
               <button className={styles.editButton}>
               <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -130,6 +473,94 @@ export default function OrderDetailsPage({ params }) {
               </button>
             </div>
           </div>
+          
+          {isManager && (
+            <>
+              <div className={styles.formGroup}>
+                <label>Фамилия клиента:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={clientLastName}
+                    onChange={(e) => setClientLastName(e.target.value)}
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Имя клиента:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={clientFirstName}
+                    onChange={(e) => setClientFirstName(e.target.value)}
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Отчество клиента:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={clientPatronymic}
+                    onChange={(e) => setClientPatronymic(e.target.value)}
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Телефон:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Email:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>ИНН организации:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={inn}
+                    onChange={(e) => setInn(e.target.value)}
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Обработан менеджером:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="checkbox"
+                    checked={isProcessed}
+                    onChange={(e) => setIsProcessed(e.target.checked)}
+                    style={{ width: 'auto', height: 'auto' }}
+                  />
+                </div>
+              </div>
+            </>
+          )}
           
           <div className={styles.formGroup}>
             <label>Комментарий (любое слово из комментария):</label>
@@ -142,49 +573,240 @@ export default function OrderDetailsPage({ params }) {
             />
           </div>
           
-          <div className={styles.formGroup}>
-            <label>Адрес доставки на карте:</label>
-            <YandexMap
-              onLocationSelect={(locationData) => {
-                setAddress(locationData.address);
-                console.log('Выбран адрес:', locationData);
-              }}
-              initialCenter={[43.585472, 39.723098]}
-              initialZoom={12}
-              height="250px"
-              showGeolocation={true}
-              showSearch={true}
-            />
-          </div>
+          {order.address && (
+            <div className={styles.formGroup}>
+              <label>Адрес доставки на карте:</label>
+              <YMaps 
+                query={{
+                  apikey: 'aa9feae8-022d-44d2-acb1-8cc0198f451d',
+                  lang: 'ru_RU',
+                  load: 'package.full'
+                }}
+              >
+                <Map
+                  state={{
+                    center: [43.585472, 39.723098],
+                    zoom: 15
+                  }}
+                  width="100%"
+                  height="250px"
+                  options={{
+                    restrictMapArea: [[41.185096, 19.616318], [81.858710, 180.000000]]
+                  }}
+                >
+                  <Placemark
+                    geometry={[43.585472, 39.723098]}
+                    options={{
+                      preset: 'islands#redDotIcon'
+                    }}
+                    properties={{
+                      balloonContent: order.address
+                    }}
+                  />
+                </Map>
+              </YMaps>
+            </div>
+          )}
           
         
   
         </div>
+        
+        {isManager && (
+          <div className={styles.addProductSection}>
+              <h3 className={styles.addProductTitle}>Добавить товар</h3>
+              <div className={styles.addProductInputWrapper}>
+                <div className={styles.addProductInputRow}>
+                  <input
+                    type="text"
+                    value={newProductArticle}
+                    onChange={(e) => handleArticleChange(e.target.value)}
+                    placeholder="Введите артикул товара"
+                    className={styles.addProductInput}
+                  />
+                  <button
+                    onClick={() => {
+                      if (searchResults.length > 0 && searchResults[0]) {
+                        addProductToOrder(searchResults[0]);
+                      }
+                    }}
+                    className={styles.addProductButton}
+                    disabled={searchResults.length === 0 || searching || !newProductArticle.trim()}
+                  >
+                    Добавить
+                  </button>
+                  {searching && (
+                    <span className={styles.searchingText}>Поиск...</span>
+                  )}
+                </div>
+                
+                {searchResults.length > 0 && (
+                  <div className={styles.searchResults}>
+                    {searchResults.map((product, index) => (
+                      <div
+                        key={product.id || index}
+                        onClick={() => addProductToOrder(product)}
+                        className={styles.searchResultItem}
+                      >
+                        <div className={styles.searchResultContent}>
+                          <div className={styles.searchResultTitle}>
+                            {product.title || product.full_name || 'Товар'}
+                          </div>
+                          <div className={styles.searchResultSku}>
+                            Артикул: {product.generated_article || product.article || ''}
+                          </div>
+                          {product.price && (
+                            <div className={styles.searchResultPrice}>
+                              {formatPrice(product.price)} ₽
+                            </div>
+                          )}
+                          {product.color && (
+                            <div className={styles.searchResultColor}>
+                              <span 
+                                className={styles.searchResultColorCircle}
+                                style={{
+                                  background: `#${product.color.code_hex || 'cfc2b0'}`,
+                                  border: '1px solid #bdbdbd'
+                                }}
+                              ></span>
+                              <span className={styles.searchResultColorText}>{product.color.title || product.color.name || ''}</span>
+                            </div>
+                          )}
+                          {product.sizes && (
+                            <div className={styles.searchResultSizes}>
+                              {product.sizes.width && `${product.sizes.width}×`}
+                              {product.sizes.height && `${product.sizes.height}×`}
+                              {product.sizes.depth && product.sizes.depth}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addProductToOrder(product);
+                          }}
+                          className={styles.searchResultAddButton}
+                        >
+                          Добавить
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {productsToAdd.length > 0 && (
+                <div className={styles.productsToAddList}>
+                  <p className={styles.productsToAddTitle}>Товары для добавления:</p>
+                  {productsToAdd.map((article, index) => (
+                    <div key={index} className={styles.productsToAddItem}>
+                      <span>{article}</span>
+                      <button
+                        onClick={() => setProductsToAdd(productsToAdd.filter((_, i) => i !== index))}
+                        className={styles.productsToAddItemRemove}
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        
         <h2 className={styles.sectionTitle}>Позиции заказа</h2>
           
-          {order.items.map(item => (
-            <div key={item.id} className={styles.productCard}>
-              <div className={styles.productImage}>
-                <img src={item.image || '/placeholder.jpg'} alt={item.name} />
-              </div>
-              <div className={styles.productDetails}>
-                <div className={styles.productName}>{item.name}</div>
-                <div className={styles.productSku}>Артикул: {item.sku}</div>
-                <div className={styles.productRow}>
-                  <span className={styles.colorCircle} style={{background: '#cfc2b0'}}></span>
-                  <span className={styles.productDivider}>|</span>
-
-                  <span className={styles.productMaterial}>Велюр</span>
-                  <span className={styles.productDivider}>|</span>
-                  <span className={styles.productSize}>{item.size}</span>
+          {order.products && order.products.length > 0 ? (
+            order.products.map(product => {
+              const isMarkedForRemoval = productsToRemove.includes(product.id);
+              return (
+                <div key={product.id} className={`${styles.productCard} ${styles.productCardFlex} ${isMarkedForRemoval ? styles.productCardRemoved : ''}`}>
+                  <div className={styles.productImage}>
+                    <img 
+                      src={
+                        product.photos && product.photos.length > 0 
+                          ? (product.photos[0].startsWith('http') 
+                              ? product.photos[0] 
+                              : `https://aldalinde.ru${product.photos[0]}`)
+                          : '/placeholder.jpg'
+                      } 
+                      alt={product.full_name || 'Товар'} 
+                    />
+                  </div>
+                  <div className={`${styles.productDetails} ${styles.productDetailsFlex}`}>
+                    <div className={styles.productName}>{product.full_name || ''}</div>
+                    {product.article && (
+                      <div className={styles.productSku}>Артикул: {product.article}</div>
+                    )}
+                    <div className={styles.productRow}>
+                      {product.color && (
+                        <>
+                          <span className={styles.colorCircle} style={{background: `#${product.color.code_hex || product.color.hex || 'cfc2b0'}`}}></span>
+                          <span className={styles.productDivider}>|</span>
+                          <span>{product.color.title || product.color.name || ''}</span>
+                          <span className={styles.productDivider}>|</span>
+                        </>
+                      )}
+                      {product.material && (
+                        <>
+                          <span className={styles.productMaterial}>{product.material}</span>
+                          {product.sizes && <span className={styles.productDivider}>|</span>}
+                        </>
+                      )}
+                      {product.sizes && (
+                        <span className={styles.productSize}>
+                          {product.sizes.width && `${product.sizes.width}×`}
+                          {product.sizes.height && `${product.sizes.height}×`}
+                          {product.sizes.depth && product.sizes.depth}
+                          {!product.sizes.width && !product.sizes.height && !product.sizes.depth && 
+                            Object.entries(product.sizes).map(([key, value]) => `${key}: ${value}`).join(', ')
+                          }
+                        </span>
+                      )}
+                    </div>
+                    {isMarkedForRemoval && (
+                      <div className={styles.removeWarning}>Товар будет удален при сохранении</div>
+                    )}
+                  </div>
+                  <div className={styles.productActions}>
+                    <div className={`${styles.productQuantity} ${styles.productQuantityRight}`}>{product.quantity || 1} шт.</div>
+                    {isManager && (
+                      <button
+                        onClick={() => {
+                          if (isMarkedForRemoval) {
+                            setProductsToRemove(productsToRemove.filter(id => id !== product.id));
+                          } else {
+                            setProductsToRemove([...productsToRemove, product.id]);
+                          }
+                        }}
+                        className={`${styles.removeProductButton} ${isMarkedForRemoval ? styles.removeProductButtonRestore : ''}`}
+                      >
+                        {isMarkedForRemoval ? 'Отменить удаление' : 'Удалить'}
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className={styles.productPrice}>{item.price.replace(' ₽','').replace('руб.','').replace(',','.')}&nbsp;<span className={styles.productCurrency}>₽</span></div>
-              </div>
+              );
+            })
+          ) : (
+            <p>Товары не найдены</p>
+          )}
+          
+            <div className={styles.saveActions}>
+              {saveError && (
+                <p className={styles.saveError}>{saveError}</p>
+              )}
+              {saveSuccess && (
+                <p className={styles.saveSuccess}>Заказ успешно обновлен</p>
+              )}
+              <button 
+                className={styles.saveButton} 
+                onClick={handleSaveStatus}
+                disabled={saving}
+              >
+                {saving ? 'Сохранение...' : 'Сохранить изменения'}
+              </button>
             </div>
-          ))}
-            <button className={styles.saveButton} onClick={handleSaveStatus}>
-            Сохранить статус
-          </button>
           
       </div>
       

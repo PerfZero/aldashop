@@ -1,115 +1,259 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useAuth } from '../../../contexts/AuthContext';
 import styles from './orders.module.css';
 
-// Имитация данных заказов
-const MOCK_ORDERS = [
-  {
-    id: '32232',
-    customer: 'Иванов Иван Иванович',
-    itemsCount: 2,
-    total: '50 000 руб.',
-    date: '22.02.2023',
-    status: 'Получен',
-    timeElapsed: '37ч 10м',
-    inn: '7701234567',
-    managerProcessed: true,
-    cancelled: false
-  },
-  {
-    id: '23223',
-    customer: 'Иванов Иван Иванович',
-    itemsCount: 1,
-    total: '15 000 руб.',
-    date: '02.12.2023',
-    status: 'Получен',
-    timeElapsed: '37ч 10м',
-    inn: '7707654321',
-    managerProcessed: false,
-    cancelled: true
-  },
-  {
-    id: '33232',
-    customer: 'Иванов Иван Иванович',
-    itemsCount: 2,
-    total: '50 000 руб.',
-    date: '22.02.2023',
-    status: 'Получен',
-    timeElapsed: '37ч 10м',
-    inn: '7701122334',
-    managerProcessed: true,
-    cancelled: false
-  }
+const statusMap = {
+  'awaiting': 'Новый',
+  'accept': 'Подтвержден',
+  'paid': 'Оплачен',
+  'assembled': 'Собран',
+  'sent': 'Отправлен',
+  'received': 'Получен',
+  'canceled': 'Отменен'
+};
+
+const statusOptions = [
+  { value: 'awaiting', label: 'Новый' },
+  { value: 'accept', label: 'Подтвержден' },
+  { value: 'paid', label: 'Оплачен' },
+  { value: 'assembled', label: 'Собран' },
+  { value: 'sent', label: 'Отправлен' },
+  { value: 'received', label: 'Получен' },
+  { value: 'canceled', label: 'Отменен' }
 ];
 
 export default function OrdersPage() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const [isManager, setIsManager] = useState(null); // null = проверка, true = менеджер, false = склад
   const [orderNumber, setOrderNumber] = useState('');
   const [orderStatus, setOrderStatus] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
+  const [orderDate, setOrderDate] = useState('');
+  const [orderDateFrom, setOrderDateFrom] = useState('');
+  const [orderDateTo, setOrderDateTo] = useState('');
   const [comment, setComment] = useState('');
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const statusOptions = [
-    "Новый",
-    "Подтвержден",
-    "Оплачен",
-    "Отправлен",
-    "Доставлен",
-    "Получен",
-    "Отменен"
-  ];
-  const [filteredOrders, setFilteredOrders] = useState(MOCK_ORDERS);
-  const [showExtraFields, setShowExtraFields] = useState(false);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [orderDate, setOrderDate] = useState('');
   const [address, setAddress] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [middleName, setMiddleName] = useState('');
   const [inn, setInn] = useState('');
-  const [managerProcessed, setManagerProcessed] = useState('');
-  const [orderSum, setOrderSum] = useState('');
+  const [sumFrom, setSumFrom] = useState('');
+  const [sumTo, setSumTo] = useState('');
   const [showCancelled, setShowCancelled] = useState(false);
   const [showManagerProcessed, setShowManagerProcessed] = useState(false);
 
+  const checkUserRole = async () => {
+    const token = localStorage.getItem('accessToken');
+    if (!token) return false;
+
+    try {
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+
+      // Пробуем запрос к API менеджера
+      const response = await fetch('/api/admin/manager/orders?page=1&page_size=1', {
+        headers
+      });
+
+      if (response.ok || response.status === 400) {
+        // 200 или 400 означает, что у пользователя есть доступ к API менеджера
+        setIsManager(true);
+        return true;
+      } else if (response.status === 403) {
+        // 403 означает, что нет доступа к API менеджера, значит это склад
+        setIsManager(false);
+        return false;
+      } else {
+        // Для других ошибок пробуем API склада
+        setIsManager(false);
+        return false;
+      }
+    } catch (err) {
+      // При ошибке предполагаем, что это склад
+      setIsManager(false);
+      return false;
+    }
+  };
+
+  const fetchOrders = async (pageNum = 1) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem('accessToken');
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      if (isManager) {
+        // Логика для менеджера
+        const params = new URLSearchParams({
+          page: pageNum.toString(),
+          page_size: '20'
+        });
+
+        if (orderNumber) params.append('order_id', orderNumber);
+        if (orderStatus) params.append('status', orderStatus);
+        if (phone) params.append('phone', phone);
+        if (email) params.append('email', email);
+        if (orderDate) params.append('order_date', orderDate);
+        if (orderDateFrom) params.append('order_date_from', orderDateFrom);
+        if (orderDateTo) params.append('order_date_to', orderDateTo);
+        if (address) params.append('address', address);
+        if (firstName) params.append('first_name', firstName);
+        if (lastName) params.append('last_name', lastName);
+        if (middleName) params.append('patronymic', middleName);
+        if (inn) params.append('inn', inn);
+        if (comment) params.append('comment', comment);
+        if (sumFrom) params.append('sum_from', sumFrom);
+        if (sumTo) params.append('sum_to', sumTo);
+        if (showCancelled) params.append('is_canceled', 'true');
+        if (showManagerProcessed) params.append('processed', 'true');
+
+        const response = await fetch(`/api/admin/manager/orders?${params.toString()}`, {
+          headers
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Ошибка при загрузке заказов');
+        }
+
+        const data = await response.json();
+        setOrders(data.results || []);
+        setTotalPages(data.total_pages || 1);
+        setPage(pageNum);
+      } else {
+        // Логика для склада
+        const params = new URLSearchParams({
+          page: pageNum.toString(),
+          page_size: '20'
+        });
+
+        if (orderNumber) params.append('order_number', orderNumber);
+        if (orderStatus) params.append('status', orderStatus);
+        if (deliveryDate) params.append('delivery_date', deliveryDate);
+        if (comment) params.append('comment', comment);
+
+        const response = await fetch(`/api/admin/storage/orders?${params.toString()}`, {
+          headers
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Ошибка при загрузке заказов');
+        }
+
+        const data = await response.json();
+        setOrders(data.results || []);
+        setTotalPages(data.total_pages || 1);
+        setPage(pageNum);
+      }
+    } catch (err) {
+      setError(err.message);
+      setOrders([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/');
+      return;
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  useEffect(() => {
+    const initialize = async () => {
+      if (!authLoading && isAuthenticated) {
+        if (isManager === null) {
+          await checkUserRole();
+        }
+        if (isManager !== null) {
+          await fetchOrders();
+        }
+      }
+    };
+    initialize();
+  }, [isManager, authLoading, isAuthenticated]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    let filtered = MOCK_ORDERS.filter(order => {
-      const matchesNumber = orderNumber === '' || order.id.includes(orderNumber);
-      const matchesStatus = orderStatus === '' || order.status === orderStatus;
-      const matchesDate = deliveryDate === '' || order.date === deliveryDate.split('-').reverse().join('.');
-      // В MOCK_ORDERS нет комментариев, поэтому фильтрация по комментарию не работает
-      return matchesNumber && matchesStatus && matchesDate;
-    });
-    setFilteredOrders(filtered);
+    fetchOrders(1);
   };
 
   const handleReset = () => {
     setOrderNumber('');
     setOrderStatus('');
     setDeliveryDate('');
+    setOrderDate('');
+    setOrderDateFrom('');
+    setOrderDateTo('');
     setComment('');
-    setFilteredOrders(MOCK_ORDERS);
+    setPhone('');
+    setEmail('');
+    setAddress('');
+    setFirstName('');
+    setLastName('');
+    setMiddleName('');
+    setInn('');
+    setSumFrom('');
+    setSumTo('');
+    setShowCancelled(false);
+    setShowManagerProcessed(false);
+    fetchOrders(1);
   };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const formatSum = (sum) => {
+    if (!sum) return '0 руб.';
+    return `${sum.toLocaleString('ru-RU')} руб.`;
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return '';
+    return timeString;
+  };
+
+  if (authLoading || !isAuthenticated || isManager === null) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Заказы</h1>
+        <div className={styles.content}>
+          <p>Загрузка...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1 className={styles.title}>Заказы</h1>
-        <div>
-         
-          <button
-            type="button"
-            className={styles.primaryButtons}
-            style={{ marginLeft: 16 }}
-            onClick={() => setShowExtraFields((prev) => !prev)}
-          >
-            {showExtraFields ? 'Скрыть дополнительные поля' : 'Добавить фильтры'}
-          </button>
-        </div>
       </div>
       
       <div className={styles.content}>
@@ -122,7 +266,7 @@ export default function OrdersPage() {
                 id="orderNumber"
                 value={orderNumber}
                 onChange={(e) => setOrderNumber(e.target.value)}
-                placeholder="Введите номер заказа"
+                placeholder={isManager ? "Введите номер заказа" : "Введите номер заказа (#1234 или 1234)"}
               />
             </div>
             
@@ -137,7 +281,7 @@ export default function OrdersPage() {
                     <input
                       type="text"
                       id="orderStatus"
-                      value={orderStatus}
+                      value={statusOptions.find(s => s.value === orderStatus)?.label || ''}
                       placeholder="Выберите статус заказа"
                       readOnly
                       className={styles.pickupAddressField}
@@ -154,16 +298,16 @@ export default function OrdersPage() {
                 </div>
                 {isStatusDropdownOpen && (
                   <div className={styles.selectOptions}>
-                    {statusOptions.map((status, idx) => (
+                    {statusOptions.map((status) => (
                       <div
-                        key={idx}
+                        key={status.value}
                         className={styles.selectOption}
                         onClick={() => {
-                          setOrderStatus(status);
+                          setOrderStatus(status.value);
                           setIsStatusDropdownOpen(false);
                         }}
                       >
-                        {status}
+                        {status.label}
                       </div>
                     ))}
                   </div>
@@ -172,30 +316,7 @@ export default function OrdersPage() {
             </div>
           </div>
           
-          <div className={styles.formRow}>
-            <div className={styles.formGroup}>
-              <label htmlFor="deliveryDate">Дата доставки/самовывоза:</label>
-              <input
-                type="date"
-                id="deliveryDate"
-                value={deliveryDate}
-                onChange={(e) => setDeliveryDate(e.target.value)}
-              />
-            </div>
-            
-            <div className={styles.formGroup}>
-              <label htmlFor="comment">Комментарий (любое слово из комментария):</label>
-              <input
-                type="text"
-                id="comment"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Введите комментарий"
-              />
-            </div>
-          </div>
-          
-          {showExtraFields && (
+          {isManager ? (
             <>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
@@ -219,9 +340,10 @@ export default function OrdersPage() {
                   />
                 </div>
               </div>
+              
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label htmlFor="orderDate">Дата заказа:</label>
+                  <label htmlFor="orderDate">Дата заказа (точная):</label>
                   <input
                     type="date"
                     id="orderDate"
@@ -230,7 +352,28 @@ export default function OrdersPage() {
                   />
                 </div>
                 <div className={styles.formGroup}>
-                  <label htmlFor="address">Адрес доставки/пункта самовывоза:</label>
+                  <label htmlFor="orderDateFrom">Дата заказа (от):</label>
+                  <input
+                    type="date"
+                    id="orderDateFrom"
+                    value={orderDateFrom}
+                    onChange={(e) => setOrderDateFrom(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="orderDateTo">Дата заказа (до):</label>
+                  <input
+                    type="date"
+                    id="orderDateTo"
+                    value={orderDateTo}
+                    onChange={(e) => setOrderDateTo(e.target.value)}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="address">Адрес доставки:</label>
                   <input
                     type="text"
                     id="address"
@@ -239,7 +382,18 @@ export default function OrdersPage() {
                     placeholder="Введите адрес"
                   />
                 </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="comment">Комментарий (любое слово из комментария):</label>
+                  <input
+                    type="text"
+                    id="comment"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Введите комментарий"
+                  />
+                </div>
               </div>
+              
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="firstName">Имя клиента:</label>
@@ -272,6 +426,7 @@ export default function OrdersPage() {
                   />
                 </div>
               </div>
+              
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="inn">ИНН организации:</label>
@@ -283,19 +438,29 @@ export default function OrdersPage() {
                     placeholder="Введите ИНН"
                   />
                 </div>
-             
-              </div>
-              <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label htmlFor="orderSum">Сумма заказа:</label>
+                  <label htmlFor="sumFrom">Сумма заказа от:</label>
                   <input
-                    type="text"
-                    id="orderSum"
-                    value={orderSum}
-                    onChange={(e) => setOrderSum(e.target.value)}
-                    placeholder="Введите сумму заказа"
+                    type="number"
+                    id="sumFrom"
+                    value={sumFrom}
+                    onChange={(e) => setSumFrom(e.target.value)}
+                    placeholder="От"
                   />
                 </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="sumTo">Сумма заказа до:</label>
+                  <input
+                    type="number"
+                    id="sumTo"
+                    value={sumTo}
+                    onChange={(e) => setSumTo(e.target.value)}
+                    placeholder="До"
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="showCancelled">Отмененные заказы:</label>
                   <input
@@ -316,6 +481,30 @@ export default function OrdersPage() {
                 </div>
               </div>
             </>
+          ) : (
+            <>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="deliveryDate">Дата доставки:</label>
+                  <input
+                    type="date"
+                    id="deliveryDate"
+                    value={deliveryDate}
+                    onChange={(e) => setDeliveryDate(e.target.value)}
+                  />
+                </div>
+                <div className={styles.formGroup}>
+                  <label htmlFor="comment">Комментарий (любое слово из комментария):</label>
+                  <input
+                    type="text"
+                    id="comment"
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Введите комментарий"
+                  />
+                </div>
+              </div>
+            </>
           )}
           
           <div className={styles.formActions}>
@@ -325,50 +514,71 @@ export default function OrdersPage() {
         </form>
         
         <div className={styles.ordersTableContainer}>
-        <table className={styles.ordersTable}>
-          <thead>
-            <tr>
-              <th>№</th>
-              <th>ФИО покупателя</th>
-              <th>Кол-во товаров</th>
-              <th>Сумма заказа</th>
-              <th>Дата заказа</th>
-              <th>Статус</th>
-              <th>Прошло</th>
-              <th>ИНН организации</th>
-              <th>Обработан менеджером</th>
-              <th>Отменён</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredOrders.map(order => (
-              <tr key={order.id}>
-                <td>
-                  <Link href={`/admin/orders/${order.id}`}>
-                    {order.id}
-                  </Link>
-                </td>
-                <td>{order.customer}</td>
-                <td>{order.itemsCount}</td>
-                <td>{order.total}</td>
-                <td>{order.date}</td>
-                <td>
-                  <span className={styles.statusLabel}>
-                    {order.status}
-                  </span>
-                </td>
-                <td>{order.timeElapsed}</td>
-                <td>{order.inn}</td>
-                <td>
-                  <input type="checkbox" checked={order.managerProcessed}  />
-                </td>
-                <td>
-                  <input type="checkbox" checked={order.cancelled}  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          {loading && <p>Загрузка...</p>}
+          {error && <p style={{ color: 'red' }}>{error}</p>}
+          {!loading && !error && (
+            <>
+              <table className={styles.ordersTable}>
+                <thead>
+                  <tr>
+                    <th>№</th>
+                    <th>ФИО покупателя</th>
+                    <th>Кол-во товаров</th>
+                    <th>Сумма заказа</th>
+                    <th>Дата заказа</th>
+                    <th>Статус</th>
+                    <th>Прошло</th>
+                    {isManager && <th>ИНН организации</th>}
+                    {isManager && <th>Обработан менеджером</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map(order => (
+                    <tr key={order.id}>
+                      <td>
+                        <Link href={`/admin/orders/${order.id}`}>
+                          {order.order_number || order.id}
+                        </Link>
+                      </td>
+                      <td>{order.client_full_name || ''}</td>
+                      <td>{order.product_count || 0}</td>
+                      <td>{formatSum(order.summ)}</td>
+                      <td>{formatDate(order.order_date)}</td>
+                      <td>
+                        <span className={styles.statusLabel}>
+                          {order.status_display || statusMap[order.status] || order.status}
+                        </span>
+                      </td>
+                      <td>{formatTime(order.processing_time)}</td>
+                      {isManager && <td>{order.inn || ''}</td>}
+                      {isManager && (
+                        <td>
+                          <input type="checkbox" checked={order.is_processed || false} readOnly />
+                        </td>
+                      )}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {totalPages > 1 && (
+                <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                  <button 
+                    onClick={() => fetchOrders(page - 1)} 
+                    disabled={page <= 1}
+                  >
+                    Назад
+                  </button>
+                  <span>Страница {page} из {totalPages}</span>
+                  <button 
+                    onClick={() => fetchOrders(page + 1)} 
+                    disabled={page >= totalPages}
+                  >
+                    Вперед
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
