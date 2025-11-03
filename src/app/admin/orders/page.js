@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { useAuth } from '../../../contexts/AuthContext';
 import styles from './orders.module.css';
 
+export const dynamic = 'force-dynamic';
+export const ssr = false;
+
 const statusMap = {
   'awaiting': 'Новый',
   'accept': 'Подтвержден',
@@ -56,6 +59,7 @@ export default function OrdersPage() {
   const [showManagerProcessed, setShowManagerProcessed] = useState(false);
 
   const checkUserRole = async () => {
+    if (typeof window === 'undefined') return false;
     const token = localStorage.getItem('accessToken');
     if (!token) return false;
 
@@ -91,6 +95,7 @@ export default function OrdersPage() {
   };
 
   const fetchOrders = async (pageNum = 1) => {
+    if (typeof window === 'undefined') return;
     setLoading(true);
     setError(null);
     try {
@@ -239,6 +244,10 @@ export default function OrdersPage() {
     if (!timeString) return '';
     return timeString;
   };
+
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
   if (authLoading || !isAuthenticated || isManager === null) {
     return (
