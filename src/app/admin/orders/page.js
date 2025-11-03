@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../../contexts/AuthContext';
 import styles from './orders.module.css';
 
 export const dynamic = 'force-dynamic';
-export const ssr = false;
 
 const statusMap = {
   'awaiting': 'Новый',
@@ -58,7 +57,7 @@ export default function OrdersPage() {
   const [showCancelled, setShowCancelled] = useState(false);
   const [showManagerProcessed, setShowManagerProcessed] = useState(false);
 
-  const checkUserRole = async () => {
+  const checkUserRole = useCallback(async () => {
     if (typeof window === 'undefined') return false;
     const token = localStorage.getItem('accessToken');
     if (!token) return false;
@@ -92,9 +91,9 @@ export default function OrdersPage() {
       setIsManager(false);
       return false;
     }
-  };
+  }, []);
 
-  const fetchOrders = async (pageNum = 1) => {
+  const fetchOrders = useCallback(async (pageNum = 1) => {
     if (typeof window === 'undefined') return;
     setLoading(true);
     setError(null);
@@ -179,7 +178,7 @@ export default function OrdersPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isManager, orderNumber, orderStatus, phone, email, orderDate, orderDateFrom, orderDateTo, address, firstName, lastName, middleName, inn, comment, sumFrom, sumTo, showCancelled, showManagerProcessed, deliveryDate]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -200,7 +199,7 @@ export default function OrdersPage() {
       }
     };
     initialize();
-  }, [isManager, authLoading, isAuthenticated]);
+  }, [isManager, authLoading, isAuthenticated, checkUserRole, fetchOrders]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
