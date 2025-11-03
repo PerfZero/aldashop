@@ -40,6 +40,7 @@ export default function OrderDetailsPage({ params }) {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [productQuantities, setProductQuantities] = useState({});
   const [productsToRemove, setProductsToRemove] = useState([]);
   const [newProductArticle, setNewProductArticle] = useState('');
   const [productsToAdd, setProductsToAdd] = useState([]);
@@ -127,9 +128,23 @@ export default function OrderDetailsPage({ params }) {
   }, []);
 
   const addProductToOrder = (product) => {
-    const article = product.generated_article || product.article;
-    if (article && !productsToAdd.includes(article)) {
-      setProductsToAdd([...productsToAdd, article]);
+    const productId = product.id;
+    if (productId && !productsToAdd.find(p => p.id === productId)) {
+      setProductsToAdd([...productsToAdd, {
+        id: productId,
+        quantity: 1,
+        full_name: product.title || product.full_name || '',
+        generated_article: product.generated_article || product.article || '',
+        article: product.article || product.generated_article || '',
+        photos: product.photos || [],
+        color: product.color || null,
+        sizes: product.sizes || null,
+        material: product.material || null
+      }]);
+      setProductQuantities({
+        ...productQuantities,
+        [productId]: 1
+      });
       setNewProductArticle('');
       setSearchResults([]);
     }
@@ -218,6 +233,14 @@ export default function OrderDetailsPage({ params }) {
       setAddress(data.address || '');
       setComment(data.comment || '');
       
+      const initialQuantities = {};
+      if (data.products && Array.isArray(data.products)) {
+        data.products.forEach(product => {
+          initialQuantities[product.id] = product.quantity || 1;
+        });
+      }
+      setProductQuantities(initialQuantities);
+      
       if (isManager) {
         // Поля только для менеджера
         setClientFirstName(data.client_first_name || '');
@@ -265,12 +288,56 @@ export default function OrderDetailsPage({ params }) {
           updateData.address = typeof address === 'string' ? address : address;
         }
 
+        order.products?.forEach(product => {
+          const currentQty = productQuantities[product.id];
+          if (currentQty !== undefined && currentQty !== product.quantity) {
+            const originalQty = product.quantity || 1;
+            const newQty = currentQty;
+            
+            if (newQty < originalQty) {
+              if (!updateData.remove_products) {
+                updateData.remove_products = [];
+              }
+              updateData.remove_products.push({
+                id: parseInt(product.id),
+                quantity: parseInt(originalQty - newQty)
+              });
+            } else if (newQty > originalQty) {
+              if (!updateData.add_products) {
+                updateData.add_products = [];
+              }
+              updateData.add_products.push({
+                id: parseInt(product.id),
+                quantity: parseInt(newQty - originalQty)
+              });
+            }
+          }
+        });
+
         if (productsToRemove.length > 0) {
-          updateData.remove_products = productsToRemove;
+          if (!updateData.remove_products) {
+            updateData.remove_products = [];
+          }
+          productsToRemove.forEach(item => {
+            const productId = typeof item === 'object' ? item.id : item;
+            const quantity = typeof item === 'object' ? item.quantity : (productQuantities[productId] || 1);
+            updateData.remove_products.push({
+              id: parseInt(productId),
+              quantity: parseInt(quantity)
+            });
+          });
         }
 
         if (productsToAdd.length > 0) {
-          updateData.add_products = productsToAdd;
+          if (!updateData.add_products) {
+            updateData.add_products = [];
+          }
+          productsToAdd.forEach(product => {
+            updateData.add_products.push({
+              id: parseInt(product.id),
+              quantity: parseInt(product.quantity || 1)
+            });
+          });
         }
 
         if (clientFirstName !== undefined && clientFirstName !== (order.client_first_name || '')) {
@@ -351,6 +418,13 @@ export default function OrderDetailsPage({ params }) {
           setProductsToRemove([]);
           setProductsToAdd([]);
           setNewProductArticle('');
+          const newQuantities = {};
+          if (data.order.products && Array.isArray(data.order.products)) {
+            data.order.products.forEach(product => {
+              newQuantities[product.id] = product.quantity || 1;
+            });
+          }
+          setProductQuantities(newQuantities);
         }
       } else {
         // Если API склада возвращает заказ напрямую
@@ -625,13 +699,45 @@ export default function OrderDetailsPage({ params }) {
                     className={styles.addProductInput}
                   />
                   <button
-                    onClick={() => {
+                    onClick={async () => {
                       if (searchResults.length > 0 && searchResults[0]) {
                         addProductToOrder(searchResults[0]);
+                      } else if (newProductArticle.trim()) {
+                        try {
+                          setSearching(true);
+                          const token = localStorage.getItem('accessToken');
+                          const headers = {
+                            'Content-Type': 'application/json',
+                          };
+                          if (token) {
+                            headers['Authorization'] = `Bearer ${token}`;
+                          }
+                          
+                          const response = await fetch('https://aldalinde.ru/api/admin_backend/manager/products/search-by-article', {
+                            method: 'POST',
+                            headers,
+                            body: JSON.stringify({ article: newProductArticle.trim() }),
+                          });
+                          
+                          if (response.ok) {
+                            const data = await response.json();
+                            if (Array.isArray(data) && data.length > 0) {
+                              addProductToOrder(data[0]);
+                            } else {
+                              alert('Товар не найден');
+                            }
+                          } else {
+                            alert('Ошибка при поиске товара');
+                          }
+                        } catch (err) {
+                          alert('Ошибка при поиске товара');
+                        } finally {
+                          setSearching(false);
+                        }
                       }
                     }}
                     className={styles.addProductButton}
-                    disabled={searchResults.length === 0 || searching || !newProductArticle.trim()}
+                    disabled={searching || !newProductArticle.trim()}
                   >
                     Добавить
                   </button>
@@ -698,9 +804,43 @@ export default function OrderDetailsPage({ params }) {
               {productsToAdd.length > 0 && (
                 <div className={styles.productsToAddList}>
                   <p className={styles.productsToAddTitle}>Товары для добавления:</p>
-                  {productsToAdd.map((article, index) => (
+                  {productsToAdd.map((product, index) => (
                     <div key={index} className={styles.productsToAddItem}>
-                      <span>{article}</span>
+                      <span>{product.full_name || product.title || product.article || 'Товар'} {product.generated_article || product.article ? `(Артикул: ${product.generated_article || product.article})` : ''} - Количество: </span>
+                      <div className={styles.quantityControlsInline}>
+                        <div className={styles.quantityButtons}>
+                          <button 
+                            type="button"
+                            className={styles.minusButton} 
+                            onClick={() => {
+                              const updatedProducts = [...productsToAdd];
+                              if (updatedProducts[index].quantity > 1) {
+                                updatedProducts[index].quantity -= 1;
+                                setProductsToAdd(updatedProducts);
+                              }
+                            }}
+                            disabled={product.quantity <= 1}
+                          >
+                            <svg width="10" height="2" viewBox="0 0 10 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M9 1H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                          <span className={styles.quantity}>{product.quantity || 1}</span>
+                          <button 
+                            type="button"
+                            className={styles.plusButton} 
+                            onClick={() => {
+                              const updatedProducts = [...productsToAdd];
+                              updatedProducts[index].quantity = (updatedProducts[index].quantity || 1) + 1;
+                              setProductsToAdd(updatedProducts);
+                            }}
+                          >
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M5 1V9M9 5H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
                       <button
                         onClick={() => setProductsToAdd(productsToAdd.filter((_, i) => i !== index))}
                         className={styles.productsToAddItemRemove}
@@ -718,65 +858,112 @@ export default function OrderDetailsPage({ params }) {
           
           {order.products && order.products.length > 0 ? (
             order.products.map(product => {
-              const isMarkedForRemoval = productsToRemove.includes(product.id);
+              const isMarkedForRemoval = productsToRemove.some(item => {
+                const itemId = typeof item === 'object' ? item.id : item;
+                return itemId === product.id;
+              });
               return (
                 <div key={product.id} className={`${styles.productCard} ${styles.productCardFlex} ${isMarkedForRemoval ? styles.productCardRemoved : ''}`}>
-                  <div className={styles.productImage}>
-                    <img 
-                      src={
-                        product.photos && product.photos.length > 0 
-                          ? (product.photos[0].startsWith('http') 
-                              ? product.photos[0] 
-                              : `https://aldalinde.ru${product.photos[0]}`)
-                          : '/placeholder.jpg'
-                      } 
-                      alt={product.full_name || 'Товар'} 
-                    />
-                  </div>
-                  <div className={`${styles.productDetails} ${styles.productDetailsFlex}`}>
-                    <div className={styles.productName}>{product.full_name || ''}</div>
-                    {product.article && (
-                      <div className={styles.productSku}>Артикул: {product.article}</div>
-                    )}
-                    <div className={styles.productRow}>
-                      {product.color && (
-                        <>
-                          <span className={styles.colorCircle} style={{background: `#${product.color.code_hex || product.color.hex || 'cfc2b0'}`}}></span>
-                          <span className={styles.productDivider}>|</span>
-                          <span>{product.color.title || product.color.name || ''}</span>
-                          <span className={styles.productDivider}>|</span>
-                        </>
-                      )}
-                      {product.material && (
-                        <>
-                          <span className={styles.productMaterial}>{product.material}</span>
-                          {product.sizes && <span className={styles.productDivider}>|</span>}
-                        </>
-                      )}
-                      {product.sizes && (
-                        <span className={styles.productSize}>
-                          {product.sizes.width && `${product.sizes.width}×`}
-                          {product.sizes.height && `${product.sizes.height}×`}
-                          {product.sizes.depth && product.sizes.depth}
-                          {!product.sizes.width && !product.sizes.height && !product.sizes.depth && 
-                            Object.entries(product.sizes).map(([key, value]) => `${key}: ${value}`).join(', ')
-                          }
-                        </span>
+                  <Link href={`/product/${product.id}`} className={styles.productCardLink}>
+                    <div className={styles.productImage}>
+                      <img 
+                        src={
+                          product.photos && product.photos.length > 0 
+                            ? (product.photos[0].startsWith('http') 
+                                ? product.photos[0] 
+                                : `https://aldalinde.ru${product.photos[0]}`)
+                            : '/placeholder.jpg'
+                        } 
+                        alt={product.full_name || 'Товар'} 
+                      />
+                    </div>
+                    <div className={`${styles.productDetails} ${styles.productDetailsFlex}`}>
+                      <div className={styles.productName}>{product.full_name || ''}</div>
+                      <div className={styles.productSku}>Артикул: {product.generated_article || product.article || ''}</div>
+                      <div className={styles.productRow}>
+                        {product.color && (
+                          <>
+                            <span className={styles.colorCircle} style={{background: `#${product.color.code_hex || product.color.hex || 'cfc2b0'}`}}></span>
+                            <span className={styles.productDivider}>|</span>
+                            <span>{product.color.title || product.color.name || ''}</span>
+                            {product.sizes && <span className={styles.productDivider}>|</span>}
+                          </>
+                        )}
+                    
+                        {product.sizes && (
+                          <span className={styles.productSize}>
+                            {product.sizes.width && `${product.sizes.width}×`}
+                            {product.sizes.height && `${product.sizes.height}×`}
+                            {product.sizes.depth && product.sizes.depth}
+                            {!product.sizes.width && !product.sizes.height && !product.sizes.depth && 
+                              Object.entries(product.sizes).map(([key, value]) => `${key}: ${value}`).join(', ')
+                            }
+                          </span>
+                        )}
+                      </div>
+                      {isMarkedForRemoval && (
+                        <div className={styles.removeWarning}>Товар будет удален при сохранении</div>
                       )}
                     </div>
-                    {isMarkedForRemoval && (
-                      <div className={styles.removeWarning}>Товар будет удален при сохранении</div>
-                    )}
-                  </div>
+                  </Link>
                   <div className={styles.productActions}>
-                    <div className={`${styles.productQuantity} ${styles.productQuantityRight}`}>{product.quantity || 1} шт.</div>
+                    {isManager ? (
+                      <div className={styles.quantityControls}>
+                        <div className={styles.quantityButtons}>
+                          <button 
+                            type="button"
+                            className={styles.minusButton} 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const currentQty = productQuantities[product.id] || product.quantity || 1;
+                              if (currentQty > 1) {
+                                setProductQuantities({
+                                  ...productQuantities,
+                                  [product.id]: currentQty - 1
+                                });
+                              }
+                            }}
+                            disabled={(productQuantities[product.id] || product.quantity || 1) <= 1}
+                          >
+                            <svg width="10" height="2" viewBox="0 0 10 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M9 1H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                          <span className={styles.quantity}>{productQuantities[product.id] !== undefined ? productQuantities[product.id] : (product.quantity || 1)}</span>
+                          <button 
+                            type="button"
+                            className={styles.plusButton} 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const currentQty = productQuantities[product.id] || product.quantity || 1;
+                              setProductQuantities({
+                                ...productQuantities,
+                                [product.id]: currentQty + 1
+                              });
+                            }}
+                          >
+                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M5 1V9M9 5H1" stroke="#C1AF86" strokeWidth="1" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={`${styles.productQuantity} ${styles.productQuantityRight}`}>{product.quantity || 1} шт.</div>
+                    )}
                     {isManager && (
                       <button
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const currentQty = productQuantities[product.id] || product.quantity || 1;
+                          const removeItem = { id: product.id, quantity: currentQty };
                           if (isMarkedForRemoval) {
-                            setProductsToRemove(productsToRemove.filter(id => id !== product.id));
+                            setProductsToRemove(productsToRemove.filter(item => {
+                              const itemId = typeof item === 'object' ? item.id : item;
+                              return itemId !== product.id;
+                            }));
                           } else {
-                            setProductsToRemove([...productsToRemove, product.id]);
+                            setProductsToRemove([...productsToRemove, removeItem]);
                           }
                         }}
                         className={`${styles.removeProductButton} ${isMarkedForRemoval ? styles.removeProductButtonRestore : ''}`}
