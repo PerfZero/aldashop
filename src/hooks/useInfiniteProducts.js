@@ -144,9 +144,9 @@ export const useInfiniteProducts = (filters, categoryId, subcategoryId, sortBy) 
       }
       return undefined;
     },
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always',
+    staleTime: 5 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
 };

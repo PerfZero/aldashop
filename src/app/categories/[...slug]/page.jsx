@@ -32,6 +32,7 @@ function CategoryPageContent() {
   
   const [dynamicFilters, setDynamicFilters] = useState({});
   const loadMoreRef = useRef(null);
+  const scrollRestoredRef = useRef(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -99,43 +100,28 @@ function CategoryPageContent() {
     enabled: hasNextPage && !isFetchingNextPage
   });
 
-  // Сохраняем позицию скролла при уходе со страницы
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
-    };
-
-    const handleRouteChange = () => {
-      sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    // Сохраняем позицию при клике на ссылку продукта
-    const productLinks = document.querySelectorAll('a[href*="/product/"]');
-    productLinks.forEach(link => {
-      link.addEventListener('click', handleRouteChange);
-    });
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      productLinks.forEach(link => {
-        link.removeEventListener('click', handleRouteChange);
-      });
-    };
-  }, []);
-
-  // Восстанавливаем позицию скролла при загрузке страницы
   useEffect(() => {
     const savedPosition = sessionStorage.getItem('catalogScrollPosition');
-    if (savedPosition) {
-      // Небольшая задержка для корректного восстановления
-      setTimeout(() => {
-        window.scrollTo(0, parseInt(savedPosition));
-        sessionStorage.removeItem('catalogScrollPosition');
-      }, 100);
+    if (savedPosition && !isProductsLoading && products.length > 0 && !scrollRestoredRef.current) {
+      const scrollPosition = parseInt(savedPosition, 10);
+      scrollRestoredRef.current = true;
+      
+      const restoreScroll = () => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.scrollTo({
+              top: scrollPosition,
+              behavior: 'instant'
+            });
+            sessionStorage.removeItem('catalogScrollPosition');
+          });
+        });
+      };
+      
+      setTimeout(restoreScroll, 200);
     }
-  }, []);
+  }, [isProductsLoading, products.length]);
+
   
 
 
@@ -412,6 +398,10 @@ function CategoryPageContent() {
   useEffect(() => {
     console.log('🟠 appliedFilters changed:', appliedFilters);
   }, [appliedFilters]);
+
+  useEffect(() => {
+    scrollRestoredRef.current = false;
+  }, [slugDep]);
 
   useEffect(() => {
     if (!categories.length) return;

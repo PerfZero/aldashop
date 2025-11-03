@@ -8,6 +8,7 @@ import { FavouritesProvider } from '../contexts/FavouritesContext';
 import QueryClientProviderWrapper from '../components/QueryClientProvider';
 
 import QueryParamProviderWrapper from '../components/QueryParamProvider';
+import ScrollRestoration from '../components/ScrollRestoration';
 import './globals.css';
 
 export const metadata = {
@@ -48,6 +49,7 @@ export default function RootLayout({ children }) {
             <AuthProvider>
               <CartProvider>
                 <FavouritesProvider>
+                  <ScrollRestoration />
                   <Header />
                   <main>
                     {children}
