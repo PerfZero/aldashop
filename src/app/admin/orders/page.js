@@ -245,10 +245,6 @@ export default function OrdersPage() {
     return timeString;
   };
 
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
   if (authLoading || !isAuthenticated || isManager === null) {
     return (
       <div className={styles.container}>
