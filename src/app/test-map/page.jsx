@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import YandexMap from '../../components/YandexMap';
-import SimpleYandexMap from '../../components/SimpleYandexMap';
 import DebugYandexMap from '../../components/DebugYandexMap';
 
 export default function TestMapPage() {
@@ -24,19 +23,11 @@ export default function TestMapPage() {
       </div>
 
       <div style={{ marginBottom: '20px' }}>
-        <h2>Простая карта (для отладки)</h2>
-        <SimpleYandexMap />
-      </div>
-
-      <div style={{ marginBottom: '20px' }}>
-        <h2>Полная карта с геолокацией</h2>
+        <h2>Простая карта с кликами</h2>
         <YandexMap
           onLocationSelect={handleLocationSelect}
           initialCenter={[43.585472, 39.723098]}
-          initialZoom={12}
           height="400px"
-          showGeolocation={true}
-          showSearch={true}
         />
       </div>
 

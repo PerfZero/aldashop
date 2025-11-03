@@ -8,7 +8,6 @@ import { useCart } from '../components/CartContext';
 import { useAuth } from '../../contexts/AuthContext';
 import YandexMap from '../../components/YandexMap';
 import AddressSelector from '../../components/AddressSelector';
-import MinimalCartMap from '../../components/MinimalCartMap';
 import AuthModal from '../../components/AuthModal';
 
 export default function CartPage() {
@@ -32,8 +31,8 @@ export default function CartPage() {
     inn: '',
     phone: '',
     email: '',
-    region: 'Краснодарский край',
-    city: 'Сочи',
+    region: 'Московская область',
+    city: 'Москва',
     street: '',
     house: '',
     postalCode: '',
@@ -991,7 +990,7 @@ export default function CartPage() {
                               initialAddress={formData.fullAddress || ''}
                               externalAddress={mapSelectedAddress}
                               placeholder="Введите адрес доставки"
-                              showMap={true}
+                              showMap={false}
                               className={styles.addressSelector}
                             />
                           </div>
@@ -1011,9 +1010,10 @@ export default function CartPage() {
                           </div>
                         </div>
                         
-                        <MinimalCartMap
+                        <YandexMap
                           onLocationSelect={handleLocationSelect}
-                          className={styles.minimalCartMap}
+                          initialCenter={formData.coordinates || [55.751574, 37.573856]}
+                          height="400px"
                         />
                       </div>
                     )}

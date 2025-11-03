@@ -1,418 +1,265 @@
 'use client';
-import { useEffect, useState, useRef } from 'react';
-import { YMaps, Map, Placemark, GeolocationControl, SearchControl } from '@pbe/react-yandex-maps';
-import styles from './YandexMap.module.css';
+import { useEffect, useRef } from 'react';
 
 const YandexMap = ({ 
   onLocationSelect, 
-  initialCenter = [43.585472, 39.723098], 
-  initialZoom = 12,
-  height = '300px',
-  showGeolocation = true,
-  showSearch = true,
-  className = ''
+  initialCenter = [55.751574, 37.573856], 
+  height = '400px'
 }) => {
-  const [mapCenter, setMapCenter] = useState(initialCenter);
-  const [userLocation, setUserLocation] = useState(null);
-  const [selectedLocation, setSelectedLocation] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
+  const placemarkRef = useRef(null);
+  const areaPolygonRef = useRef(null);
+  const apiKey = 'aa9feae8-022d-44d2-acb1-8cc0198f451d';
 
-  // Получение геолокации пользователя
+  const allowedRegionCodes = ['RU-MOS', 'RU-MOW', 'RU-SAM'];
+
   useEffect(() => {
-    if (showGeolocation && navigator.geolocation) {
-      setIsLoading(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const userCoords = [latitude, longitude];
-          setUserLocation(userCoords);
-          setMapCenter(userCoords);
-          setIsLoading(false);
-        },
-        (error) => {
-          console.log('Ошибка получения геолокации:', error);
-          setError('Не удалось получить ваше местоположение');
-          setIsLoading(false);
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000
-        }
-      );
-    }
-  }, [showGeolocation]);
+    if (!mapContainerRef.current || mapRef.current) return;
 
-  // Обработка клика по карте
-  const handleMapClick = (event) => {
-    const coords = event.get('coords');
-    setSelectedLocation(coords);
-    // Не центрируем карту на выбранную точку
-    // setMapCenter(coords);
-    
-    // Геокодирование для получения адреса
-    if (window.ymaps) {
-      window.ymaps.geocode(coords).then((res) => {
-        const firstGeoObject = res.geoObjects.get(0);
-        if (firstGeoObject) {
-          const address = firstGeoObject.getAddressLine();
-          const addressObj = firstGeoObject.properties.get('metaDataProperty')?.GeocoderMetaData?.Address;
-          const components = addressObj?.Components || [];
-          const postalCode = addressObj?.postal_code || '';
-          
-          let country = '';
-          let region = '';
-          let city = '';
-          let street = '';
-          let house = '';
-          
-          components.forEach(component => {
-            switch (component.kind) {
-              case 'country':
-                country = component.name;
-                break;
-              case 'province':
-                if (!component.name.includes('федеральный округ')) {
-                  region = component.name;
-                }
-                break;
-              case 'administrative_area_level_1':
-                region = component.name;
-                break;
-              case 'locality':
-                city = component.name;
-                break;
-              case 'route':
-                street = component.name;
-                break;
-              case 'street':
-                street = component.name;
-                break;
-              case 'street_number':
-                house = component.name;
-                break;
-              case 'house':
-                house = component.name;
-                break;
-            }
-          });
-          
-          if (country !== 'Россия') {
-            alert('Доставка возможна только по территории России');
-            setSelectedLocation(null);
-            return;
-          }
-          
-          const locationData = {
-            coordinates: coords,
-            address: address,
-            region: region,
-            city: city,
-            street: street,
-            house: house,
-            postal_code: postalCode,
-            components: components
-          };
-          
-          if (onLocationSelect) {
-            onLocationSelect(locationData);
-          }
-        }
-      }).catch((error) => {
-        console.error('Ошибка геокодирования:', error);
-        setError('Не удалось определить адрес для выбранной точки');
-      });
-    }
-  };
+    const initMap = () => {
+      if (!window.ymaps) return;
 
-  // Обработка клика по геолокации
-  const handleGeolocationClick = () => {
-    if (userLocation) {
-      // Если геолокация уже получена, используем её
-      setMapCenter(userLocation);
-      setSelectedLocation(userLocation);
-      
-      if (window.ymaps) {
-        window.ymaps.geocode(userLocation).then((res) => {
-          const firstGeoObject = res.geoObjects.get(0);
-          if (firstGeoObject) {
-            const address = firstGeoObject.getAddressLine();
-            const addressObj = firstGeoObject.properties.get('metaDataProperty')?.GeocoderMetaData?.Address;
-            const components = addressObj?.Components || [];
-            const postalCode = addressObj?.postal_code || '';
-            
-            let region = '';
-            let city = '';
-            let street = '';
-            let house = '';
-            
-            components.forEach(component => {
-              switch (component.kind) {
-                case 'administrative_area_level_1':
-                  region = component.name;
-                  break;
-                case 'locality':
-                  city = component.name;
-                  break;
-                case 'route':
-                  street = component.name;
-                  break;
-                case 'street_number':
-                  house = component.name;
-                  break;
-              }
-            });
-            
-            const locationData = {
-              coordinates: userLocation,
-              address: address,
-              region: region,
-              city: city,
-              street: street,
-              house: house,
-              postal_code: postalCode,
-              components: components
-            };
-            
-            if (onLocationSelect) {
-              onLocationSelect(locationData);
-            }
-          }
+      window.ymaps.ready(() => {
+        if (!mapContainerRef.current || mapRef.current) return;
+
+        mapRef.current = new window.ymaps.Map(mapContainerRef.current, {
+          center: initialCenter,
+          zoom: 10
         });
-      }
-    } else {
-      // Если геолокация не получена, запрашиваем её
-      if (navigator.geolocation) {
-        setIsLoading(true);
-        setError(null);
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            const userCoords = [latitude, longitude];
-            setUserLocation(userCoords);
-            setMapCenter(userCoords);
-            setSelectedLocation(userCoords);
-            setIsLoading(false);
+
+        if (window.ymaps.borders && window.ymaps.borders.load) {
+          window.ymaps.borders.load('RU', {
+            lang: 'ru',
+            quality: 2
+          }).then((geojson) => {
+            const regions = window.ymaps.geoQuery(geojson);
+            const allowedRegions = allowedRegionCodes.map(code => 
+              regions.search(`properties.iso3166 = "${code}"`)
+            ).filter(region => region.getLength() > 0);
             
-            // Автоматически геокодируем полученные координаты
-            if (window.ymaps) {
-              window.ymaps.geocode(userCoords).then((res) => {
-          const firstGeoObject = res.geoObjects.get(0);
-          if (firstGeoObject) {
-            const address = firstGeoObject.getAddressLine();
-            const addressObj = firstGeoObject.properties.get('metaDataProperty')?.GeocoderMetaData?.Address;
-            const components = addressObj?.Components || [];
-            const postalCode = addressObj?.postal_code || '';
-            
-            let region = '';
-            let city = '';
-            let street = '';
-            let house = '';
-            
-            components.forEach(component => {
-              switch (component.kind) {
-                case 'administrative_area_level_1':
-                  region = component.name;
-                  break;
-                case 'locality':
-                  city = component.name;
-                  break;
-                case 'route':
-                  street = component.name;
-                  break;
-                case 'street_number':
-                  house = component.name;
-                  break;
-              }
+            allowedRegions.forEach(region => {
+              region.setOptions({
+                fillColor: '#00FF0022',
+                strokeColor: '#00FF00',
+                strokeWidth: 2,
+                strokeStyle: 'solid',
+                opacity: 0.5
+              });
+              
+              mapRef.current.geoObjects.add(region);
             });
             
-            const locationData = {
-              coordinates: userCoords,
-              address: address,
-              region: region,
-              city: city,
-              street: street,
-              house: house,
-              postal_code: postalCode,
-              components: components
-            };
-                  
+            if (allowedRegions.length > 0) {
+              areaPolygonRef.current = allowedRegions;
+            }
+          }).catch((error) => {
+            console.error('Ошибка загрузки границ:', error);
+          });
+        }
+
+        mapRef.current.events.add('click', (e) => {
+          const coords = e.get('coords');
+
+          if (placemarkRef.current) {
+            mapRef.current.geoObjects.remove(placemarkRef.current);
+          }
+
+          placemarkRef.current = new window.ymaps.Placemark(coords, {
+            balloonContent: 'Выбранная точка доставки',
+            hintContent: 'Точка доставки'
+          }, {
+            preset: 'islands#redDotIcon',
+            draggable: false
+          });
+
+          mapRef.current.geoObjects.add(placemarkRef.current);
+
+          const geocodeWithHTTP = (coords) => {
+            const [lat, lon] = coords;
+            const url = `https://geocode-maps.yandex.ru/v1/?apikey=${apiKey}&geocode=${lon},${lat}&format=json&results=1&lang=ru_RU`;
+            
+            fetch(url)
+              .then(response => response.json())
+              .then(data => {
+                if (data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject) {
+                  const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
+                  const address = geoObject.metaDataProperty?.GeocoderMetaData?.text || '';
+                  const addressObj = geoObject.metaDataProperty?.GeocoderMetaData?.Address;
+                  const components = addressObj?.Components || [];
+                  const postalCode = addressObj?.postal_code || '';
+
+                  let country = '';
+                  let region = '';
+                  let regionIso = '';
+                  let city = '';
+                  let street = '';
+                  let house = '';
+
+                  components.forEach(component => {
+                    switch (component.kind) {
+                      case 'country':
+                        country = component.name;
+                        break;
+                      case 'province':
+                        if (!component.name.includes('федеральный округ')) {
+                          region = component.name;
+                        }
+                        break;
+                      case 'administrative_area_level_1':
+                        region = component.name;
+                        break;
+                      case 'locality':
+                        city = component.name;
+                        break;
+                      case 'route':
+                      case 'street':
+                        street = component.name;
+                        break;
+                      case 'street_number':
+                      case 'house':
+                        house = component.name;
+                        break;
+                    }
+                  });
+
+                  const allowedRegionNames = [
+                    'Московская область', 'Москва', 'Москва г',
+                    'Самарская область', 'Самара'
+                  ];
+
+                  let regionFound = false;
+                  components.forEach(comp => {
+                    if (comp.kind === 'administrative_area_level_1' || comp.kind === 'province') {
+                      const compName = comp.name || '';
+                      if (allowedRegionNames.some(name => 
+                        compName.includes(name) || 
+                        compName === name ||
+                        (name.includes('Московская') && compName.includes('Московская')) ||
+                        (name.includes('Москва') && compName.includes('Москва')) ||
+                        (name.includes('Самарская') && compName.includes('Самарская')) ||
+                        (name.includes('Самара') && compName.includes('Самара'))
+                      )) {
+                        regionFound = true;
+                      }
+                    }
+                  });
+
+                  if (!regionFound && region) {
+                    const isAllowed = allowedRegionNames.some(name => 
+                      region.includes(name) || 
+                      region === name ||
+                      (name.includes('Московская') && region.includes('Московская')) ||
+                      (name.includes('Москва') && region.includes('Москва')) ||
+                      (name.includes('Самарская') && region.includes('Самарская')) ||
+                      (name.includes('Самара') && region.includes('Самара'))
+                    );
+
+                    if (!isAllowed) {
+                      alert('Доставка осуществляется только по разрешенным областям. Выбранная точка находится вне зоны доставки.');
+                      if (placemarkRef.current) {
+                        mapRef.current.geoObjects.remove(placemarkRef.current);
+                        placemarkRef.current = null;
+                      }
+                      return;
+                    }
+                  }
+
+                  if (placemarkRef.current) {
+                    placemarkRef.current.properties.set('balloonContent', address || 'Выбранная точка доставки');
+                  }
+
                   if (onLocationSelect) {
-                    onLocationSelect(locationData);
+                    onLocationSelect({
+                      coordinates: coords,
+                      fullAddress: address,
+                      address: address,
+                      region: region,
+                      city: city,
+                      street: street,
+                      house: house,
+                      postal_code: postalCode,
+                      components: components
+                    });
                   }
                 }
+              })
+              .catch((error) => {
+                console.error('Ошибка HTTP геокодирования:', error);
+                if (placemarkRef.current) {
+                  placemarkRef.current.properties.set('balloonContent', `Координаты: ${coords[0].toFixed(6)}, ${coords[1].toFixed(6)}`);
+                }
+                if (onLocationSelect) {
+                  onLocationSelect({
+                    coordinates: coords,
+                    fullAddress: '',
+                    address: '',
+                    region: '',
+                    city: '',
+                    street: '',
+                    house: '',
+                    postal_code: '',
+                    components: []
+                  });
+                }
               });
-            }
-          },
-          (error) => {
-            console.log('Ошибка получения геолокации:', error);
-            let errorMessage = 'Не удалось получить ваше местоположение';
-            switch (error.code) {
-              case error.PERMISSION_DENIED:
-                errorMessage = 'Доступ к геолокации запрещен. Разрешите доступ в настройках браузера.';
-                break;
-              case error.POSITION_UNAVAILABLE:
-                errorMessage = 'Информация о местоположении недоступна.';
-                break;
-              case error.TIMEOUT:
-                errorMessage = 'Время ожидания запроса геолокации истекло.';
-                break;
-            }
-            setError(errorMessage);
-            setIsLoading(false);
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 15000,
-            maximumAge: 300000
-          }
-        );
-      } else {
-        setError('Геолокация не поддерживается вашим браузером');
-      }
+          };
+
+          geocodeWithHTTP(coords);
+        });
+      });
+    };
+
+    if (window.ymaps && window.ymaps.ready) {
+      initMap();
+      return;
     }
-  };
+
+    if (document.querySelector(`script[src*="api-maps.yandex.ru/2.1"]`)) {
+      const checkInterval = setInterval(() => {
+        if (window.ymaps && window.ymaps.ready) {
+          clearInterval(checkInterval);
+          initMap();
+        }
+      }, 100);
+      return () => clearInterval(checkInterval);
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://api-maps.yandex.ru/2.1/?apikey=${apiKey}&lang=ru_RU`;
+    script.async = true;
+
+    script.onload = () => {
+      if (window.ymaps && window.ymaps.ready) {
+        initMap();
+      }
+    };
+
+    document.head.appendChild(script);
+
+    return () => {
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
+      }
+      if (mapRef.current && mapRef.current.destroy) {
+        mapRef.current.destroy();
+        mapRef.current = null;
+      }
+      placemarkRef.current = null;
+    };
+  }, [initialCenter, onLocationSelect]);
 
   return (
     <div 
-      className={`${styles.mapContainer} ${className}`}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* Временная отладочная информация */}
-      <div style={{ 
-        position: 'absolute', 
-        top: '5px', 
-        left: '5px', 
-        background: 'rgba(255,255,255,0.9)', 
-        padding: '5px', 
-        fontSize: '10px', 
-        zIndex: 1000,
-        border: '1px solid #ccc',
-        borderRadius: '3px'
-      }}>
-        YandexMap: {isLoading ? 'Загрузка...' : 'Готово'} | 
-        Геолокация: {showGeolocation ? 'Вкл' : 'Выкл'} | 
-        Пользователь: {userLocation ? 'Есть' : 'Нет'} | 
-        Выбрано: {selectedLocation ? 'Есть' : 'Нет'}
-      </div>
-      {isLoading && (
-        <div className={styles.loadingOverlay}>
-          <div className={styles.loadingSpinner}></div>
-          <p>Получение вашего местоположения...</p>
-        </div>
-      )}
-      
-      {error && (
-        <div className={styles.errorMessage}>
-          <p>{error}</p>
-          <button 
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setError(null);
-            }}
-            className={styles.errorClose}
-          >
-            ×
-          </button>
-        </div>
-      )}
-      
-      <YMaps 
-        query={{
-          apikey: 'aa9feae8-022d-44d2-acb1-8cc0198f451d',
-          lang: 'ru_RU',
-          load: 'package.full'
-        }}
-      >
-        <Map
-          instanceRef={mapRef}
-          state={{
-            center: mapCenter,
-            zoom: initialZoom,
-            controls: []
-          }}
-          options={{
-            restrictMapArea: [[41.185096, 19.616318], [81.858710, 180.000000]]
-          }}
-          width="100%"
-          height={height}
-          onClick={handleMapClick}
-          className={styles.map}
-        >
-          {/* Поиск */}
-          {showSearch && (
-            <SearchControl
-              options={{
-                float: 'left',
-                noPlacemark: true,
-                provider: 'yandex#search'
-              }}
-            />
-          )}
-          
-          {/* Геолокация */}
-          {showGeolocation && userLocation && (
-            <GeolocationControl
-              options={{
-                float: 'right',
-                noPlacemark: true
-              }}
-              onClick={handleGeolocationClick}
-            />
-          )}
-          
-          {/* Маркер текущего местоположения пользователя */}
-          {userLocation && (
-            <Placemark
-              geometry={userLocation}
-              options={{
-                preset: 'islands#blueCircleDotIcon',
-                iconColor: '#3caa3c'
-              }}
-              properties={{
-                balloonContent: 'Ваше текущее местоположение'
-              }}
-            />
-          )}
-          
-          {/* Маркер выбранной точки */}
-          {selectedLocation && (
-            <Placemark
-              geometry={selectedLocation}
-              options={{
-                preset: 'islands#redDotIcon',
-                iconColor: '#ff0000'
-              }}
-              properties={{
-                balloonContent: 'Выбранная точка доставки'
-              }}
-            />
-          )}
-        </Map>
-      </YMaps>
-      
-      <div className={styles.mapInstructions}>
-        <p>Кликните на карте, чтобы выбрать точку доставки</p>
-        {showGeolocation && (
-          <button 
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleGeolocationClick();
-            }}
-            className={styles.geolocationButton}
-            disabled={isLoading}
-          >
-            {isLoading ? '⏳ Определяем местоположение...' : '📍 Использовать мое местоположение'}
-          </button>
-        )}
-      </div>
-    </div>
+      ref={mapContainerRef}
+      style={{ 
+        width: '100%', 
+        height: height, 
+        borderRadius: '8px', 
+        overflow: 'hidden', 
+        minHeight: '400px' 
+      }}
+    />
   );
 };
 

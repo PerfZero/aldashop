@@ -52,7 +52,7 @@ const CartMap = ({ onLocationSelect }) => {
     console.log('CartMap: Геокодируем координаты клика через HTTP API');
     const apiKey = 'aa9feae8-022d-44d2-acb1-8cc0198f451d';
     const coordsString = `${coords[1]},${coords[0]}`; // lat,lon для HTTP API
-    const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${coordsString}&format=json&results=1&lang=ru_RU`;
+    const url = `https://geocode-maps.yandex.ru/v1/?apikey=${apiKey}&geocode=${coordsString}&format=json&results=1&lang=ru_RU`;
     
     console.log('CartMap: HTTP запрос для клика:', url);
     
@@ -123,7 +123,7 @@ const CartMap = ({ onLocationSelect }) => {
           console.log('CartMap: Используем HTTP API для геокодирования');
           const apiKey = 'aa9feae8-022d-44d2-acb1-8cc0198f451d';
           const coordsString = `${userCoords[1]},${userCoords[0]}`; // lat,lon для HTTP API
-          const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${coordsString}&format=json&results=1&lang=ru_RU`;
+          const url = `https://geocode-maps.yandex.ru/v1/?apikey=${apiKey}&geocode=${coordsString}&format=json&results=1&lang=ru_RU`;
           
           console.log('CartMap: HTTP запрос к геокодеру:', url);
           

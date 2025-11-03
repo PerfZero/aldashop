@@ -4,7 +4,6 @@ import { useState, useEffect, use, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../../../../contexts/AuthContext';
-import { YMaps, Map, Placemark } from '@pbe/react-yandex-maps';
 import styles from './orderDetails.module.css';
 
 const statusMap = {
@@ -43,6 +42,9 @@ export default function OrderDetailsPage({ params }) {
     floor: '',
     apartment: ''
   });
+  const [deliveryCoordinates, setDeliveryCoordinates] = useState(null);
+  const mapContainerRef = useRef(null);
+  const adminMapRef = useRef(null);
   const [comment, setComment] = useState('');
   const [clientFirstName, setClientFirstName] = useState('');
   const [clientLastName, setClientLastName] = useState('');
@@ -60,6 +62,7 @@ export default function OrderDetailsPage({ params }) {
   const [productsToAdd, setProductsToAdd] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [showAddressFields, setShowAddressFields] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -70,6 +73,148 @@ export default function OrderDetailsPage({ params }) {
   const formatPrice = (price) => {
     if (!price) return '0';
     return price.toLocaleString('ru-RU');
+  };
+
+  const AdminOrderMap = ({ center, address, deliveryAddress }) => {
+    const mapRef = useRef(null);
+    const containerRef = useRef(null);
+    const placemarkRef = useRef(null);
+    const apiKey = 'aa9feae8-022d-44d2-acb1-8cc0198f451d';
+
+    useEffect(() => {
+      if (!containerRef.current) return;
+
+      const initMap = () => {
+        if (!window.ymaps) return;
+
+        window.ymaps.ready(() => {
+          if (!containerRef.current) return;
+
+          if (!mapRef.current) {
+            mapRef.current = new window.ymaps.Map(containerRef.current, {
+              center: center || [55.751574, 37.573856],
+              zoom: 15
+            });
+          }
+
+          if (placemarkRef.current) {
+            mapRef.current.geoObjects.remove(placemarkRef.current);
+          }
+
+          placemarkRef.current = new window.ymaps.Placemark(center || [55.751574, 37.573856], {
+            balloonContent: address || 'Адрес доставки'
+          }, {
+            preset: 'islands#redDotIcon'
+          });
+
+          mapRef.current.geoObjects.add(placemarkRef.current);
+          
+          if (center) {
+            mapRef.current.setCenter(center);
+          }
+        });
+      };
+
+      if (window.ymaps && window.ymaps.ready) {
+        initMap();
+      } else {
+        const script = document.createElement('script');
+        script.src = `https://api-maps.yandex.ru/2.1/?apikey=${apiKey}&lang=ru_RU`;
+        script.async = true;
+
+        script.onload = () => {
+          if (window.ymaps && window.ymaps.ready) {
+            initMap();
+          }
+        };
+
+        if (!document.querySelector(`script[src*="api-maps.yandex.ru/2.1"]`)) {
+          document.head.appendChild(script);
+        } else {
+          initMap();
+        }
+
+        return () => {
+          if (script.parentNode) {
+            script.parentNode.removeChild(script);
+          }
+        };
+      }
+
+      return () => {
+        if (mapRef.current && mapRef.current.destroy) {
+          mapRef.current.destroy();
+          mapRef.current = null;
+        }
+        placemarkRef.current = null;
+      };
+    }, [center, address]);
+
+    useEffect(() => {
+      if (deliveryAddress && mapRef.current) {
+        const addressString = [
+          deliveryAddress.administrative_area,
+          deliveryAddress.locality,
+          deliveryAddress.route,
+          deliveryAddress.street_number
+        ].filter(Boolean).join(', ');
+
+        if (addressString.trim().length > 3) {
+          const timeoutId = setTimeout(() => {
+            geocodeAddress(addressString, (coords) => {
+              if (coords && mapRef.current) {
+                if (placemarkRef.current) {
+                  mapRef.current.geoObjects.remove(placemarkRef.current);
+                }
+                
+                placemarkRef.current = new window.ymaps.Placemark(coords, {
+                  balloonContent: addressString
+                }, {
+                  preset: 'islands#redDotIcon'
+                });
+                
+                mapRef.current.geoObjects.add(placemarkRef.current);
+                mapRef.current.setCenter(coords);
+              }
+            });
+          }, 500);
+
+          return () => clearTimeout(timeoutId);
+        }
+      }
+    }, [deliveryAddress]);
+
+    return (
+      <div className={styles.formGroup}>
+        <label>Адрес доставки на карте:</label>
+        <div 
+          ref={containerRef}
+          style={{ width: '100%', height: '250px', borderRadius: '8px', overflow: 'hidden' }}
+        />
+      </div>
+    );
+  };
+
+  const geocodeAddress = async (addressString, setCoordinates) => {
+    if (!addressString || addressString.trim().length < 3) return;
+    
+    try {
+      const apiKey = 'aa9feae8-022d-44d2-acb1-8cc0198f451d';
+      const url = `https://geocode-maps.yandex.ru/v1/?apikey=${apiKey}&geocode=${encodeURIComponent(addressString)}&format=json&results=1&lang=ru_RU`;
+      
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject) {
+        const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
+        const coords = geoObject.Point.pos.split(' ').map(Number).reverse();
+        if (coords.length === 2) {
+          setCoordinates(coords);
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка геокодирования адреса:', error);
+    }
   };
 
   const searchProductByArticle = async (article) => {
@@ -288,7 +433,30 @@ export default function OrderDetailsPage({ params }) {
             };
             console.log('✅ Устанавливаем deliveryAddress:', deliveryAddr);
             setAddress(data.address.full_address || '');
-            setAddressObj(data.address);
+            
+            if (data.address.coordinates_x && data.address.coordinates_y) {
+              setDeliveryCoordinates([data.address.coordinates_y, data.address.coordinates_x]);
+              setAddressObj({
+                ...data.address,
+                coordinates_y: data.address.coordinates_y,
+                coordinates_x: data.address.coordinates_x
+              });
+            } else if (data.address.coordinates && Array.isArray(data.address.coordinates) && data.address.coordinates.length === 2) {
+              setDeliveryCoordinates(data.address.coordinates);
+              setAddressObj({
+                ...data.address,
+                coordinates_y: data.address.coordinates[0],
+                coordinates_x: data.address.coordinates[1]
+              });
+            } else {
+              setAddressObj(data.address);
+              if (data.address.full_address || (data.address.route && data.address.street_number)) {
+                const addressString = data.address.full_address || 
+                  `${data.address.administrative_area || ''}, ${data.address.locality || ''}, ${data.address.route || ''}, ${data.address.street_number || ''}`.trim();
+                geocodeAddress(addressString, setDeliveryCoordinates);
+              }
+            }
+            
             setDeliveryAddress(deliveryAddr);
           } else {
             setAddress('');
@@ -314,6 +482,18 @@ export default function OrderDetailsPage({ params }) {
           floor: data.delivery_address.floor || '',
           apartment: data.delivery_address.apartment || ''
         });
+        
+        if (data.delivery_address.coordinates_x && data.delivery_address.coordinates_y) {
+          setDeliveryCoordinates([data.delivery_address.coordinates_y, data.delivery_address.coordinates_x]);
+        } else if (data.delivery_address.coordinates && Array.isArray(data.delivery_address.coordinates) && data.delivery_address.coordinates.length === 2) {
+          setDeliveryCoordinates(data.delivery_address.coordinates);
+        } else {
+          const addressString = data.delivery_address.full_address || 
+            `${data.delivery_address.administrative_area || ''}, ${data.delivery_address.locality || ''}, ${data.delivery_address.route || ''}, ${data.delivery_address.street_number || ''}`.trim();
+          if (addressString) {
+            geocodeAddress(addressString, setDeliveryCoordinates);
+          }
+        }
       } else if (data.address && typeof data.address === 'object' && !data.address.id && (data.address.route || data.address.locality || data.address.administrative_area)) {
         console.log('✅ Адрес доставки найден в data.address (else if):', data.address);
         const deliveryAddr = {
@@ -328,6 +508,16 @@ export default function OrderDetailsPage({ params }) {
         };
         console.log('✅ Устанавливаем deliveryAddress (else if):', deliveryAddr);
         setDeliveryAddress(deliveryAddr);
+        
+        if (data.address.coordinates_x && data.address.coordinates_y) {
+          setDeliveryCoordinates([data.address.coordinates_y, data.address.coordinates_x]);
+        } else if (data.address.coordinates && Array.isArray(data.address.coordinates) && data.address.coordinates.length === 2) {
+          setDeliveryCoordinates(data.address.coordinates);
+        } else if (data.address.full_address || (data.address.route && data.address.street_number)) {
+          const addressString = data.address.full_address || 
+            `${data.address.administrative_area || ''}, ${data.address.locality || ''}, ${data.address.route || ''}, ${data.address.street_number || ''}`.trim();
+          geocodeAddress(addressString, setDeliveryCoordinates);
+        }
       }
       
       const initialQuantities = {};
@@ -743,108 +933,130 @@ export default function OrderDetailsPage({ params }) {
           {isManager && !isPickup && (
             <>
               <div className={styles.formGroup}>
-                <label>Область:</label>
-                <div className={styles.inputWithIcon}>
-                  <input
-                    type="text"
-                    value={deliveryAddress.administrative_area}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, administrative_area: e.target.value})}
-                    placeholder="Московская область"
-                    className={styles.formInput}
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddressFields(!showAddressFields)}
+                  className={styles.showAddressButton}
+                  style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#f0f0f0',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '14px'
+                  }}
+                >
+                  {showAddressFields ? 'Скрыть основные поля адреса' : 'Показать основные поля адреса'}
+                </button>
               </div>
               
-              <div className={styles.formGroup}>
-                <label>Город:</label>
-                <div className={styles.inputWithIcon}>
-                  <input
-                    type="text"
-                    value={deliveryAddress.locality}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, locality: e.target.value})}
-                    placeholder="Москва"
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label>Улица:</label>
-                <div className={styles.inputWithIcon}>
-                  <input
-                    type="text"
-                    value={deliveryAddress.route}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, route: e.target.value})}
-                    placeholder="Ленинский проспект"
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label>Номер дома:</label>
-                <div className={styles.inputWithIcon}>
-                  <input
-                    type="text"
-                    value={deliveryAddress.street_number}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, street_number: e.target.value})}
-                    placeholder="10"
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label>Индекс:</label>
-                <div className={styles.inputWithIcon}>
-                  <input
-                    type="text"
-                    value={deliveryAddress.postal_code}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, postal_code: e.target.value})}
-                    placeholder="119049"
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label>Подъезд:</label>
-                <div className={styles.inputWithIcon}>
-                  <input
-                    type="text"
-                    value={deliveryAddress.entrance}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, entrance: e.target.value})}
-                    placeholder="2"
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label>Этаж:</label>
-                <div className={styles.inputWithIcon}>
-                  <input
-                    type="text"
-                    value={deliveryAddress.floor}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, floor: e.target.value})}
-                    placeholder="3"
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
-              
-              <div className={styles.formGroup}>
-                <label>Квартира:</label>
-                <div className={styles.inputWithIcon}>
-                  <input
-                    type="text"
-                    value={deliveryAddress.apartment}
-                    onChange={(e) => setDeliveryAddress({...deliveryAddress, apartment: e.target.value})}
-                    placeholder="45"
-                    className={styles.formInput}
-                  />
-                </div>
-              </div>
+              {showAddressFields && (
+                <>
+                  <div className={styles.formGroup}>
+                    <label>Область:</label>
+                    <div className={styles.inputWithIcon}>
+                      <input
+                        type="text"
+                        value={deliveryAddress.administrative_area}
+                        onChange={(e) => setDeliveryAddress({...deliveryAddress, administrative_area: e.target.value})}
+                        placeholder="Московская область"
+                        className={styles.formInput}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Город:</label>
+                    <div className={styles.inputWithIcon}>
+                      <input
+                        type="text"
+                        value={deliveryAddress.locality}
+                        onChange={(e) => setDeliveryAddress({...deliveryAddress, locality: e.target.value})}
+                        placeholder="Москва"
+                        className={styles.formInput}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Улица:</label>
+                    <div className={styles.inputWithIcon}>
+                      <input
+                        type="text"
+                        value={deliveryAddress.route}
+                        onChange={(e) => setDeliveryAddress({...deliveryAddress, route: e.target.value})}
+                        placeholder="Ленинский проспект"
+                        className={styles.formInput}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Номер дома:</label>
+                    <div className={styles.inputWithIcon}>
+                      <input
+                        type="text"
+                        value={deliveryAddress.street_number}
+                        onChange={(e) => setDeliveryAddress({...deliveryAddress, street_number: e.target.value})}
+                        placeholder="10"
+                        className={styles.formInput}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Индекс:</label>
+                    <div className={styles.inputWithIcon}>
+                      <input
+                        type="text"
+                        value={deliveryAddress.postal_code}
+                        onChange={(e) => setDeliveryAddress({...deliveryAddress, postal_code: e.target.value})}
+                        placeholder="119049"
+                        className={styles.formInput}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Подъезд:</label>
+                    <div className={styles.inputWithIcon}>
+                      <input
+                        type="text"
+                        value={deliveryAddress.entrance}
+                        onChange={(e) => setDeliveryAddress({...deliveryAddress, entrance: e.target.value})}
+                        placeholder="2"
+                        className={styles.formInput}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Этаж:</label>
+                    <div className={styles.inputWithIcon}>
+                      <input
+                        type="text"
+                        value={deliveryAddress.floor}
+                        onChange={(e) => setDeliveryAddress({...deliveryAddress, floor: e.target.value})}
+                        placeholder="3"
+                        className={styles.formInput}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className={styles.formGroup}>
+                    <label>Квартира:</label>
+                    <div className={styles.inputWithIcon}>
+                      <input
+                        type="text"
+                        value={deliveryAddress.apartment}
+                        onChange={(e) => setDeliveryAddress({...deliveryAddress, apartment: e.target.value})}
+                        placeholder="45"
+                        className={styles.formInput}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           )}
           
@@ -1010,42 +1222,15 @@ export default function OrderDetailsPage({ params }) {
           </div>
           
           {((address || (addressObj && addressObj.full_address)) && (isManager ? (!isPickup || (addressObj && addressObj.coordinates_y && addressObj.coordinates_x)) : true)) && (
-            <div className={styles.formGroup}>
-              <label>Адрес доставки на карте:</label>
-              <YMaps 
-                query={{
-                  apikey: 'aa9feae8-022d-44d2-acb1-8cc0198f451d',
-                  lang: 'ru_RU',
-                  load: 'package.full'
-                }}
-              >
-                <Map
-                  state={{
-                    center: addressObj && addressObj.coordinates_y && addressObj.coordinates_x 
-                      ? [addressObj.coordinates_y, addressObj.coordinates_x]
-                      : [43.585472, 39.723098],
-                    zoom: 15
-                  }}
-                  width="100%"
-                  height="250px"
-                  options={{
-                    restrictMapArea: [[41.185096, 19.616318], [81.858710, 180.000000]]
-                  }}
-                >
-                  <Placemark
-                    geometry={addressObj && addressObj.coordinates_y && addressObj.coordinates_x 
-                      ? [addressObj.coordinates_y, addressObj.coordinates_x]
-                      : [43.585472, 39.723098]}
-                    options={{
-                      preset: 'islands#redDotIcon'
-                    }}
-                    properties={{
-                      balloonContent: address || (addressObj && addressObj.full_address) || ''
-                    }}
-                  />
-                </Map>
-              </YMaps>
-            </div>
+            <AdminOrderMap 
+              center={(!isPickup && deliveryCoordinates) 
+                ? deliveryCoordinates
+                : (addressObj && addressObj.coordinates_y && addressObj.coordinates_x) 
+                  ? [addressObj.coordinates_y, addressObj.coordinates_x]
+                  : [55.751574, 37.573856]}
+              address={address || (addressObj && addressObj.full_address) || ''}
+              deliveryAddress={isManager && !isPickup ? deliveryAddress : null}
+            />
           )}
           
         

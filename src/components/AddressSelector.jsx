@@ -367,11 +367,8 @@ const AddressSelector = ({
             
             <YandexMap
               onLocationSelect={handleMapLocationSelect}
-              initialCenter={selectedLocation?.coordinates || [43.585472, 39.723098]}
-              initialZoom={15}
+              initialCenter={selectedLocation?.coordinates || [55.751574, 37.573856]}
               height="400px"
-              showGeolocation={true}
-              showSearch={true}
             />
           </div>
         </div>

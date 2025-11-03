@@ -10,7 +10,6 @@
     "deploy": "git add . && git commit -m 'Auto-deploy' && git push origin main"
   },
   "dependencies": {
-    "@pbe/react-yandex-maps": "^1.2.5",
     "@tanstack/react-query": "^5.90.2",
     "next": "15.2.4",
     "next-query-params": "^5.1.0",

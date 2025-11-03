@@ -27,7 +27,7 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
     // HTTP API для геокодирования
     const apiKey = 'aa9feae8-022d-44d2-acb1-8cc0198f451d';
     const coordsString = `${coords[1]},${coords[0]}`;
-    const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${coordsString}&format=json&results=1&lang=ru_RU`;
+    const url = `https://geocode-maps.yandex.ru/v1/?apikey=${apiKey}&geocode=${coordsString}&format=json&results=1&lang=ru_RU`;
     
     fetch(url)
       .then(response => response.json())
@@ -129,7 +129,7 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
           // HTTP API для геокодирования
           const apiKey = 'aa9feae8-022d-44d2-acb1-8cc0198f451d';
           const coordsString = `${userCoords[1]},${userCoords[0]}`;
-          const url = `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${coordsString}&format=json&results=1&lang=ru_RU`;
+          const url = `https://geocode-maps.yandex.ru/v1/?apikey=${apiKey}&geocode=${coordsString}&format=json&results=1&lang=ru_RU`;
           
           fetch(url)
             .then(response => response.json())
