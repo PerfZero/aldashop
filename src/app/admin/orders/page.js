@@ -137,6 +137,7 @@ export default function OrdersPage() {
         }
 
         const data = await response.json();
+        console.log('Orders data received (manager):', data);
         setOrders(data.results || []);
         setTotalPages(data.total_pages || 1);
         setPage(pageNum);
@@ -162,6 +163,7 @@ export default function OrdersPage() {
         }
 
         const data = await response.json();
+        console.log('Orders data received (storage):', data);
         setOrders(data.results || []);
         setTotalPages(data.total_pages || 1);
         setPage(pageNum);
@@ -188,7 +190,7 @@ export default function OrdersPage() {
           await checkUserRole();
         }
         if (isManager !== null) {
-          await fetchOrders();
+          await fetchOrders(1);
         }
       }
     };
@@ -516,7 +518,10 @@ export default function OrdersPage() {
         <div className={styles.ordersTableContainer}>
           {loading && <p>Загрузка...</p>}
           {error && <p style={{ color: 'red' }}>{error}</p>}
-          {!loading && !error && (
+          {!loading && !error && orders.length === 0 && (
+            <p>Заказы не найдены</p>
+          )}
+          {!loading && !error && orders.length > 0 && (
             <>
               <table className={styles.ordersTable}>
                 <thead>
