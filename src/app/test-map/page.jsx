@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import YandexMap from '../../components/YandexMap';
-import DebugYandexMap from '../../components/DebugYandexMap';
 
 export default function TestMapPage() {
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -17,11 +16,6 @@ export default function TestMapPage() {
     <div style={{ padding: '20px' }}>
       <h1>Тест Яндекс.Карт</h1>
       
-      <div style={{ marginBottom: '20px' }}>
-        <h2>Отладочная карта</h2>
-        <DebugYandexMap />
-      </div>
-
       <div style={{ marginBottom: '20px' }}>
         <h2>Простая карта с кликами</h2>
         <YandexMap
