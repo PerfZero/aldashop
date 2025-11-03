@@ -29,6 +29,20 @@ export default function OrderDetailsPage({ params }) {
   const [status, setStatus] = useState('');
   const [deliveryDate, setDeliveryDate] = useState('');
   const [address, setAddress] = useState('');
+  const [addressObj, setAddressObj] = useState(null);
+  const [isPickup, setIsPickup] = useState(false);
+  const [availablePickupAddresses, setAvailablePickupAddresses] = useState([]);
+  const [selectedPickupAddress, setSelectedPickupAddress] = useState(null);
+  const [deliveryAddress, setDeliveryAddress] = useState({
+    administrative_area: '',
+    locality: '',
+    route: '',
+    street_number: '',
+    postal_code: '',
+    entrance: '',
+    floor: '',
+    apartment: ''
+  });
   const [comment, setComment] = useState('');
   const [clientFirstName, setClientFirstName] = useState('');
   const [clientLastName, setClientLastName] = useState('');
@@ -228,10 +242,93 @@ export default function OrderDetailsPage({ params }) {
       }
 
       const data = await response.json();
+      console.log('📥 Данные заказа из API:', data);
+      console.log('📥 data.address:', data.address);
+      console.log('📥 data.delivery_address:', data.delivery_address);
+      console.log('📥 data.delivery_type:', data.delivery_type);
+      console.log('📥 data.pickup:', data.pickup);
+      
       setOrder(data);
       setStatus(data.status || '');
-      setAddress(data.address || '');
       setComment(data.comment || '');
+      
+      if (data.available_pickup_addresses && Array.isArray(data.available_pickup_addresses)) {
+        setAvailablePickupAddresses(data.available_pickup_addresses);
+      }
+      
+      const isPickupDelivery = data.pickup !== undefined 
+        ? data.pickup 
+        : (data.delivery_type === 'pickup');
+      
+      console.log('🔍 isPickupDelivery:', isPickupDelivery);
+      
+      setIsPickup(isPickupDelivery);
+      
+      if (data.address) {
+        if (typeof data.address === 'string') {
+          setAddress(data.address);
+          setAddressObj(null);
+        } else if (typeof data.address === 'object') {
+          if (isPickupDelivery && data.address.id) {
+            console.log('📦 Самовывоз - адрес с id:', data.address);
+            setAddressObj(data.address);
+            setAddress(data.address.full_address || '');
+            setSelectedPickupAddress(data.address);
+          } else if (!isPickupDelivery && (data.address.route || data.address.locality || data.address.full_address || data.address.administrative_area)) {
+            console.log('✅ Адрес доставки найден в data.address:', data.address);
+            const deliveryAddr = {
+              administrative_area: data.address.administrative_area || '',
+              locality: data.address.locality || '',
+              route: data.address.route || '',
+              street_number: data.address.street_number || '',
+              postal_code: data.address.postal_code || '',
+              entrance: data.address.entrance || '',
+              floor: data.address.floor || '',
+              apartment: data.address.apartment || ''
+            };
+            console.log('✅ Устанавливаем deliveryAddress:', deliveryAddr);
+            setAddress(data.address.full_address || '');
+            setAddressObj(data.address);
+            setDeliveryAddress(deliveryAddr);
+          } else {
+            setAddress('');
+            setAddressObj(null);
+          }
+        } else {
+          setAddress('');
+          setAddressObj(null);
+        }
+      } else {
+        setAddress('');
+        setAddressObj(null);
+      }
+      
+      if (data.delivery_address && typeof data.delivery_address === 'object') {
+        setDeliveryAddress({
+          administrative_area: data.delivery_address.administrative_area || '',
+          locality: data.delivery_address.locality || '',
+          route: data.delivery_address.route || '',
+          street_number: data.delivery_address.street_number || '',
+          postal_code: data.delivery_address.postal_code || '',
+          entrance: data.delivery_address.entrance || '',
+          floor: data.delivery_address.floor || '',
+          apartment: data.delivery_address.apartment || ''
+        });
+      } else if (data.address && typeof data.address === 'object' && !data.address.id && (data.address.route || data.address.locality || data.address.administrative_area)) {
+        console.log('✅ Адрес доставки найден в data.address (else if):', data.address);
+        const deliveryAddr = {
+          administrative_area: data.address.administrative_area || '',
+          locality: data.address.locality || '',
+          route: data.address.route || '',
+          street_number: data.address.street_number || '',
+          postal_code: data.address.postal_code || '',
+          entrance: data.address.entrance || '',
+          floor: data.address.floor || '',
+          apartment: data.address.apartment || ''
+        };
+        console.log('✅ Устанавливаем deliveryAddress (else if):', deliveryAddr);
+        setDeliveryAddress(deliveryAddr);
+      }
       
       const initialQuantities = {};
       if (data.products && Array.isArray(data.products)) {
@@ -241,8 +338,13 @@ export default function OrderDetailsPage({ params }) {
       }
       setProductQuantities(initialQuantities);
       
+      setTimeout(() => {
+        console.log('📋 После установки - deliveryAddress:', deliveryAddress);
+        console.log('📋 После установки - address:', address);
+        console.log('📋 После установки - isPickup:', isPickup);
+      }, 100);
+      
       if (isManager) {
-        // Поля только для менеджера
         setClientFirstName(data.client_first_name || '');
         setClientLastName(data.client_last_name || '');
         setClientPatronymic(data.client_patronymic || '');
@@ -254,7 +356,6 @@ export default function OrderDetailsPage({ params }) {
           setDeliveryDate(formatDate(data.order_date));
         }
       } else {
-        // Для склада используем received_date если есть
         if (data.received_date) {
           setDeliveryDate(formatDate(data.received_date));
         }
@@ -283,9 +384,39 @@ export default function OrderDetailsPage({ params }) {
       }
 
       if (isManager) {
-        // Поля только для менеджера
-        if (address !== undefined && address !== (order.address || '')) {
-          updateData.address = typeof address === 'string' ? address : address;
+        const oldPickup = order.pickup !== undefined ? order.pickup : (order.address && typeof order.address === 'object' && order.address.id);
+        const pickupChanged = isPickup !== oldPickup;
+        
+        if (pickupChanged) {
+          updateData.pickup = isPickup;
+          if (isPickup) {
+            if (selectedPickupAddress && selectedPickupAddress.id) {
+              updateData.address = { id: selectedPickupAddress.id };
+            }
+          } else {
+            updateData.delivery_address = deliveryAddress;
+          }
+        } else {
+          if (isPickup) {
+            if (selectedPickupAddress && selectedPickupAddress.id !== (order.address?.id || addressObj?.id)) {
+              updateData.address = { id: selectedPickupAddress.id };
+            }
+          } else {
+            const oldDeliveryAddress = order.delivery_address || {};
+            const deliveryChanged = 
+              deliveryAddress.administrative_area !== (oldDeliveryAddress.administrative_area || '') ||
+              deliveryAddress.locality !== (oldDeliveryAddress.locality || '') ||
+              deliveryAddress.route !== (oldDeliveryAddress.route || '') ||
+              deliveryAddress.street_number !== (oldDeliveryAddress.street_number || '') ||
+              deliveryAddress.postal_code !== (oldDeliveryAddress.postal_code || '') ||
+              deliveryAddress.entrance !== (oldDeliveryAddress.entrance || '') ||
+              deliveryAddress.floor !== (oldDeliveryAddress.floor || '') ||
+              deliveryAddress.apartment !== (oldDeliveryAddress.apartment || '');
+            
+            if (deliveryChanged) {
+              updateData.delivery_address = deliveryAddress;
+            }
+          }
         }
 
         order.products?.forEach(product => {
@@ -404,8 +535,70 @@ export default function OrderDetailsPage({ params }) {
       if (data.order) {
         setOrder(data.order);
         setStatus(data.order.status || '');
-        setAddress(data.order.address || '');
         setComment(data.order.comment || '');
+        
+        if (data.order.available_pickup_addresses && Array.isArray(data.order.available_pickup_addresses)) {
+          setAvailablePickupAddresses(data.order.available_pickup_addresses);
+        }
+        
+        if (data.order.address) {
+          if (typeof data.order.address === 'string') {
+            setAddress(data.order.address);
+            setAddressObj(null);
+            setIsPickup(false);
+          } else if (typeof data.order.address === 'object' && data.order.address.id) {
+            setAddressObj(data.order.address);
+            setAddress(data.order.address.full_address || '');
+            setIsPickup(true);
+            setSelectedPickupAddress(data.order.address);
+          } else if (typeof data.order.address === 'object' && (data.order.address.route || data.order.address.locality || data.order.address.full_address)) {
+            setAddress(data.order.address.full_address || '');
+            setAddressObj(data.order.address);
+            setIsPickup(false);
+            setDeliveryAddress({
+              administrative_area: data.order.address.administrative_area || '',
+              locality: data.order.address.locality || '',
+              route: data.order.address.route || '',
+              street_number: data.order.address.street_number || '',
+              postal_code: data.order.address.postal_code || '',
+              entrance: data.order.address.entrance || '',
+              floor: data.order.address.floor || '',
+              apartment: data.order.address.apartment || ''
+            });
+          }
+        }
+        
+        if (data.order.pickup !== undefined) {
+          setIsPickup(data.order.pickup);
+        } else if (data.order.delivery_type === 'pickup') {
+          setIsPickup(true);
+        } else if (data.order.delivery_type === 'delivery') {
+          setIsPickup(false);
+        }
+        
+        if (data.order.delivery_address && typeof data.order.delivery_address === 'object') {
+          setDeliveryAddress({
+            administrative_area: data.order.delivery_address.administrative_area || '',
+            locality: data.order.delivery_address.locality || '',
+            route: data.order.delivery_address.route || '',
+            street_number: data.order.delivery_address.street_number || '',
+            postal_code: data.order.delivery_address.postal_code || '',
+            entrance: data.order.delivery_address.entrance || '',
+            floor: data.order.delivery_address.floor || '',
+            apartment: data.order.delivery_address.apartment || ''
+          });
+        } else if (data.order.address && typeof data.order.address === 'object' && !data.order.address.id && (data.order.address.route || data.order.address.locality || data.order.address.administrative_area)) {
+          setDeliveryAddress({
+            administrative_area: data.order.address.administrative_area || '',
+            locality: data.order.address.locality || '',
+            route: data.order.address.route || '',
+            street_number: data.order.address.street_number || '',
+            postal_code: data.order.address.postal_code || '',
+            entrance: data.order.address.entrance || '',
+            floor: data.order.address.floor || '',
+            apartment: data.order.address.apartment || ''
+          });
+        }
         
         if (isManager) {
           setClientFirstName(data.order.client_first_name || '');
@@ -427,7 +620,6 @@ export default function OrderDetailsPage({ params }) {
           setProductQuantities(newQuantities);
         }
       } else {
-        // Если API склада возвращает заказ напрямую
         setOrder(data);
         setStatus(data.status || '');
         setComment(data.comment || '');
@@ -486,19 +678,189 @@ export default function OrderDetailsPage({ params }) {
         </div>
         
         <div className={styles.orderDetails}>
-          <div className={styles.formGroup}>
-            <label>Адрес доставки/пункта самовывоза:</label>
-            <div className={styles.inputWithIcon}>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Введите адрес"
-                className={styles.formInput}
-              />
-              
+          {isManager && (
+            <div className={styles.formGroup}>
+              <label>Тип доставки:</label>
+              <div className={styles.inputWithIcon}>
+                <select
+                  value={isPickup ? 'pickup' : 'delivery'}
+                  onChange={(e) => {
+                    const newIsPickup = e.target.value === 'pickup';
+                    setIsPickup(newIsPickup);
+                    if (newIsPickup) {
+                      setDeliveryAddress({
+                        administrative_area: '',
+                        locality: '',
+                        route: '',
+                        street_number: '',
+                        postal_code: '',
+                        entrance: '',
+                        floor: '',
+                        apartment: ''
+                      });
+                    } else {
+                      setSelectedPickupAddress(null);
+                      setAddressObj(null);
+                      setAddress('');
+                    }
+                  }}
+                  className={styles.formInput}
+                >
+                  <option value="delivery">Доставка</option>
+                  <option value="pickup">Самовывоз</option>
+                </select>
+              </div>
             </div>
-          </div>
+          )}
+          
+          {isManager && isPickup && availablePickupAddresses.length > 0 && (
+            <div className={styles.formGroup}>
+              <label>Адрес самовывоза:</label>
+              <div className={styles.inputWithIcon}>
+                <select
+                  value={selectedPickupAddress?.id || ''}
+                  onChange={(e) => {
+                    const selected = availablePickupAddresses.find(addr => addr.id === parseInt(e.target.value));
+                    setSelectedPickupAddress(selected);
+                    if (selected) {
+                      setAddress(selected.full_address || '');
+                      setAddressObj(selected);
+                    }
+                  }}
+                  className={styles.formInput}
+                >
+                  <option value="">Выберите адрес</option>
+                  {availablePickupAddresses.map(addr => (
+                    <option key={addr.id} value={addr.id}>
+                      {addr.full_address || `${addr.administrative_area}, ${addr.locality}, ${addr.route} ${addr.street_number}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+          
+          {isManager && !isPickup && (
+            <>
+              <div className={styles.formGroup}>
+                <label>Область:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={deliveryAddress.administrative_area}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, administrative_area: e.target.value})}
+                    placeholder="Московская область"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Город:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={deliveryAddress.locality}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, locality: e.target.value})}
+                    placeholder="Москва"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Улица:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={deliveryAddress.route}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, route: e.target.value})}
+                    placeholder="Ленинский проспект"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Номер дома:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={deliveryAddress.street_number}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, street_number: e.target.value})}
+                    placeholder="10"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Индекс:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={deliveryAddress.postal_code}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, postal_code: e.target.value})}
+                    placeholder="119049"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Подъезд:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={deliveryAddress.entrance}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, entrance: e.target.value})}
+                    placeholder="2"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Этаж:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={deliveryAddress.floor}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, floor: e.target.value})}
+                    placeholder="3"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+              
+              <div className={styles.formGroup}>
+                <label>Квартира:</label>
+                <div className={styles.inputWithIcon}>
+                  <input
+                    type="text"
+                    value={deliveryAddress.apartment}
+                    onChange={(e) => setDeliveryAddress({...deliveryAddress, apartment: e.target.value})}
+                    placeholder="45"
+                    className={styles.formInput}
+                  />
+                </div>
+              </div>
+            </>
+          )}
+          
+          {!isManager && (
+            <div className={styles.formGroup}>
+              <label>Адрес доставки/пункта самовывоза:</label>
+              <div className={styles.inputWithIcon}>
+                <input
+                  type="text"
+                  value={address}
+                  readOnly
+                  className={styles.formInput}
+                />
+              </div>
+            </div>
+          )}
           
           <div className={styles.formGroup}>
             <label>Дата доставки/самовывоза:</label>
@@ -647,7 +1009,7 @@ export default function OrderDetailsPage({ params }) {
             />
           </div>
           
-          {order.address && (
+          {((address || (addressObj && addressObj.full_address)) && (isManager ? (!isPickup || (addressObj && addressObj.coordinates_y && addressObj.coordinates_x)) : true)) && (
             <div className={styles.formGroup}>
               <label>Адрес доставки на карте:</label>
               <YMaps 
@@ -659,7 +1021,9 @@ export default function OrderDetailsPage({ params }) {
               >
                 <Map
                   state={{
-                    center: [43.585472, 39.723098],
+                    center: addressObj && addressObj.coordinates_y && addressObj.coordinates_x 
+                      ? [addressObj.coordinates_y, addressObj.coordinates_x]
+                      : [43.585472, 39.723098],
                     zoom: 15
                   }}
                   width="100%"
@@ -669,12 +1033,14 @@ export default function OrderDetailsPage({ params }) {
                   }}
                 >
                   <Placemark
-                    geometry={[43.585472, 39.723098]}
+                    geometry={addressObj && addressObj.coordinates_y && addressObj.coordinates_x 
+                      ? [addressObj.coordinates_y, addressObj.coordinates_x]
+                      : [43.585472, 39.723098]}
                     options={{
                       preset: 'islands#redDotIcon'
                     }}
                     properties={{
-                      balloonContent: order.address
+                      balloonContent: address || (addressObj && addressObj.full_address) || ''
                     }}
                   />
                 </Map>

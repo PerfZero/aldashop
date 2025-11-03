@@ -36,6 +36,7 @@ export default function CartPage() {
     city: 'Сочи',
     street: '',
     house: '',
+    postalCode: '',
     pickupAddress: 'ул. Кипарисовая, 56',
     pickupAddressId: null,
     apartment: '',
@@ -78,7 +79,7 @@ export default function CartPage() {
       if (isAuthenticated) {
         setIsLoadingAutocomplete(true);
         try {
-          const response = await fetch('/api/order/autocomplete/', {
+          const response = await fetch('https://aldalinde.ru/api/order/autocomplete/', {
             headers: getAuthHeaders(),
           });
           
@@ -151,13 +152,11 @@ export default function CartPage() {
         case 'firstName':
         case 'lastName':
         case 'patronymic':
-        case 'phone':
         case 'email':
         case 'city':
           errors[name] = `${name === 'firstName' ? 'Имя' : 
                           name === 'lastName' ? 'Фамилия' : 
                           name === 'patronymic' ? 'Отчество' : 
-                          name === 'phone' ? 'Телефон' : 
                           name === 'email' ? 'Email' : 
                           'Населенный пункт'} обязательно для заполнения`;
           break;
@@ -192,14 +191,6 @@ export default function CartPage() {
           errors.patronymic = 'Отчество должно содержать минимум 2 символа';
         } else if (!/^[а-яёa-z\s-]+$/i.test(value.trim())) {
           errors.patronymic = 'Отчество может содержать только буквы, пробелы и дефисы';
-        }
-        break;
-        
-      case 'phone':
-        const phoneDigits = value.replace(/\D/g, '');
-        // Проверяем, что номер заполнен полностью (11 цифр для РФ)
-        if (phoneDigits.length !== 11) {
-          errors.phone = 'Введите корректный номер телефона';
         }
         break;
         
@@ -333,7 +324,7 @@ export default function CartPage() {
     try {
       const currentTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       
-      const response = await fetch('/api/order/check-promo/', {
+      const response = await fetch('https://aldalinde.ru/api/order/check-promo/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -366,7 +357,7 @@ export default function CartPage() {
   const validateForm = () => {
     const errors = {};
     
-    const fieldsToValidate = ['firstName', 'lastName', 'patronymic', 'phone', 'email', 'city'];
+    const fieldsToValidate = ['firstName', 'lastName', 'patronymic', 'email', 'city'];
     
     if (formData.isLegalEntity) {
       fieldsToValidate.push('inn');
@@ -419,7 +410,7 @@ export default function CartPage() {
         locality: formData.city,
         route: formData.street || '',
         street_number: formData.house || '',
-        postal_code: '',
+        postal_code: formData.postalCode || '',
         entrance: '',
         floor: '',
         apartment: formData.apartment || ''
@@ -476,7 +467,7 @@ export default function CartPage() {
         Object.assign(headers, authHeaders);
       }
       
-      const response = await fetch('/api/order/create-order/', {
+      const response = await fetch('https://aldalinde.ru/api/order/create-order/', {
         method: 'POST',
         headers,
         body: JSON.stringify(orderData)
@@ -538,7 +529,6 @@ export default function CartPage() {
 
   const handleLocationSelect = (locationData) => {
     
-    // Обновляем адрес из карты
     if (locationData.fullAddress) {
       setMapSelectedAddress(locationData.fullAddress);
     }
@@ -549,18 +539,34 @@ export default function CartPage() {
       city: locationData.city || prev.city,
       street: locationData.street || prev.street,
       house: locationData.house || prev.house,
+      postalCode: locationData.postal_code || prev.postalCode,
       coordinates: locationData.coordinates,
       fullAddress: locationData.fullAddress || locationData.address
     }));
 
-    // Валидируем поля адреса после обновления
     if (locationData.street) {
       const streetErrors = validateField('street', locationData.street);
-      setValidationErrors(prev => ({ ...prev, ...streetErrors }));
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        if (!streetErrors.street) {
+          delete newErrors.street;
+        } else {
+          newErrors.street = streetErrors.street;
+        }
+        return newErrors;
+      });
     }
     if (locationData.house) {
       const houseErrors = validateField('house', locationData.house);
-      setValidationErrors(prev => ({ ...prev, ...houseErrors }));
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        if (!houseErrors.house) {
+          delete newErrors.house;
+        } else {
+          newErrors.house = houseErrors.house;
+        }
+        return newErrors;
+      });
     }
   };
 
@@ -813,7 +819,6 @@ export default function CartPage() {
                           type="tel" 
                           name="phone" 
                           placeholder=" " 
-                          required
                           value={formData.phone}
                           onChange={handleInputChange}
                           className={validationErrors.phone ? styles.errorInput : ''}

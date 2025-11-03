@@ -35,9 +35,46 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
         if (data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject) {
           const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
           const address = geoObject.metaDataProperty.GeocoderMetaData.text;
-          const components = geoObject.metaDataProperty.GeocoderMetaData.Address?.Components || [];
+          const addressObj = geoObject.metaDataProperty.GeocoderMetaData.Address;
+          const components = addressObj?.Components || [];
+          const postalCode = addressObj?.postal_code || '';
           
-          const country = components.find(c => c.kind === 'country')?.name || '';
+          let country = '';
+          let region = '';
+          let city = '';
+          let street = '';
+          let house = '';
+          
+          components.forEach(component => {
+            switch (component.kind) {
+              case 'country':
+                country = component.name;
+                break;
+              case 'province':
+                if (!component.name.includes('федеральный округ')) {
+                  region = component.name;
+                }
+                break;
+              case 'administrative_area_level_1':
+                region = component.name;
+                break;
+              case 'locality':
+                city = component.name;
+                break;
+              case 'route':
+                street = component.name;
+                break;
+              case 'street':
+                street = component.name;
+                break;
+              case 'street_number':
+                house = component.name;
+                break;
+              case 'house':
+                house = component.name;
+                break;
+            }
+          });
           
           if (country !== 'Россия') {
             alert('Доставка возможна только по территории России');
@@ -51,11 +88,13 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
             const locationData = {
               coordinates: coords,
               fullAddress: address,
-              region: '',
-              city: '',
-              street: '',
-              house: '',
-              components: []
+              address: address,
+              region: region,
+              city: city,
+              street: street,
+              house: house,
+              postal_code: postalCode,
+              components: components
             };
             onLocationSelect(locationData);
           }
@@ -98,9 +137,46 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
               if (data.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject) {
                 const geoObject = data.response.GeoObjectCollection.featureMember[0].GeoObject;
                 const address = geoObject.metaDataProperty.GeocoderMetaData.text;
-                const components = geoObject.metaDataProperty.GeocoderMetaData.Address?.Components || [];
+                const addressObj = geoObject.metaDataProperty.GeocoderMetaData.Address;
+                const components = addressObj?.Components || [];
+                const postalCode = addressObj?.postal_code || '';
                 
-                const country = components.find(c => c.kind === 'country')?.name || '';
+                let country = '';
+                let region = '';
+                let city = '';
+                let street = '';
+                let house = '';
+                
+                components.forEach(component => {
+                  switch (component.kind) {
+                    case 'country':
+                      country = component.name;
+                      break;
+                    case 'province':
+                      if (!region || component.name.includes('федеральный округ')) {
+                        region = component.name;
+                      }
+                      break;
+                    case 'administrative_area_level_1':
+                      region = component.name;
+                      break;
+                    case 'locality':
+                      city = component.name;
+                      break;
+                    case 'route':
+                      street = component.name;
+                      break;
+                    case 'street':
+                      street = component.name;
+                      break;
+                    case 'street_number':
+                      house = component.name;
+                      break;
+                    case 'house':
+                      house = component.name;
+                      break;
+                  }
+                });
                 
                 if (country !== 'Россия') {
                   alert('Доставка возможна только по территории России');
@@ -114,11 +190,13 @@ const MinimalCartMap = ({ onLocationSelect, className = '' }) => {
                   const locationData = {
                     coordinates: userCoords,
                     fullAddress: address,
-                    region: '',
-                    city: '',
-                    street: '',
-                    house: '',
-                    components: []
+                    address: address,
+                    region: region,
+                    city: city,
+                    street: street,
+                    house: house,
+                    postal_code: postalCode,
+                    components: components
                   };
                   onLocationSelect(locationData);
                 }
