@@ -32,6 +32,31 @@ export default function OrderDetailsPage({ params }) {
   const [isPickup, setIsPickup] = useState(false);
   const [availablePickupAddresses, setAvailablePickupAddresses] = useState([]);
   const [selectedPickupAddress, setSelectedPickupAddress] = useState(null);
+  const [isDeliveryTypeDropdownOpen, setIsDeliveryTypeDropdownOpen] = useState(false);
+  const [isPickupAddressDropdownOpen, setIsPickupAddressDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
+  const deliveryTypeRef = useRef(null);
+  const pickupAddressRef = useRef(null);
+  const statusRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (deliveryTypeRef.current && !deliveryTypeRef.current.contains(event.target)) {
+        setIsDeliveryTypeDropdownOpen(false);
+      }
+      if (pickupAddressRef.current && !pickupAddressRef.current.contains(event.target)) {
+        setIsPickupAddressDropdownOpen(false);
+      }
+      if (statusRef.current && !statusRef.current.contains(event.target)) {
+        setIsStatusDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
   const [deliveryAddress, setDeliveryAddress] = useState({
     administrative_area: '',
     locality: '',
@@ -65,6 +90,21 @@ export default function OrderDetailsPage({ params }) {
   const [showAddressFields, setShowAddressFields] = useState(false);
 
   const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const parseDateFromInput = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -543,11 +583,11 @@ export default function OrderDetailsPage({ params }) {
         setInn(data.inn || '');
         setIsProcessed(data.is_processed || false);
         if (data.order_date) {
-          setDeliveryDate(formatDate(data.order_date));
+          setDeliveryDate(formatDateForInput(data.order_date));
         }
       } else {
         if (data.received_date) {
-          setDeliveryDate(formatDate(data.received_date));
+          setDeliveryDate(formatDateForInput(data.received_date));
         }
       }
     } catch (err) {
@@ -871,34 +911,63 @@ export default function OrderDetailsPage({ params }) {
           {isManager && (
             <div className={styles.formGroup}>
               <label>Тип доставки:</label>
-              <div className={styles.inputWithIcon}>
-                <select
-                  value={isPickup ? 'pickup' : 'delivery'}
-                  onChange={(e) => {
-                    const newIsPickup = e.target.value === 'pickup';
-                    setIsPickup(newIsPickup);
-                    if (newIsPickup) {
-                      setDeliveryAddress({
-                        administrative_area: '',
-                        locality: '',
-                        route: '',
-                        street_number: '',
-                        postal_code: '',
-                        entrance: '',
-                        floor: '',
-                        apartment: ''
-                      });
-                    } else {
-                      setSelectedPickupAddress(null);
-                      setAddressObj(null);
-                      setAddress('');
-                    }
-                  }}
-                  className={styles.formInput}
+              <div className={styles.customSelect} ref={deliveryTypeRef}>
+                <div 
+                  className={styles.selectHeader} 
+                  onClick={() => setIsDeliveryTypeDropdownOpen(!isDeliveryTypeDropdownOpen)}
                 >
-                  <option value="delivery">Доставка</option>
-                  <option value="pickup">Самовывоз</option>
-                </select>
+                  <div className={styles.inputContainer}>
+                    <input 
+                      type="text" 
+                      placeholder=" "
+                      value={isPickup ? 'Самовывоз' : 'Доставка'}
+                      readOnly
+                      className={styles.selectInput}
+                    />
+                  
+                  </div>
+                  <div className={styles.selectArrow}>
+                    <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 1L7 7L13 1" stroke="#C1AF86" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+                
+                {isDeliveryTypeDropdownOpen && (
+                  <div className={styles.selectOptions}>
+                    <div 
+                      className={styles.selectOption}
+                      onClick={() => {
+                        setIsPickup(false);
+                        setIsDeliveryTypeDropdownOpen(false);
+                        setSelectedPickupAddress(null);
+                        setAddressObj(null);
+                        setAddress('');
+                      }}
+                    >
+                      Доставка
+                    </div>
+                    <div 
+                      className={styles.selectOption}
+                      onClick={() => {
+                        setIsPickup(true);
+                        setIsDeliveryTypeDropdownOpen(false);
+                        setDeliveryAddress({
+                          administrative_area: '',
+                          locality: '',
+                          route: '',
+                          street_number: '',
+                          postal_code: '',
+                          entrance: '',
+                          floor: '',
+                          apartment: ''
+                        });
+                      }}
+                    >
+                      Самовывоз
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -906,26 +975,46 @@ export default function OrderDetailsPage({ params }) {
           {isManager && isPickup && availablePickupAddresses.length > 0 && (
             <div className={styles.formGroup}>
               <label>Адрес самовывоза:</label>
-              <div className={styles.inputWithIcon}>
-                <select
-                  value={selectedPickupAddress?.id || ''}
-                  onChange={(e) => {
-                    const selected = availablePickupAddresses.find(addr => addr.id === parseInt(e.target.value));
-                    setSelectedPickupAddress(selected);
-                    if (selected) {
-                      setAddress(selected.full_address || '');
-                      setAddressObj(selected);
-                    }
-                  }}
-                  className={styles.formInput}
+              <div className={styles.customSelect} ref={pickupAddressRef}>
+                <div 
+                  className={styles.selectHeader} 
+                  onClick={() => setIsPickupAddressDropdownOpen(!isPickupAddressDropdownOpen)}
                 >
-                  <option value="">Выберите адрес</option>
-                  {availablePickupAddresses.map(addr => (
-                    <option key={addr.id} value={addr.id}>
-                      {addr.full_address || `${addr.administrative_area}, ${addr.locality}, ${addr.route} ${addr.street_number}`}
-                    </option>
-                  ))}
-                </select>
+                  <div className={styles.inputContainer}>
+                    <input 
+                      type="text" 
+                      placeholder=" "
+                      value={selectedPickupAddress?.full_address || selectedPickupAddress ? `${selectedPickupAddress.administrative_area}, ${selectedPickupAddress.locality}, ${selectedPickupAddress.route} ${selectedPickupAddress.street_number}` : ''}
+                      readOnly
+                      className={styles.selectInput}
+                    />
+                   
+                  </div>
+                  <div className={styles.selectArrow}>
+                    <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 1L7 7L13 1" stroke="#C1AF86" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                </div>
+                
+                {isPickupAddressDropdownOpen && (
+                  <div className={styles.selectOptions}>
+                    {availablePickupAddresses.map(addr => (
+                      <div 
+                        key={addr.id}
+                        className={styles.selectOption}
+                        onClick={() => {
+                          setSelectedPickupAddress(addr);
+                          setAddress(addr.full_address || '');
+                          setAddressObj(addr);
+                          setIsPickupAddressDropdownOpen(false);
+                        }}
+                      >
+                        {addr.full_address || `${addr.administrative_area}, ${addr.locality}, ${addr.route} ${addr.street_number}`}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1078,12 +1167,23 @@ export default function OrderDetailsPage({ params }) {
             <label>Дата доставки/самовывоза:</label>
             <div className={styles.inputWithIcon}>
               <input
-                type="text"
-                value={deliveryDate}
+                type="date"
+                value={deliveryDate || ''}
                 onChange={(e) => setDeliveryDate(e.target.value)}
                 className={styles.formInput}
+                style={{ paddingRight: '50px' }}
               />
-              <button className={styles.editButton}>
+              <button 
+                className={styles.editButton}
+                type="button"
+                onClick={() => {
+                  const input = document.querySelector(`input[type="date"][value="${deliveryDate || ''}"]`);
+                  if (input) {
+                    input.showPicker();
+                  }
+                }}
+                style={{ pointerEvents: 'auto', zIndex: 10 }}
+              >
               <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
   <path d="M19.09 14.9412V19.3812C19.0898 20.0094 18.8401 20.6118 18.3959 21.0561C17.9516 21.5003 17.3492 21.75 16.721 21.7502H5.12002C4.80777 21.7501 4.49863 21.6883 4.21035 21.5683C3.92208 21.4483 3.66035 21.2726 3.44021 21.0511C3.22007 20.8297 3.04586 20.5669 2.92758 20.2779C2.80931 19.989 2.74931 19.6795 2.75102 19.3672V7.77922C2.74916 7.46747 2.80919 7.15845 2.92764 6.87007C3.04608 6.58169 3.22059 6.31968 3.44103 6.09924C3.66148 5.87879 3.92348 5.70429 4.21186 5.58584C4.50025 5.4674 4.80927 5.40736 5.12102 5.40922H9.56002" stroke="#C1A286" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
   <path d="M19.09 9.49521L15.005 5.40921M6.83496 16.3032V14.1382C6.83696 13.7812 6.97896 13.4382 7.22996 13.1852L16.762 3.65321C16.8884 3.52532 17.039 3.42378 17.205 3.35449C17.371 3.28519 17.5491 3.24951 17.729 3.24951C17.9088 3.24951 18.0869 3.28519 18.2529 3.35449C18.4189 3.42378 18.5695 3.52532 18.696 3.65321L20.847 5.80421C20.9749 5.93069 21.0764 6.08128 21.1457 6.24727C21.215 6.41326 21.2507 6.59134 21.2507 6.77121C21.2507 6.95108 21.215 7.12917 21.1457 7.29515C21.0764 7.46114 20.9749 7.61173 20.847 7.73821L11.315 17.2702C11.0615 17.5219 10.7192 17.6638 10.362 17.6652H8.19696C8.01803 17.6655 7.8408 17.6304 7.67544 17.5621C7.51007 17.4937 7.35982 17.3934 7.2333 17.2669C7.10677 17.1404 7.00646 16.9901 6.9381 16.8247C6.86975 16.6594 6.8347 16.4821 6.83496 16.3032Z" stroke="#C1A286" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -1094,31 +1194,64 @@ export default function OrderDetailsPage({ params }) {
           
           <div className={styles.formGroup}>
             <label>Статус заказа:</label>
-            <div className={styles.inputWithIcon}>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                className={styles.formInput}
-                disabled={!isManager && order.can_change_status === false}
+            <div className={styles.customSelect} ref={statusRef}>
+              <div 
+                className={styles.selectHeader} 
+                onClick={() => !(!isManager && order.can_change_status === false) && setIsStatusDropdownOpen(!isStatusDropdownOpen)}
+                style={{ 
+                  cursor: (!isManager && order.can_change_status === false) ? 'not-allowed' : 'pointer',
+                  opacity: (!isManager && order.can_change_status === false) ? 0.5 : 1
+                }}
               >
-                {order.available_statuses && order.available_statuses.length > 0 ? (
-                  order.available_statuses.map(statusVal => (
-                    <option key={statusVal} value={statusVal}>
-                      {statusMap[statusVal] || statusVal}
-                    </option>
-                  ))
-                ) : (
-                  Object.entries(statusMap).map(([value, label]) => (
-                    <option key={value} value={value}>{label}</option>
-                  ))
-                )}
-              </select>
-              <button className={styles.editButton}>
-              <svg width="24" height="25" viewBox="0 0 24 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <path d="M19.09 14.9412V19.3812C19.0898 20.0094 18.8401 20.6118 18.3959 21.0561C17.9516 21.5003 17.3492 21.75 16.721 21.7502H5.12002C4.80777 21.7501 4.49863 21.6883 4.21035 21.5683C3.92208 21.4483 3.66035 21.2726 3.44021 21.0511C3.22007 20.8297 3.04586 20.5669 2.92758 20.2779C2.80931 19.989 2.74931 19.6795 2.75102 19.3672V7.77922C2.74916 7.46747 2.80919 7.15845 2.92764 6.87007C3.04608 6.58169 3.22059 6.31968 3.44103 6.09924C3.66148 5.87879 3.92348 5.70429 4.21186 5.58584C4.50025 5.4674 4.80927 5.40736 5.12102 5.40922H9.56002" stroke="#C1A286" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-  <path d="M19.09 9.49521L15.005 5.40921M6.83496 16.3032V14.1382C6.83696 13.7812 6.97896 13.4382 7.22996 13.1852L16.762 3.65321C16.8884 3.52532 17.039 3.42378 17.205 3.35449C17.371 3.28519 17.5491 3.24951 17.729 3.24951C17.9088 3.24951 18.0869 3.28519 18.2529 3.35449C18.4189 3.42378 18.5695 3.52532 18.696 3.65321L20.847 5.80421C20.9749 5.93069 21.0764 6.08128 21.1457 6.24727C21.215 6.41326 21.2507 6.59134 21.2507 6.77121C21.2507 6.95108 21.215 7.12917 21.1457 7.29515C21.0764 7.46114 20.9749 7.61173 20.847 7.73821L11.315 17.2702C11.0615 17.5219 10.7192 17.6638 10.362 17.6652H8.19696C8.01803 17.6655 7.8408 17.6304 7.67544 17.5621C7.51007 17.4937 7.35982 17.3934 7.2333 17.2669C7.10677 17.1404 7.00646 16.9901 6.9381 16.8247C6.86975 16.6594 6.8347 16.4821 6.83496 16.3032Z" stroke="#C1A286" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-</svg>
-              </button>
+                <div className={styles.inputContainer}>
+                  <input 
+                    type="text" 
+                    placeholder=" "
+                    value={statusMap[status] || status}
+                    readOnly
+                    className={styles.selectInput}
+                    disabled={!isManager && order.can_change_status === false}
+                  />
+                 
+                </div>
+                <div className={styles.selectArrow}>
+                  <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M1 1L7 7L13 1" stroke="#C1AF86" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+              </div>
+              
+              {isStatusDropdownOpen && !(!isManager && order.can_change_status === false) && (
+                <div className={styles.selectOptions}>
+                  {order.available_statuses && order.available_statuses.length > 0 ? (
+                    order.available_statuses.map(statusVal => (
+                      <div 
+                        key={statusVal}
+                        className={styles.selectOption}
+                        onClick={() => {
+                          setStatus(statusVal);
+                          setIsStatusDropdownOpen(false);
+                        }}
+                      >
+                        {statusMap[statusVal] || statusVal}
+                      </div>
+                    ))
+                  ) : (
+                    Object.entries(statusMap).map(([value, label]) => (
+                      <div 
+                        key={value}
+                        className={styles.selectOption}
+                        onClick={() => {
+                          setStatus(value);
+                          setIsStatusDropdownOpen(false);
+                        }}
+                      >
+                        {label}
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
           </div>
           
