@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
-import { YMaps, Map, Placemark, SearchControl, ZoomControl, GeolocationControl } from '@pbe/react-yandex-maps';
+import { YMaps, Map, Placemark, ZoomControl } from '@pbe/react-yandex-maps';
 
 const YandexMap = ({ 
   initialCenter = [55.751574, 37.573856],
