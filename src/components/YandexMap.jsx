@@ -14,6 +14,7 @@ const YandexMap = ({
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [mapCenter, setMapCenter] = useState(initialCenter);
   const mapRef = useRef(null);
+  const searchControlRef = useRef(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -35,6 +36,52 @@ const YandexMap = ({
 
   useEffect(() => {
     if (!mapReady || !mapRef.current || !window.ymaps) return;
+
+    const removeAllSearchControls = () => {
+      if (mapRef.current && mapRef.current.controls) {
+        try {
+          const controls = mapRef.current.controls;
+          const allControls = [];
+          
+          if (controls.each) {
+            controls.each((control) => {
+              try {
+                if (control && typeof control.get === 'function') {
+                  const name = control.get('name');
+                  if (name === 'searchControl') {
+                    allControls.push(control);
+                  }
+                }
+              } catch {
+              }
+            });
+          }
+          
+          allControls.forEach((control) => {
+            try {
+              controls.remove(control);
+            } catch (e) {
+            }
+          });
+          
+          if (allControls.length > 0 && window.ymaps) {
+            const searchControl = new window.ymaps.control.SearchControl({
+              options: {
+                size: 'large',
+                provider: 'yandex#search',
+                noPlacemark: false
+              }
+            });
+            controls.add(searchControl);
+          }
+        } catch (e) {
+        }
+      }
+    };
+
+    setTimeout(removeAllSearchControls, 300);
+    setTimeout(removeAllSearchControls, 600);
+    setTimeout(removeAllSearchControls, 1000);
 
     const allowedRegionCodes = ['RU-MOW', 'RU-MOS'];
     
@@ -184,7 +231,9 @@ const YandexMap = ({
             center: mapCenter,
             zoom: 15
           }}
-          options={{}}
+          options={{
+            suppressMapOpenBlock: true
+          }}
           width="100%"
           height="100%"
           onClick={handleMapClick}
@@ -193,13 +242,6 @@ const YandexMap = ({
           }}
         >
           <ZoomControl />
-          <SearchControl
-            options={{
-              size: 'large',
-              provider: 'yandex#search',
-              noPlacemark: false
-            }}
-          />
           {selectedLocation && (
             <Placemark
               geometry={selectedLocation}
