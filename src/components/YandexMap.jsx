@@ -24,9 +24,12 @@ const YandexMap = ({
   }, []);
 
   useEffect(() => {
-    if (selectedCoordinates) {
+    if (selectedCoordinates && Array.isArray(selectedCoordinates) && selectedCoordinates.length === 2) {
       setSelectedLocation(selectedCoordinates);
       setMapCenter(selectedCoordinates);
+      if (mapRef.current) {
+        mapRef.current.setCenter(selectedCoordinates, 15);
+      }
     }
   }, [selectedCoordinates]);
 
@@ -63,98 +66,6 @@ const YandexMap = ({
     });
   }, [mapReady]);
 
-  const searchControlRef = useRef(null);
-
-  useEffect(() => {
-    if (!mapReady || !searchControlRef.current) return;
-
-    const searchControl = searchControlRef.current;
-    
-    const handleResultSelect = (e) => {
-      const index = e.get('index');
-      const results = searchControl.getResultsArray();
-      const selectedResult = results[index];
-      
-      if (selectedResult && mapRef.current) {
-        const coords = selectedResult.geometry.getCoordinates();
-        const address = selectedResult.getAddressLine();
-        
-        setSelectedLocation(coords);
-        setMapCenter(coords);
-        mapRef.current.setCenter(coords, 15);
-
-        const geoObject = selectedResult.properties.get('metaDataProperty')?.GeocoderMetaData;
-        const addressObj = geoObject?.Address;
-        const components = addressObj?.Components || [];
-        const postalCode = addressObj?.postal_code || '';
-        
-        let country = '';
-        let region = '';
-        let city = '';
-        let street = '';
-        let house = '';
-        
-        components.forEach(component => {
-          switch (component.kind) {
-            case 'country':
-              country = component.name;
-              break;
-            case 'province':
-              if (!component.name.includes('федеральный округ')) {
-                region = component.name;
-              }
-              break;
-            case 'administrative_area_level_1':
-              region = component.name;
-              break;
-            case 'locality':
-              city = component.name;
-              break;
-            case 'route':
-              street = component.name;
-              break;
-            case 'street':
-              street = component.name;
-              break;
-            case 'street_number':
-              house = component.name;
-              break;
-            case 'house':
-              house = component.name;
-              break;
-          }
-        });
-
-        const allowedRegionNames = ['Московская область', 'Москва', 'Москва г', 'Московская обл.'];
-        const isAllowedRegion = allowedRegionNames.some(name => 
-          region.includes(name) || city.includes('Москва')
-        );
-
-        if (country === 'Россия' && isAllowedRegion && onLocationSelect) {
-          const locationData = {
-            coordinates: coords,
-            fullAddress: address,
-            address: address,
-            region: region,
-            city: city,
-            street: street,
-            house: house,
-            postal_code: postalCode,
-            components: components
-          };
-          onLocationSelect(locationData);
-        }
-      }
-    };
-
-    searchControl.events.add('resultselect', handleResultSelect);
-
-    return () => {
-      if (searchControl && searchControl.events) {
-        searchControl.events.remove('resultselect', handleResultSelect);
-      }
-    };
-  }, [mapReady, onLocationSelect]);
 
   const handleMapClick = (event) => {
     const coords = event.get('coords');
@@ -282,9 +193,7 @@ const YandexMap = ({
           }}
         >
           <ZoomControl />
-          <GeolocationControl />
           <SearchControl
-            instanceRef={searchControlRef}
             options={{
               size: 'large',
               provider: 'yandex#search',

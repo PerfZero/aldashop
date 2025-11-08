@@ -57,8 +57,10 @@ export default function CartPage() {
     legalSignatoryPosition: ''
   });
   const [isPickupDropdownOpen, setIsPickupDropdownOpen] = useState(false);
+  const [isSavedAddressesDropdownOpen, setIsSavedAddressesDropdownOpen] = useState(false);
   const [showSavedAddresses, setShowSavedAddresses] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [selectedSavedAddress, setSelectedSavedAddress] = useState('');
   const [pickupAddresses, setPickupAddresses] = useState([
     'ул. Кипарисовая, 56',
     'ул. Морская, 24',
@@ -122,6 +124,22 @@ export default function CartPage() {
 
     loadAutocompleteData();
   }, [isAuthenticated, getAuthHeaders]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isSavedAddressesDropdownOpen && !event.target.closest(`.${styles.customSelect}`)) {
+        setIsSavedAddressesDropdownOpen(false);
+      }
+      if (isPickupDropdownOpen && !event.target.closest(`.${styles.customSelect}`)) {
+        setIsPickupDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSavedAddressesDropdownOpen, isPickupDropdownOpen]);
 
   useEffect(() => {
     if (promoCodeStatus === 'valid') {
@@ -504,19 +522,30 @@ export default function CartPage() {
   };
 
   const handleSelectSavedAddress = (address) => {
+    const fullAddress = address.full_address || '';
+    let coordinates = null;
+    
+    if (address.coordinates_x && address.coordinates_y) {
+      const lat = parseFloat(address.coordinates_y);
+      const lon = parseFloat(address.coordinates_x);
+      if (!isNaN(lat) && !isNaN(lon)) {
+        coordinates = [lat, lon];
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       city: address.locality || prev.city,
       street: address.route || prev.street,
       house: address.street_number || prev.house,
       apartment: address.apartment || prev.apartment,
-      fullAddress: address.full_address || prev.fullAddress,
-      coordinates: address.coordinates_x && address.coordinates_y 
-        ? [parseFloat(address.coordinates_y), parseFloat(address.coordinates_x)]
-        : prev.coordinates
+      fullAddress: fullAddress,
+      coordinates: coordinates || prev.coordinates
     }));
     setSelectedAddressId(address.id);
-    setShowSavedAddresses(false);
+    setSelectedSavedAddress(fullAddress);
+    setMapSelectedAddress(fullAddress);
+    setIsSavedAddressesDropdownOpen(false);
   };
 
   const handleRemoveClick = (item) => {
@@ -970,17 +999,47 @@ export default function CartPage() {
                     {formData.delivery === 'address' && (
                       <div className={styles.addressToDelivery}>
                         {autocompleteData?.delivery_addresses && autocompleteData.delivery_addresses.length > 0 && (
-                          <div className={styles.savedAddresses}>
-                            <h4>Сохраненные адреса</h4>
-                            {autocompleteData.delivery_addresses.map((address, index) => (
+                          <div className={styles.addressField}>
+                            <div className={styles.customSelect}>
                               <div 
-                                key={`delivery-${address.id}-${index}`}
-                                className={`${styles.savedAddress} ${selectedAddressId === address.id ? styles.selected : ''}`}
-                                onClick={() => handleSelectSavedAddress(address)}
+                                className={styles.selectHeader} 
+                                onClick={() => setIsSavedAddressesDropdownOpen(!isSavedAddressesDropdownOpen)}
                               >
-                                {address.full_address}
+                                <div className={styles.inputContainer}>
+                                  <input 
+                                    type="text" 
+                                    name="savedAddress" 
+                                    placeholder=" "
+                                    value={selectedSavedAddress || 'Выберите сохраненный адрес'}
+                                    onChange={() => {}}
+                                    className={styles.pickupAddressField}
+                                    readOnly
+                                  />
+                                  <span className={styles.floatingLabel}>
+                                    Сохраненные адреса
+                                  </span>
+                                </div>
+                                <div className={styles.selectArrow}>
+                                  <svg width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M1 1L7 7L13 1" stroke="#C1AF86" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  </svg>
+                                </div>
                               </div>
-                            ))}
+                              
+                              {isSavedAddressesDropdownOpen && (
+                                <div className={styles.selectOptions}>
+                                  {autocompleteData.delivery_addresses.map((address, index) => (
+                                    <div 
+                                      key={`delivery-${address.id}-${index}`} 
+                                      className={`${styles.selectOption} ${selectedAddressId === address.id ? styles.selected : ''}`}
+                                      onClick={() => handleSelectSavedAddress(address)}
+                                    >
+                                      {address.full_address}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
                         <div className={styles.addressFields}>
