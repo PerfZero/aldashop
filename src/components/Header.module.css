@@ -39,7 +39,7 @@
   height: 2px;
   background-color: #323433;
   margin: 2px 0;
-  transition: all 0.3s;
+  transition: all .3s;
 }
 
 .header__burger.active span:nth-child(1) {
@@ -57,6 +57,7 @@
 .header__nav {
   display: flex;
   align-items: center;
+
 }
 
 .header__navItem {
@@ -69,7 +70,7 @@
   color: #a45b38;
 }
 
-.header__navItem:hover {
+.header__navItem:hover{
   color: #a45b38;
   color: #a45b38;
 }
@@ -85,6 +86,10 @@
   display: block;
   white-space: nowrap;
 }
+
+
+
+
 
 .header__navLink.active {
   color: #a45b38;
@@ -152,7 +157,7 @@
   .mobileMenu__sidebar {
     width: 120px;
     background: #fff;
-    border-right: 1px solid rgba(193, 175, 134, 0.5);
+    border-right:  1px solid rgba(193, 175, 134, 0.5);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -173,24 +178,25 @@
     border-left: 3px solid transparent;
   }
 
-  .mobileMenu__categoryItem {
+  .mobileMenu__categoryItem{
     display: flex;
   }
 
   .mobileMenu__sidebarItem.active {
-    color: #a45b38;
+    color: #A45B38;
 
-    border-right: 3px solid #a45b38;
+    border-right: 3px solid #A45B38;
   }
   .mobileMenu__sidebarBottom {
-    /* margin-top: auto; */
-    border-top: 1px solid #c1af8680;
-    display: flex;
-    flex-direction: column;
-    /* margin-bottom: 50%; */
-    flex: 1;
-    align-items: center;
-    justify-content: center;
+        /* margin-top: auto; */
+        border-top: 1px solid #c1af8680;
+        display: flex
+;
+        flex-direction: column;
+        /* margin-bottom: 50%; */
+        flex: 1;
+        align-items: center;
+        justify-content: center;
   }
   .mobileMenu__content {
     flex: 1;
@@ -199,149 +205,150 @@
     background: #fff;
     display: flex;
     flex-direction: column;
-  }
+}
 
-  .mobileMenu__dropdownTitle {
+.mobileMenu__dropdownTitle {
     font-family: "Tenor Sans", sans-serif;
     font-size: 22px;
     color: #323433;
     margin-bottom: 18px;
-  }
+}
 
-  .mobileMenu__dropdownLinks {
+.mobileMenu__dropdownLinks {
     display: flex;
     flex-direction: column;
     gap: 12px;
     margin-bottom: 18px;
-  }
+}
 
-  .mobileMenu__dropdownLink {
+.mobileMenu__dropdownLink {
     font-family: "Montserrat", sans-serif;
     font-size: 16px;
     color: #323433;
     text-decoration: none;
     transition: color 0.2s;
-  }
+}
 
-  .mobileMenu__dropdownLink:hover {
-    color: #c1a286;
-  }
+.mobileMenu__dropdownLink:hover {
+    color: #C1A286;
+}
 
-  .mobileMenu__dropdownEmpty {
+.mobileMenu__dropdownEmpty {
     font-family: "Montserrat", sans-serif;
     font-size: 14px;
     color: #999;
-  }
+}
 
-  .mobileMenu__dropdownImages {
+.mobileMenu__dropdownImages {
     display: flex;
     flex-direction: column;
     gap: 10px;
-  }
+}
 
-  .mobileMenu__dropdownImage {
+.mobileMenu__dropdownImage {
     width: 100%;
     height: 60px;
     object-fit: contain;
     background: #f2f2f2;
     border-radius: 6px;
-  }
+}
 
-  /* Новые стили для объединенного отображения */
-  .mobileMenu__categoryItem {
+/* Новые стили для объединенного отображения */
+.mobileMenu__categoryItem {
     display: flex;
     align-items: center;
     flex-direction: row-reverse;
     gap: 12px;
     padding: 5px;
     font-weight: 500;
-    font-size: 14px;
-    line-height: 140%;
-    color: #323433;
+font-size: 14px;
+line-height: 140%;
+color: #323433;
+
 
     transition: all 0.2s ease;
-  }
+}
 
-  .mobileMenu__categoryItem:hover {
-    border-color: #c1a286;
+.mobileMenu__categoryItem:hover {
+    border-color: #C1A286;
     background: #faf6f2;
-  }
+}
 
-  .mobileMenu__categoryImage {
+.mobileMenu__categoryImage {
     width: 60px;
     height: 60px;
     object-fit: contain;
     background: #f2f2f2;
     border-radius: 6px;
     flex-shrink: 0;
-  }
+}
 
-  .mobileMenu__categoryInfo {
+.mobileMenu__categoryInfo {
     flex: 1;
-  }
+}
 
-  .mobileMenu__categoryTitle {
+.mobileMenu__categoryTitle {
     font-family: "Montserrat", sans-serif;
     font-size: 16px;
     color: #323433;
     margin-bottom: 4px;
-  }
+}
 
-  .mobileMenu__categoryDesc {
+.mobileMenu__categoryDesc {
     font-family: "Montserrat", sans-serif;
     font-size: 14px;
     color: #999;
-  }
+}
 
-  .mobileMenu__logo {
+.mobileMenu__logo {
     height: 32px;
     margin-right: auto;
-  }
+}
 
-  .header__iconsDesktop {
+.header__iconsDesktop {
     display: none;
-  }
+}
 
-  .header__icon--cart {
+.header__icon--cart {
     display: inline-flex;
-  }
+}
 
-  .header__icon--favorite {
+.header__icon--favorite {
     display: inline-flex;
     position: relative;
-  }
+}
 
-  .mobileSearch {
+.mobileSearch {
     width: 100%;
     background: #fff;
-    padding: 0;
+    padding: 0 ;
     box-sizing: border-box;
-
+    
     padding: 0 16px;
     position: relative;
     z-index: 10;
-  }
+}
 
-  .header__icons {
-    order: 2;
+.header__icons{
+    order:2;
     margin-left: auto;
-  }
+}
 
-  .header__logo {
-    order: 1;
-  }
+.header__logo{
+    order:1;
+}
 
-  .header__burger {
-    order: 3;
+.header__burger{
+    order:3;
     margin-left: 5px;
-  }
+}
 
-  .header {
+.header{
     padding-bottom: 16px;
     box-shadow: none;
-  }
+}
 
-  .mobileSearch__inputWrapper {
+.mobileSearch__inputWrapper {
     display: flex;
     align-items: center;
     border: 1px solid #e5e5e5;
@@ -351,24 +358,24 @@
     flex-direction: row-reverse;
     background: #fff;
     margin-top: 8px;
-  }
+}
 
-  .mobileSearch__icon {
+.mobileSearch__icon {
     flex-shrink: 0;
     margin-right: 8px;
     color: #b0a89f;
-  }
+}
 
-  .mobileSearch__input {
+.mobileSearch__input {
     border: none;
     outline: none;
     font-size: 16px;
     flex: 1;
     background: transparent;
     color: #323433;
-  }
+}
 
-  .mobileSearch__close {
+.mobileSearch__close {
     background: none;
     border: none;
     font-size: 28px;
@@ -376,36 +383,36 @@
     cursor: pointer;
     margin-left: 4px;
     line-height: 1;
-  }
+}
 
-  .mobileSearch__resultsList {
+.mobileSearch__resultsList {
     position: absolute;
     left: 0;
     right: 0;
     top: 60px;
     background: #fff;
     border-radius: 0 0 16px 16px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.07);
     z-index: 20;
     padding: 8px 0 0 0;
     max-height: 320px;
     overflow-y: auto;
-  }
+}
 
-  .mobileSearch__result {
+.mobileSearch__result {
     display: flex;
     align-items: center;
     padding: 10px 16px;
     cursor: pointer;
     border-radius: 8px;
     transition: background 0.15s;
-  }
+}
 
-  .mobileSearch__result:hover {
+.mobileSearch__result:hover {
     background: #faf6f2;
-  }
+}
 
-  .mobileSearch__img {
+.mobileSearch__img {
     width: 44px;
     height: 28px;
     object-fit: contain;
@@ -413,43 +420,43 @@
     border-radius: 6px;
     background: #f2f2f2;
     flex-shrink: 0;
-  }
+}
 
-  .mobileSearch__info {
+.mobileSearch__info {
     display: flex;
     flex-direction: column;
-  }
+}
 
-  .mobileSearch__name {
+.mobileSearch__name {
     font-size: 15px;
     color: #323433;
     font-weight: 600;
     line-height: 1.1;
-  }
+}
 
-  .mobileSearch__all {
+.mobileSearch__all {
     padding: 10px 16px 2px 16px;
     text-align: left;
-  }
+}
 
-  .mobileSearch__all a {
+.mobileSearch__all a {
     color: #c1a286;
     font-size: 15px;
     text-decoration: underline;
     cursor: pointer;
     transition: color 0.18s;
-  }
+}
 
-  .mobileSearch__all a:hover {
+.mobileSearch__all a:hover {
     color: #a07c5b;
-  }
+}
 
-  .mobileSearch__empty {
+.mobileSearch__empty {
     display: block;
     color: #b0a89f;
     text-align: center;
     font-size: 15px;
-  }
+}
 }
 
 /* Десктопные стили */
@@ -495,38 +502,43 @@
   position: relative;
 }
 
+
 /* Добавьте эти стили в ваш Header.module.css */
 
 .header__nav {
-  position: relative;
-  display: flex;
-}
+    position: relative;
+    display: flex;
+  }
+  
+  .header__navItem {
+    position: relative;
+  }
 
-.header__navItem {
-  position: relative;
-}
+  .mobileSearch__input{
+    font-weight: 400;
+font-size: 14px;
+line-height: 140%;
+color: #999a99;
+font-family: "Montserrat", sans-serif;
 
-.mobileSearch__input {
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 140%;
-  color: #999a99;
-  font-family: "Montserrat", sans-serif;
-}
+  }
+  
 
-.searchDropdown {
-  position: fixed;
-  background-color: #fff;
-  display: flex;
-  font-family: Montserrat, sans-serif;
-  left: 200px;
-  z-index: 99;
-  width: 80%;
-  padding: 10px;
-  border-bottom: 1px solid #bbb;
-  top: 3%;
-  flex-direction: column;
-}
+
+  
+  .searchDropdown{
+    position: absolute;
+    background: linear-gradient(0deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.7)), #FFFFFF;
+    display: flex;
+    font-family: "Montserrat", sans-serif;
+    z-index: 1000;
+    left: -250px;
+    padding: 10px;
+    border-bottom: 1px solid #bbb;
+    top: -6px;
+    flex-direction: column;
+  }
+
 
 .searchDropdown__img {
   width: 44px;
@@ -598,39 +610,44 @@
   font-size: 15px;
 }
 
-.searchDropdown__header {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
+  .searchDropdown__header{
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
 
-.searchDropdown__info .header__navLink:hover {
-  color: #a45b38;
-}
+  .searchDropdown__info
+  
+  .header__navLink:hover {
+    color: #a45b38;
+  }
+  
+  /* Удалим старый индикатор при наведении */
+  .header__navLink:hover::after {
+    content: none;
+  }
+  
+  /* Стиль для активного пункта меню */
+  .header__navLink.active {
+    color: #a45b38;
+  }
+  
+  /* Индикатор под меню */
+  .nav-indicator {
+    position: absolute;
+    height: 1px;
+    background-color: #a45b38;
+    bottom: -20px;
+    transition: left 0.3s ease, width 0.3s ease, opacity 0.3s ease;
+    pointer-events: none; /* Чтобы индикатор не мешал кликам */
+  }
 
-/* Удалим старый индикатор при наведении */
-.header__navLink:hover::after {
-  content: none;
-}
 
-/* Стиль для активного пункта меню */
-.header__navLink.active {
-  color: #a45b38;
-}
-
-/* Индикатор под меню */
-.nav-indicator {
-  position: absolute;
-  height: 1px;
-  background-color: #a45b38;
-  bottom: -20px;
-  transition: left 0.3s ease, width 0.3s ease, opacity 0.3s ease;
-  pointer-events: none; /* Чтобы индикатор не мешал кликам */
-}
-
+  
 .header__nav {
   display: flex;
   position: relative;
+ 
 }
 
 .header__icons {
@@ -650,6 +667,7 @@
 .header__icon:hover circle {
   stroke: #a45b38;
 }
+
 
 .header__icon:first-child:hover path {
   stroke: #a45b38;
@@ -805,7 +823,7 @@
   position: absolute;
   top: -5px;
   right: -5px;
-  background-color: #a45b38;
+  background-color: #A45B38;
   color: white;
   font-size: 10px;
   font-weight: bold;
@@ -822,7 +840,7 @@
   position: absolute;
   top: -5px;
   right: -5px;
-  background-color: #a45b38;
+  background-color: #A45B38;
   color: white;
   font-size: 10px;
   font-weight: bold;
@@ -835,7 +853,8 @@
   padding: 0 4px;
 }
 
-@media screen and (max-width: 768px) {
+
+@media screen and (max-width: 768px )   {
   .header__nav {
     display: none;
   }
@@ -850,7 +869,7 @@
   .header__nav {
     display: none;
   }
-
+  
   .header__icons {
     gap: 15px;
   }
