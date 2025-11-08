@@ -141,3 +141,91 @@ const allowedRegionNames = [
    - Не нужно передавать координаты границ вручную
    - Яндекс.Карты загружают готовые границы по ISO кодам
 
+### 8. Ограничение карты по границам регионов (без координат)
+
+Для ограничения области карты по границам регионов без использования координат можно использовать `ymaps.borders.load()`:
+
+**Пример реализации:**
+
+```javascript
+useEffect(() => {
+  if (!window.ymaps || !mapRef.current) return;
+  
+  const allowedRegionCodes = ['RU-KDA', 'RU-ROS'];
+  
+  window.ymaps.borders.load('RU', {
+    lang: 'ru_RU'
+  }).then((result) => {
+    const regions = result.features.filter(feature => {
+      const isoCode = feature.properties?.iso3166;
+      return isoCode && allowedRegionCodes.includes(isoCode);
+    });
+    
+    if (regions.length > 0) {
+      const geoObjects = new window.ymaps.GeoObjectCollection();
+      
+      regions.forEach(region => {
+        geoObjects.add(region);
+      });
+      
+      const bounds = geoObjects.getBounds();
+      if (bounds) {
+        const map = mapRef.current;
+        map.options.set('restrictMapArea', [
+          [bounds[0][0], bounds[0][1]],
+          [bounds[1][0], bounds[1][1]]
+        ]);
+      }
+    }
+  });
+}, []);
+```
+
+**Альтернативный способ - ограничение по полигону:**
+
+```javascript
+useEffect(() => {
+  if (!window.ymaps || !mapRef.current) return;
+  
+  const allowedRegionCodes = ['RU-KDA'];
+  
+  window.ymaps.borders.load('RU', {
+    lang: 'ru_RU'
+  }).then((result) => {
+    const region = result.features.find(feature => {
+      const isoCode = feature.properties?.iso3166;
+      return isoCode && allowedRegionCodes.includes(isoCode);
+    });
+    
+    if (region && mapRef.current) {
+      const map = mapRef.current;
+      
+      map.action.Manager.setCorrection((action, point) => {
+        if (action === 'move' || action === 'zoom') {
+          const geometry = region.geometry;
+          if (geometry && geometry.getType() === 'Polygon') {
+            const coordinates = geometry.getCoordinates();
+            const polygon = new window.ymaps.Polygon(coordinates);
+            
+            if (!polygon.contains(point)) {
+              const bounds = polygon.getBounds();
+              const center = bounds ? [
+                (bounds[0][0] + bounds[1][0]) / 2,
+                (bounds[0][1] + bounds[1][1]) / 2
+              ] : point;
+              return center;
+            }
+          }
+        }
+        return point;
+      });
+    }
+  });
+}, []);
+```
+
+**Важно:**
+- `ymaps.borders.load()` требует подключения модуля `package.full` или `package.borders`
+- Для получения bounding box используйте `geoObjects.getBounds()`
+- Для более точного ограничения по полигону используйте `map.action.Manager.setCorrection()`
+

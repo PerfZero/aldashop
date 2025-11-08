@@ -113,6 +113,28 @@
   flex: 1;
 }
 
+.button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.button.fullscreen::before {
+  content: '⤢';
+}
+
+.button.exit-fullscreen::before {
+  content: '⤓';
+}
+
 .geolocationButton {
   background: #C1AF86;
   color: white;

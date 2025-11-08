@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import YandexMap from './YandexMap';
+import SimpleYandexMap from './YandexMap';
 import styles from './AddressSelector.module.css';
 
 const AddressSelector = ({ 
@@ -365,9 +365,9 @@ const AddressSelector = ({
               </button>
             </div>
             
-            <YandexMap
+            <SimpleYandexMap
               onLocationSelect={handleMapLocationSelect}
-              initialCenter={selectedLocation?.coordinates || [55.751574, 37.573856]}
+              initialCenter={selectedLocation?.coordinates || [43.585472, 39.723098]}
               height="400px"
             />
           </div>

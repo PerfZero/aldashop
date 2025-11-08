@@ -12,30 +12,8 @@ const CartMap = ({ onLocationSelect }) => {
   const [selectedAddress, setSelectedAddress] = useState('');
 
   useEffect(() => {
-    console.log('CartMap: Компонент загружен');
-    
-    // Проверяем доступность геолокации
-    if (navigator.geolocation) {
-      console.log('CartMap: Геолокация поддерживается браузером');
-      
-      // Проверяем разрешения (если поддерживается)
-      if (navigator.permissions) {
-        navigator.permissions.query({ name: 'geolocation' }).then((result) => {
-          console.log('CartMap: Статус разрешения геолокации:', result.state);
-          if (result.state === 'denied') {
-            console.log('CartMap: Геолокация заблокирована пользователем');
-          }
-        }).catch((error) => {
-          console.log('CartMap: Не удалось проверить разрешения:', error);
-        });
-      }
-    } else {
-      console.log('CartMap: Геолокация не поддерживается браузером');
-    }
-    
     const timer = setTimeout(() => {
       setIsLoaded(true);
-      console.log('CartMap: Таймер сработал, карта должна загрузиться');
     }, 1000);
     
     return () => clearTimeout(timer);
@@ -274,8 +252,7 @@ const CartMap = ({ onLocationSelect }) => {
         <YMaps 
           query={{
             apikey: 'aa9feae8-022d-44d2-acb1-8cc0198f451d',
-            lang: 'ru_RU',
-            load: 'package.full'
+            lang: 'ru_RU'
           }}
           onLoad={() => {
             console.log('CartMap: YMaps загружен');

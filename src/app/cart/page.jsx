@@ -1014,6 +1014,8 @@ export default function CartPage() {
                           onLocationSelect={handleLocationSelect}
                           initialCenter={formData.coordinates || [55.751574, 37.573856]}
                           height="400px"
+                          selectedCoordinates={formData.coordinates}
+                          selectedAddress={formData.fullAddress}
                         />
                       </div>
                     )}

@@ -62,7 +62,6 @@ input, textarea, button, select {
 	font-family: inherit;
     font-size: inherit;
     color: inherit;
-    background-color: transparent;
 }
 
 input::-ms-clear {
@@ -141,6 +140,28 @@ html {
 /* Стили для активных слайдов в галерее */
 .swiper-slide-thumb-active {
   border: 1px solid #a45b38 !important;
+}
+
+.button {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: white;
+  cursor: pointer;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.button.fullscreen::before {
+  content: '⤢';
+}
+
+.button.exit-fullscreen::before {
+  content: '⤓';
 }
 
 .swiper-slide-active {
