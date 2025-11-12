@@ -83,7 +83,7 @@ const YandexMap = ({
     setTimeout(removeAllSearchControls, 600);
     setTimeout(removeAllSearchControls, 1000);
 
-    const allowedRegionCodes = ['RU-MOW', 'RU-MOS'];
+    const allowedRegionCodes = ['RU-MOW', 'RU-MOS', 'RU-SAM'];
     
     window.ymaps.borders.load('RU', {
       lang: 'ru_RU'
@@ -176,13 +176,13 @@ const YandexMap = ({
             return;
           }
 
-          const allowedRegionNames = ['Московская область', 'Москва', 'Москва г', 'Московская обл.'];
+          const allowedRegionNames = ['Московская область', 'Самарская область'];
           const isAllowedRegion = allowedRegionNames.some(name => 
-            region.includes(name) || city.includes('Москва')
+            region.includes(name) || city.includes('Москва') || city.includes('Самара')
           );
 
           if (!isAllowedRegion) {
-            alert('Доставка возможна только по Москве и Московской области');
+            alert('Доставка возможна только по Москве, Московской области и Самарской области');
             setSelectedLocation(null);
             return;
           }

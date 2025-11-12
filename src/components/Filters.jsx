@@ -65,8 +65,22 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
       delete finalFilters.in_stock;
     }
     
+    const priceFilter = filters.find(f => f.slug === 'price' && f.type === 'range');
+    if (priceFilter) {
+      const displayedMin = tempFilters.price?.min !== undefined ? tempFilters.price.min : (priceFilter.min || 0);
+      const displayedMax = tempFilters.price?.max !== undefined ? tempFilters.price.max : (priceFilter.max || 100000);
+      
+      finalFilters.price = {
+        min: displayedMin,
+        max: displayedMax
+      };
+    }
+    
     Object.keys(finalFilters).forEach(key => {
       if (finalFilters[key] === '' || finalFilters[key] === undefined || finalFilters[key] === null) {
+        delete finalFilters[key];
+      }
+      if (finalFilters[key] && typeof finalFilters[key] === 'object' && Object.keys(finalFilters[key]).length === 0) {
         delete finalFilters[key];
       }
     });

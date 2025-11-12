@@ -68,11 +68,14 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
       }
     }
 
-    if (filters.price && (filters.price.min || filters.price.max)) {
-      requestBody.price = {
-        min: filters.price.min || 0,
-        max: filters.price.max || 100000
-      };
+    if (filters.price && (filters.price.min !== undefined || filters.price.max !== undefined)) {
+      requestBody.price = {};
+      if (filters.price.min !== undefined) {
+        requestBody.price.min = filters.price.min;
+      }
+      if (filters.price.max !== undefined) {
+        requestBody.price.max = filters.price.max;
+      }
     }
 
     if (filters.search && filters.search.trim() !== "") {
