@@ -63,7 +63,10 @@ export default function ResetPasswordPage() {
   if (isLoading) {
     return (
       <div className={styles.container}>
-        <div className={styles.loading}>Загрузка...</div>
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Загрузка...</p>
+        </div>
       </div>
     );
   }
@@ -72,6 +75,7 @@ export default function ResetPasswordPage() {
     return (
       <div className={styles.container}>
         <div className={styles.error}>
+          <div className={styles.errorIcon}>✕</div>
           <h2>Ошибка</h2>
           <p>{error}</p>
           <button className={styles.button} onClick={handleClose}>
