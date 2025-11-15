@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import styles from './ResetPasswordModal.module.css';
 
-export default function ResetPasswordModal({ isOpen, onClose, uidb64, token, resetKey }) {
+export default function ResetPasswordModal({ isOpen, onClose, uidb64, token }) {
   const [status, setStatus] = useState('form');
   const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
@@ -14,14 +14,11 @@ export default function ResetPasswordModal({ isOpen, onClose, uidb64, token, res
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (resetKey) {
-      return;
-    }
     if (!uidb64 || !token) {
       setStatus('error');
       setMessage('Неверная ссылка для сброса пароля');
     }
-  }, [uidb64, token, resetKey]);
+  }, [uidb64, token]);
 
   const validateForm = () => {
     const newErrors = {};
@@ -52,28 +49,15 @@ export default function ResetPasswordModal({ isOpen, onClose, uidb64, token, res
     }
 
     try {
-      let response;
-      if (resetKey) {
-        response = await fetch(`/api/auth/reset-password-confirm-key/${resetKey}/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            new_password: formData.new_password
-          }),
-        });
-      } else {
-        response = await fetch(`/api/auth/reset-password-confirm/${uidb64}/${token}/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            new_password: formData.new_password
-          }),
-        });
-      }
+      const response = await fetch(`/api/auth/reset-password-confirm/${uidb64}/${token}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          new_password: formData.new_password
+        }),
+      });
 
       const data = await response.json();
 
