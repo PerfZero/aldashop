@@ -24,6 +24,11 @@ export default function CartPage() {
   const [isLoadingAutocomplete, setIsLoadingAutocomplete] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [mapSelectedAddress, setMapSelectedAddress] = useState('');
+  const [documentsUrls, setDocumentsUrls] = useState({
+    terms: '#',
+    privacy: '#',
+    offer: '#'
+  });
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -70,6 +75,35 @@ export default function CartPage() {
     'ул. Приморская, 118'
   ]);
   const [validationErrors, setValidationErrors] = useState({});
+
+  useEffect(() => {
+    const fetchDocuments = async () => {
+      try {
+        const [termsRes, privacyRes, offerRes] = await Promise.all([
+          fetch('https://aldalinde.ru/api/documents?type=public_offer'),
+          fetch('https://aldalinde.ru/api/documents?type=privacy_policy'),
+          fetch('https://aldalinde.ru/api/documents?type=public_offer')
+        ]);
+
+        const termsData = termsRes.ok ? await termsRes.json() : null;
+        const privacyData = privacyRes.ok ? await privacyRes.json() : null;
+        const offerData = offerRes.ok ? await offerRes.json() : null;
+
+        const getFullUrl = (url) => {
+          if (!url) return '#';
+          return url.startsWith('http') ? url : `https://aldalinde.ru${url}`;
+        };
+
+        setDocumentsUrls({
+          terms: getFullUrl(termsData?.url),
+          privacy: getFullUrl(privacyData?.url),
+          offer: getFullUrl(offerData?.url)
+        });
+      } catch (error) {
+      }
+    };
+    fetchDocuments();
+  }, []);
 
   useEffect(() => {
     calculateTotal();
@@ -1141,7 +1175,7 @@ export default function CartPage() {
               
               <p className={styles.termsText}>
                 Делая заказ, Вы даете согласие на обработку персональных данных, принимаете <br />
-                <a href="">  правилами пользования</a>,  <a href=""> политику конфиденциальности </a> и <a href=""> договор оферты.</a>
+                <a href={documentsUrls.terms} target="_blank" rel="noopener noreferrer">правилами пользования</a>,  <a href={documentsUrls.privacy} target="_blank" rel="noopener noreferrer">политику конфиденциальности</a> и <a href={documentsUrls.offer} target="_blank" rel="noopener noreferrer">договор оферты.</a>
               </p>
             </form>
             

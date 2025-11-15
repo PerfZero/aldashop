@@ -32,18 +32,71 @@ const Footer = () => {
   }, []);
 
   const openModal = async (type) => {
+    const typeMap = {
+      terms: 'public_offer',
+      privacy: 'privacy_policy',
+      offer: 'public_offer'
+    };
+
     const titles = {
       terms: 'Правила пользования',
       privacy: 'Политика конфиденциальности',
       offer: 'Публичная оферта'
     };
 
-    setModalData({
-      isOpen: true,
-      title: titles[type] || 'Документ',
-      content: '<p>Пока нет текста</p>',
-      type: type
-    });
+    const apiType = typeMap[type];
+
+    try {
+      const response = await fetch(`https://aldalinde.ru/api/documents?type=${apiType}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.url) {
+          const fullUrl = data.url.startsWith('http') ? data.url : `https://aldalinde.ru${data.url}`;
+          if (fullUrl.endsWith('.pdf')) {
+            window.open(fullUrl, '_blank');
+            return;
+          }
+          const contentResponse = await fetch(fullUrl);
+          if (contentResponse.ok) {
+            const content = await contentResponse.text();
+            setModalData({
+              isOpen: true,
+              title: titles[type] || 'Документ',
+              content: content,
+              type: type
+            });
+          } else {
+            setModalData({
+              isOpen: true,
+              title: titles[type] || 'Документ',
+              content: '<p>Не удалось загрузить документ</p>',
+              type: type
+            });
+          }
+        } else {
+          setModalData({
+            isOpen: true,
+            title: titles[type] || 'Документ',
+            content: '<p>Документ не найден</p>',
+            type: type
+          });
+        }
+      } else {
+        setModalData({
+          isOpen: true,
+          title: titles[type] || 'Документ',
+          content: '<p>Ошибка загрузки документа</p>',
+          type: type
+        });
+      }
+    } catch (error) {
+      setModalData({
+        isOpen: true,
+        title: titles[type] || 'Документ',
+        content: '<p>Ошибка загрузки документа</p>',
+        type: type
+      });
+    }
   };
 
   const closeModal = () => {

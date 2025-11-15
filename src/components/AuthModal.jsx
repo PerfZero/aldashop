@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import styles from './AuthModal.module.css';
 
@@ -10,6 +10,7 @@ export default function AuthModal({ isOpen, onClose }) {
   const [isResetPassword, setIsResetPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptNews, setAcceptNews] = useState(false);
+  const [termsUrl, setTermsUrl] = useState('#');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,6 +22,23 @@ export default function AuthModal({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [resetError, setResetError] = useState('');
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
+
+  useEffect(() => {
+    const fetchTermsUrl = async () => {
+      try {
+        const response = await fetch('https://aldalinde.ru/api/documents?type=public_offer');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.url) {
+            const fullUrl = data.url.startsWith('http') ? data.url : `https://aldalinde.ru${data.url}`;
+            setTermsUrl(fullUrl);
+          }
+        }
+      } catch (error) {
+      }
+    };
+    fetchTermsUrl();
+  }, []);
 
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -378,7 +396,7 @@ export default function AuthModal({ isOpen, onClose }) {
                       }
                     }}
                   />
-                  <span>Установив этот флажок, я подтверждаю согласие с <a href="#">Правилами пользования</a> ALDA.</span>
+                  <span>Установив этот флажок, я подтверждаю согласие с <a href={termsUrl} target="_blank" rel="noopener noreferrer">Правилами пользования</a> ALDA.</span>
                 </label>
                 {isSubmitted && errors.terms && (
                   <span className={styles.errorText}>{errors.terms}</span>
