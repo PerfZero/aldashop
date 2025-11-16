@@ -22,6 +22,13 @@ export default function AuthModal({ isOpen, onClose }) {
   const [isLoading, setIsLoading] = useState(false);
   const [resetError, setResetError] = useState('');
   const [showConfirmationMessage, setShowConfirmationMessage] = useState(false);
+  const [confirmationMessage, setConfirmationMessage] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [isResending, setIsResending] = useState(false);
+  const [showPasswords, setShowPasswords] = useState({
+    password: false,
+    confirmPassword: false
+  });
 
   useEffect(() => {
     const fetchTermsUrl = async () => {
@@ -108,11 +115,9 @@ export default function AuthModal({ isOpen, onClose }) {
             const result = await register(formData.email, formData.name, formData.password);
             
             if (result.success) {
+              setRegisteredEmail(formData.email);
+              setConfirmationMessage(result.message || 'Регистрация успешна. На вашу почту отправлено письмо с подтверждением.');
               setShowConfirmationMessage(true);
-              setTimeout(() => {
-                setShowConfirmationMessage(false);
-                onClose();
-              }, 3000);
             } else {
               setErrors(prev => ({ ...prev, general: result.error }));
             }
@@ -160,11 +165,16 @@ export default function AuthModal({ isOpen, onClose }) {
     setResetError('');
     setIsSubmitted(false);
     setShowConfirmationMessage(false);
+    setConfirmationMessage('');
     setFormData({
       name: '',
       email: '',
       password: '',
       confirmPassword: ''
+    });
+    setShowPasswords({
+      password: false,
+      confirmPassword: false
     });
   };
 
@@ -174,12 +184,51 @@ export default function AuthModal({ isOpen, onClose }) {
     setResetError('');
     setIsSubmitted(false);
     setShowConfirmationMessage(false);
+    setConfirmationMessage('');
     setFormData({
       name: '',
       email: '',
       password: '',
       confirmPassword: ''
     });
+    setShowPasswords({
+      password: false,
+      confirmPassword: false
+    });
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords(prev => ({
+      ...prev,
+      [field]: !prev[field]
+    }));
+  };
+
+  const handleResendEmail = async () => {
+    if (!registeredEmail) return;
+    
+    setIsResending(true);
+    try {
+      const response = await fetch('/api/auth/resend-email-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: registeredEmail }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setConfirmationMessage(data.detail || 'Письмо с подтверждением отправлено повторно на вашу электронную почту.');
+      } else {
+        setConfirmationMessage(data.error || data.detail || 'Ошибка при отправке письма. Попробуйте позже.');
+      }
+    } catch (error) {
+      setConfirmationMessage('Произошла ошибка при отправке письма. Попробуйте позже.');
+    } finally {
+      setIsResending(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -200,9 +249,26 @@ export default function AuthModal({ isOpen, onClose }) {
             <p className={styles.subtitle}>
               {showConfirmationMessage && isResetPassword 
                 ? 'Письмо с инструкциями по сбросу пароля отправлено на вашу электронную почту. Пожалуйста, проверьте почту и следуйте инструкциям.'
-                : 'Письмо с подтверждением отправлено на вашу электронную почту. Пожалуйста, проверьте почту и перейдите по ссылке для подтверждения аккаунта.'
+                : confirmationMessage || 'Письмо с подтверждением отправлено на вашу электронную почту. Пожалуйста, проверьте почту и перейдите по ссылке для подтверждения аккаунта.'
               }
             </p>
+            {!isResetPassword && (
+              <div className={styles.resendActions}>
+                <button 
+                  className={styles.resendButton} 
+                  onClick={handleResendEmail}
+                  disabled={isResending}
+                >
+                  {isResending ? 'Отправка...' : 'Отправить повторно'}
+                </button>
+                <button 
+                  className={styles.closeConfirmButton} 
+                  onClick={onClose}
+                >
+                  Закрыть
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -319,28 +385,70 @@ export default function AuthModal({ isOpen, onClose }) {
                     )}
                   </div>
                   <div className={styles.inputWrapper}>
-                    <input
-                      type="password"
-                      name="password"
-                      placeholder="Пароль"
-                      className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
-                      value={formData.password}
-                      onChange={handleChange}
-                    />
+                    <div className={styles.passwordInputContainer}>
+                      <input
+                        type={showPasswords.password ? "text" : "password"}
+                        name="password"
+                        placeholder="Пароль"
+                        className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                        value={formData.password}
+                        onChange={handleChange}
+                      />
+                      <button
+                        type="button"
+                        className={styles.passwordToggle}
+                        onClick={() => togglePasswordVisibility('password')}
+                      >
+                        {showPasswords.password ? (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        ) : (
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                     {isSubmitted && errors.password && (
                       <span className={styles.errorText}>{errors.password}</span>
                     )}
                   </div>
                   {!isLogin && (
                     <div className={styles.inputWrapper}>
-                      <input
-                        type="password"
-                        name="confirmPassword"
-                        placeholder="Повтор пароля"
-                        className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
-                        value={formData.confirmPassword}
-                        onChange={handleChange}
-                      />
+                      <div className={styles.passwordInputContainer}>
+                        <input
+                          type={showPasswords.confirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          placeholder="Повтор пароля"
+                          className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                        />
+                        <button
+                          type="button"
+                          className={styles.passwordToggle}
+                          onClick={() => togglePasswordVisibility('confirmPassword')}
+                        >
+                          {showPasswords.confirmPassword ? (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          ) : (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                       {isSubmitted && errors.confirmPassword && (
                         <span className={styles.errorText}>{errors.confirmPassword}</span>
                       )}
@@ -371,11 +479,16 @@ export default function AuthModal({ isOpen, onClose }) {
                     setErrors({});
                     setIsSubmitted(false);
                     setShowConfirmationMessage(false);
+                    setConfirmationMessage('');
                     setFormData({
                       name: '',
                       email: '',
                       password: '',
                       confirmPassword: ''
+                    });
+                    setShowPasswords({
+                      password: false,
+                      confirmPassword: false
                     });
                   }}>
                     {isLogin ? "Зарегистрироваться" : "Войти"}

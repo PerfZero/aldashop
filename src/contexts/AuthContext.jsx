@@ -139,12 +139,11 @@ export function AuthProvider({ children }) {
         throw new Error(data.error || 'Ошибка регистрации');
       }
 
-      // После успешной регистрации автоматически входим в систему
       const loginResult = await login(email, password);
       if (loginResult.success) {
         return { success: true, data };
       } else {
-        return { success: false, error: 'Регистрация прошла успешно, но не удалось войти в систему' };
+        return { success: true, data, message: data.detail || 'Регистрация успешна. На вашу почту отправлено письмо с подтверждением.' };
       }
     } catch (error) {
       return { success: false, error: error.message };

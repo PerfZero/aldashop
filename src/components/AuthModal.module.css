@@ -116,6 +116,12 @@ margin-bottom: 15px;
   width: 100%;
 }
 
+.passwordInputContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 
 .errorText {
     font-family: "Montserrat", sans-serif;
@@ -151,7 +157,7 @@ margin-bottom: 15px;
 
 .input {
     border: 1px solid #c8c8c8;
-    padding: 11px 20px;
+    padding: 11px 50px 11px 20px;
     background: #f9f8f4;
     font-family: "Montserrat", sans-serif;
 font-weight: 500;
@@ -159,6 +165,7 @@ width: 100%;
 font-size: 16px;
 line-height: 140%;
 color: rgba(193, 175, 134, 0.5);
+box-sizing: border-box;
 }
 
 .input:focus {
@@ -354,4 +361,81 @@ color: #fff;
   .modal::after{
     display: none;
   }
+}
+
+.passwordToggle {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: rgba(193, 175, 134, 0.5);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.passwordToggle:hover {
+  color: #C1A286;
+}
+
+.passwordToggle:focus {
+  outline: none;
+  color: #C1A286;
+}
+
+.resendActions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  width: 100%;
+}
+
+.resendButton {
+  padding: 15px 30px;
+  background: #a45b38;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 150%;
+  text-align: center;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  width: 100%;
+}
+
+.resendButton:hover:not(:disabled) {
+  background: #8b4a2e;
+}
+
+.resendButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.closeConfirmButton {
+  padding: 15px 30px;
+  background: #f3f4f6;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 150%;
+  text-align: center;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  cursor: pointer;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.closeConfirmButton:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
 } 
