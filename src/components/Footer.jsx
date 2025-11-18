@@ -212,14 +212,11 @@ const Footer = () => {
           ©2025 ALDA. Все права защищены
         </div>
         <nav className={styles.bottomNav}>
-          <button onClick={() => openModal('terms')} className={styles.legalLink}>
-            Правила пользования
+          <button onClick={() => openModal('offer')} className={styles.legalLink}>
+            Публичная оферта
           </button>
           <button onClick={() => openModal('privacy')} className={styles.legalLink}>
             Политика конфиденциальности
-          </button>
-          <button onClick={() => openModal('offer')} className={styles.legalLink}>
-            Публичная оферта
           </button>
         </nav>
       </div>

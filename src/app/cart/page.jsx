@@ -1271,7 +1271,7 @@ export default function CartPage() {
               
               <p className={styles.termsText}>
                 Делая заказ, Вы даете согласие на обработку персональных данных, принимаете <br />
-                <button type="button" onClick={() => openDocumentModal('terms')} className={styles.documentLink}>правилами пользования</button>,  <button type="button" onClick={() => openDocumentModal('privacy')} className={styles.documentLink}>политику конфиденциальности</button> и <button type="button" onClick={() => openDocumentModal('offer')} className={styles.documentLink}>договор оферты.</button>
+                <button type="button" onClick={() => openDocumentModal('offer')} className={styles.documentLink}>публичную оферту</button>, <button type="button" onClick={() => openDocumentModal('privacy')} className={styles.documentLink}>политику конфиденциальности</button> и <button type="button" onClick={() => openDocumentModal('terms')} className={styles.documentLink}>согласие на обработку персональных данных</button>.
               </p>
             </form>
             
