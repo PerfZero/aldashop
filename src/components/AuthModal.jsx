@@ -12,6 +12,7 @@ export default function AuthModal({ isOpen, onClose }) {
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [acceptNews, setAcceptNews] = useState(false);
   const [termsUrl, setTermsUrl] = useState('#');
+  const [consentPromotionalUrl, setConsentPromotionalUrl] = useState('#');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,7 +36,7 @@ export default function AuthModal({ isOpen, onClose }) {
   useEffect(() => {
     const fetchTermsUrl = async () => {
       try {
-        const response = await fetch('https://aldalinde.ru/api/documents?type=public_offer');
+        const response = await fetch('https://aldalinde.ru/api/documents?type=consent_personal_data');
         if (response.ok) {
           const data = await response.json();
           if (data.url) {
@@ -46,7 +47,21 @@ export default function AuthModal({ isOpen, onClose }) {
       } catch (error) {
       }
     };
+    const fetchConsentPromotionalUrl = async () => {
+      try {
+        const response = await fetch('https://aldalinde.ru/api/documents?type=consent_promotional');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.url) {
+            const fullUrl = data.url.startsWith('http') ? data.url : `https://aldalinde.ru${data.url}`;
+            setConsentPromotionalUrl(fullUrl);
+          }
+        }
+      } catch (error) {
+      }
+    };
     fetchTermsUrl();
+    fetchConsentPromotionalUrl();
   }, []);
 
   const validateEmail = (email) => {
@@ -233,11 +248,15 @@ export default function AuthModal({ isOpen, onClose }) {
     }
   };
 
-  const openDocumentModal = async (e) => {
+  const openDocumentModal = async (e, documentType = 'terms') => {
     e.preventDefault();
-    if (!termsUrl || termsUrl === '#') {
+    const url = documentType === 'consent_promotional' ? consentPromotionalUrl : termsUrl;
+    const apiType = documentType === 'consent_promotional' ? 'consent_promotional' : 'consent_personal_data';
+    const title = documentType === 'consent_promotional' ? 'Согласие на промо-рассылку' : 'Согласие на обработку персональных данных';
+    
+    if (!url || url === '#') {
       try {
-        const response = await fetch('https://aldalinde.ru/api/documents?type=public_offer');
+        const response = await fetch(`https://aldalinde.ru/api/documents?type=${apiType}`);
         if (response.ok) {
           const data = await response.json();
           if (data.url) {
@@ -245,9 +264,9 @@ export default function AuthModal({ isOpen, onClose }) {
             if (fullUrl.endsWith('.pdf')) {
               setModalData({
                 isOpen: true,
-                title: 'Правила пользования',
+                title: title,
                 content: '',
-                type: 'terms',
+                type: documentType,
                 pdfUrl: fullUrl
               });
               return;
@@ -257,9 +276,9 @@ export default function AuthModal({ isOpen, onClose }) {
               const content = await contentResponse.text();
               setModalData({
                 isOpen: true,
-                title: 'Правила пользования',
+                title: title,
                 content: content,
-                type: 'terms',
+                type: documentType,
                 pdfUrl: null
               });
             }
@@ -268,40 +287,40 @@ export default function AuthModal({ isOpen, onClose }) {
       } catch (error) {
         setModalData({
           isOpen: true,
-          title: 'Правила пользования',
+          title: title,
           content: '<p>Ошибка загрузки документа</p>',
-          type: 'terms',
+          type: documentType,
           pdfUrl: null
         });
       }
     } else {
-      if (termsUrl.endsWith('.pdf')) {
+      if (url.endsWith('.pdf')) {
         setModalData({
           isOpen: true,
-          title: 'Правила пользования',
+          title: title,
           content: '',
-          type: 'terms',
-          pdfUrl: termsUrl
+          type: documentType,
+          pdfUrl: url
         });
       } else {
         try {
-          const contentResponse = await fetch(termsUrl);
+          const contentResponse = await fetch(url);
           if (contentResponse.ok) {
             const content = await contentResponse.text();
             setModalData({
               isOpen: true,
-              title: 'Правила пользования',
+              title: title,
               content: content,
-              type: 'terms',
+              type: documentType,
               pdfUrl: null
             });
           }
         } catch (error) {
           setModalData({
             isOpen: true,
-            title: 'Правила пользования',
+            title: title,
             content: '<p>Ошибка загрузки документа</p>',
-            type: 'terms',
+            type: documentType,
             pdfUrl: null
           });
         }
@@ -607,7 +626,7 @@ export default function AuthModal({ isOpen, onClose }) {
                     checked={acceptNews}
                     onChange={(e) => setAcceptNews(e.target.checked)}
                   />
-                  <span>Установив флажок, я хочу получать последние новости от ALDA.</span>
+                  <span>Установив флажок, я хочу <button type="button" onClick={(e) => openDocumentModal(e, 'consent_promotional')} className={styles.documentLink}>получать последние новости</button> от ALDA.</span>
                 </label>
               </div>
             )}

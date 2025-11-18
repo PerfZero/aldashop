@@ -82,7 +82,7 @@ export default function CartPage() {
     const fetchDocuments = async () => {
       try {
         const [termsRes, privacyRes, offerRes] = await Promise.all([
-          fetch('https://aldalinde.ru/api/documents?type=public_offer'),
+          fetch('https://aldalinde.ru/api/documents?type=consent_personal_data'),
           fetch('https://aldalinde.ru/api/documents?type=privacy_policy'),
           fetch('https://aldalinde.ru/api/documents?type=public_offer')
         ]);
@@ -109,13 +109,13 @@ export default function CartPage() {
 
   const openDocumentModal = async (type) => {
     const typeMap = {
-      terms: 'public_offer',
+      terms: 'consent_personal_data',
       privacy: 'privacy_policy',
       offer: 'public_offer'
     };
 
     const titles = {
-      terms: 'Правила пользования',
+      terms: 'Согласие на обработку персональных данных',
       privacy: 'Политика конфиденциальности',
       offer: 'Публичная оферта'
     };

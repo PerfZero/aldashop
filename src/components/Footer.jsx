@@ -33,13 +33,13 @@ const Footer = () => {
 
   const openModal = async (type) => {
     const typeMap = {
-      terms: 'public_offer',
+      terms: 'consent_personal_data',
       privacy: 'privacy_policy',
       offer: 'public_offer'
     };
 
     const titles = {
-      terms: 'Правила пользования',
+      terms: 'Согласие на обработку персональных данных',
       privacy: 'Политика конфиденциальности',
       offer: 'Публичная оферта'
     };
