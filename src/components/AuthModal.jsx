@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import LegalModal from './LegalModal';
 import styles from './AuthModal.module.css';
 
 export default function AuthModal({ isOpen, onClose }) {
@@ -29,6 +30,7 @@ export default function AuthModal({ isOpen, onClose }) {
     password: false,
     confirmPassword: false
   });
+  const [modalData, setModalData] = useState({ isOpen: false, title: '', content: '', type: '', pdfUrl: null });
 
   useEffect(() => {
     const fetchTermsUrl = async () => {
@@ -231,6 +233,86 @@ export default function AuthModal({ isOpen, onClose }) {
     }
   };
 
+  const openDocumentModal = async (e) => {
+    e.preventDefault();
+    if (!termsUrl || termsUrl === '#') {
+      try {
+        const response = await fetch('https://aldalinde.ru/api/documents?type=public_offer');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.url) {
+            const fullUrl = data.url.startsWith('http') ? data.url : `https://aldalinde.ru${data.url}`;
+            if (fullUrl.endsWith('.pdf')) {
+              setModalData({
+                isOpen: true,
+                title: 'Правила пользования',
+                content: '',
+                type: 'terms',
+                pdfUrl: fullUrl
+              });
+              return;
+            }
+            const contentResponse = await fetch(fullUrl);
+            if (contentResponse.ok) {
+              const content = await contentResponse.text();
+              setModalData({
+                isOpen: true,
+                title: 'Правила пользования',
+                content: content,
+                type: 'terms',
+                pdfUrl: null
+              });
+            }
+          }
+        }
+      } catch (error) {
+        setModalData({
+          isOpen: true,
+          title: 'Правила пользования',
+          content: '<p>Ошибка загрузки документа</p>',
+          type: 'terms',
+          pdfUrl: null
+        });
+      }
+    } else {
+      if (termsUrl.endsWith('.pdf')) {
+        setModalData({
+          isOpen: true,
+          title: 'Правила пользования',
+          content: '',
+          type: 'terms',
+          pdfUrl: termsUrl
+        });
+      } else {
+        try {
+          const contentResponse = await fetch(termsUrl);
+          if (contentResponse.ok) {
+            const content = await contentResponse.text();
+            setModalData({
+              isOpen: true,
+              title: 'Правила пользования',
+              content: content,
+              type: 'terms',
+              pdfUrl: null
+            });
+          }
+        } catch (error) {
+          setModalData({
+            isOpen: true,
+            title: 'Правила пользования',
+            content: '<p>Ошибка загрузки документа</p>',
+            type: 'terms',
+            pdfUrl: null
+          });
+        }
+      }
+    }
+  };
+
+  const closeModal = () => {
+    setModalData({ isOpen: false, title: '', content: '', type: '', pdfUrl: null });
+  };
+
   if (!isOpen) return null;
 
   if (showConfirmationMessage) {
@@ -252,6 +334,11 @@ export default function AuthModal({ isOpen, onClose }) {
                 : confirmationMessage || 'Письмо с подтверждением отправлено на вашу электронную почту. Пожалуйста, проверьте почту и перейдите по ссылке для подтверждения аккаунта.'
               }
             </p>
+            {!isResetPassword && (
+              <p className={styles.spamNote}>
+                Обратите внимание: письмо подтверждения может попасть в папку «Спам». Пожалуйста, проверьте папку «Спам», если не видите письмо во входящих.
+              </p>
+            )}
             {!isResetPassword && (
               <div className={styles.resendActions}>
                 <button 
@@ -509,7 +596,7 @@ export default function AuthModal({ isOpen, onClose }) {
                       }
                     }}
                   />
-                  <span>Установив этот флажок, я подтверждаю согласие с <a href={termsUrl} target="_blank" rel="noopener noreferrer">Правилами пользования</a> ALDA.</span>
+                  <span>Установив флажок, я даю согласие на обработку <button type="button" onClick={openDocumentModal} className={styles.documentLink}>персональных данных</button></span>
                 </label>
                 {isSubmitted && errors.terms && (
                   <span className={styles.errorText}>{errors.terms}</span>
@@ -520,13 +607,21 @@ export default function AuthModal({ isOpen, onClose }) {
                     checked={acceptNews}
                     onChange={(e) => setAcceptNews(e.target.checked)}
                   />
-                  <span>Да, я хочу быть в курсе всех новостей и специальных предложений от ALDA.</span>
+                  <span>Установив флажок, я хочу получать последние новости от ALDA.</span>
                 </label>
               </div>
             )}
           </>
         )}
       </div>
+      <LegalModal
+        isOpen={modalData.isOpen}
+        onClose={closeModal}
+        title={modalData.title}
+        content={modalData.content}
+        type={modalData.type}
+        pdfUrl={modalData.pdfUrl}
+      />
     </div>
   );
 } 

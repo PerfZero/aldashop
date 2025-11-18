@@ -9,7 +9,7 @@ import LegalModal from './LegalModal';
 const Footer = () => {
   const [footerInfo, setFooterInfo] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [modalData, setModalData] = useState({ isOpen: false, title: '', content: '', type: '' });
+  const [modalData, setModalData] = useState({ isOpen: false, title: '', content: '', type: '', pdfUrl: null });
 
   useEffect(() => {
     const fetchFooterInfo = async () => {
@@ -53,7 +53,13 @@ const Footer = () => {
         if (data.url) {
           const fullUrl = data.url.startsWith('http') ? data.url : `https://aldalinde.ru${data.url}`;
           if (fullUrl.endsWith('.pdf')) {
-            window.open(fullUrl, '_blank');
+            setModalData({
+              isOpen: true,
+              title: titles[type] || 'Документ',
+              content: '',
+              type: type,
+              pdfUrl: fullUrl
+            });
             return;
           }
           const contentResponse = await fetch(fullUrl);
@@ -63,14 +69,16 @@ const Footer = () => {
               isOpen: true,
               title: titles[type] || 'Документ',
               content: content,
-              type: type
+              type: type,
+              pdfUrl: null
             });
           } else {
             setModalData({
               isOpen: true,
               title: titles[type] || 'Документ',
               content: '<p>Не удалось загрузить документ</p>',
-              type: type
+              type: type,
+              pdfUrl: null
             });
           }
         } else {
@@ -78,7 +86,8 @@ const Footer = () => {
             isOpen: true,
             title: titles[type] || 'Документ',
             content: '<p>Документ не найден</p>',
-            type: type
+            type: type,
+            pdfUrl: null
           });
         }
       } else {
@@ -86,7 +95,8 @@ const Footer = () => {
           isOpen: true,
           title: titles[type] || 'Документ',
           content: '<p>Ошибка загрузки документа</p>',
-          type: type
+          type: type,
+          pdfUrl: null
         });
       }
     } catch (error) {
@@ -94,13 +104,14 @@ const Footer = () => {
         isOpen: true,
         title: titles[type] || 'Документ',
         content: '<p>Ошибка загрузки документа</p>',
-        type: type
+        type: type,
+        pdfUrl: null
       });
     }
   };
 
   const closeModal = () => {
-    setModalData({ isOpen: false, title: '', content: '', type: '' });
+    setModalData({ isOpen: false, title: '', content: '', type: '', pdfUrl: null });
   };
 
   if (loading) {
@@ -219,6 +230,7 @@ const Footer = () => {
         title={modalData.title}
         content={modalData.content}
         type={modalData.type}
+        pdfUrl={modalData.pdfUrl}
       />
     </footer>
   );

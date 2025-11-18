@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import styles from './LegalModal.module.css';
 
-export default function LegalModal({ isOpen, onClose, title, content, type }) {
+export default function LegalModal({ isOpen, onClose, title, content, type, pdfUrl }) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -37,10 +37,18 @@ export default function LegalModal({ isOpen, onClose, title, content, type }) {
           </button>
         </div>
         <div className={styles.content}>
-          <div 
-            className={styles.text}
-            dangerouslySetInnerHTML={{ __html: content }}
-          />
+          {pdfUrl ? (
+            <iframe 
+              src={pdfUrl} 
+              className={styles.pdfViewer}
+              title={title}
+            />
+          ) : (
+            <div 
+              className={styles.text}
+              dangerouslySetInnerHTML={{ __html: content }}
+            />
+          )}
         </div>
       </div>
     </div>,

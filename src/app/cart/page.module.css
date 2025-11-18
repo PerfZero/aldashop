@@ -456,6 +456,23 @@ color: #a45b38;
 text-decoration-skip-ink: none;
 color: #a45b38;
   }
+
+  .documentLink {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    text-decoration: underline;
+    text-decoration-skip-ink: none;
+    color: #a45b38;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .documentLink:hover {
+    color: #8a4a2f;
+  }
   
   .orderSummary {
     width: 400px;

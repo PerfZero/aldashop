@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import YandexMap from '../../components/YandexMap';
 import AddressSelector from '../../components/AddressSelector';
 import AuthModal from '../../components/AuthModal';
+import LegalModal from '../../components/LegalModal';
 
 export default function CartPage() {
   const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart } = useCart();
@@ -29,6 +30,7 @@ export default function CartPage() {
     privacy: '#',
     offer: '#'
   });
+  const [modalData, setModalData] = useState({ isOpen: false, title: '', content: '', type: '', pdfUrl: null });
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -104,6 +106,100 @@ export default function CartPage() {
     };
     fetchDocuments();
   }, []);
+
+  const openDocumentModal = async (type) => {
+    const typeMap = {
+      terms: 'public_offer',
+      privacy: 'privacy_policy',
+      offer: 'public_offer'
+    };
+
+    const titles = {
+      terms: 'Правила пользования',
+      privacy: 'Политика конфиденциальности',
+      offer: 'Публичная оферта'
+    };
+
+    const apiType = typeMap[type];
+    const url = documentsUrls[type];
+
+    if (!url || url === '#') {
+      try {
+        const response = await fetch(`https://aldalinde.ru/api/documents?type=${apiType}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.url) {
+            const fullUrl = data.url.startsWith('http') ? data.url : `https://aldalinde.ru${data.url}`;
+            if (fullUrl.endsWith('.pdf')) {
+              setModalData({
+                isOpen: true,
+                title: titles[type] || 'Документ',
+                content: '',
+                type: type,
+                pdfUrl: fullUrl
+              });
+              return;
+            }
+            const contentResponse = await fetch(fullUrl);
+            if (contentResponse.ok) {
+              const content = await contentResponse.text();
+              setModalData({
+                isOpen: true,
+                title: titles[type] || 'Документ',
+                content: content,
+                type: type,
+                pdfUrl: null
+              });
+            }
+          }
+        }
+      } catch (error) {
+        setModalData({
+          isOpen: true,
+          title: titles[type] || 'Документ',
+          content: '<p>Ошибка загрузки документа</p>',
+          type: type,
+          pdfUrl: null
+        });
+      }
+    } else {
+      if (url.endsWith('.pdf')) {
+        setModalData({
+          isOpen: true,
+          title: titles[type] || 'Документ',
+          content: '',
+          type: type,
+          pdfUrl: url
+        });
+      } else {
+        try {
+          const contentResponse = await fetch(url);
+          if (contentResponse.ok) {
+            const content = await contentResponse.text();
+            setModalData({
+              isOpen: true,
+              title: titles[type] || 'Документ',
+              content: content,
+              type: type,
+              pdfUrl: null
+            });
+          }
+        } catch (error) {
+          setModalData({
+            isOpen: true,
+            title: titles[type] || 'Документ',
+            content: '<p>Ошибка загрузки документа</p>',
+            type: type,
+            pdfUrl: null
+          });
+        }
+      }
+    }
+  };
+
+  const closeModal = () => {
+    setModalData({ isOpen: false, title: '', content: '', type: '', pdfUrl: null });
+  };
 
   useEffect(() => {
     calculateTotal();
@@ -1175,7 +1271,7 @@ export default function CartPage() {
               
               <p className={styles.termsText}>
                 Делая заказ, Вы даете согласие на обработку персональных данных, принимаете <br />
-                <a href={documentsUrls.terms} target="_blank" rel="noopener noreferrer">правилами пользования</a>,  <a href={documentsUrls.privacy} target="_blank" rel="noopener noreferrer">политику конфиденциальности</a> и <a href={documentsUrls.offer} target="_blank" rel="noopener noreferrer">договор оферты.</a>
+                <button type="button" onClick={() => openDocumentModal('terms')} className={styles.documentLink}>правилами пользования</button>,  <button type="button" onClick={() => openDocumentModal('privacy')} className={styles.documentLink}>политику конфиденциальности</button> и <button type="button" onClick={() => openDocumentModal('offer')} className={styles.documentLink}>договор оферты.</button>
               </p>
             </form>
             
@@ -1292,6 +1388,14 @@ export default function CartPage() {
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
+      />
+      <LegalModal
+        isOpen={modalData.isOpen}
+        onClose={closeModal}
+        title={modalData.title}
+        content={modalData.content}
+        type={modalData.type}
+        pdfUrl={modalData.pdfUrl}
       />
     </div>
   );
