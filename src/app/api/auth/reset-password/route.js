@@ -16,6 +16,9 @@ export async function POST(request) {
     const data = await response.json();
 
     if (!response.ok) {
+      if (response.status === 429) {
+        return Response.json({ error: data.error || 'Вы превысили лимит. Повторите попытку позже.' }, { status: 429 });
+      }
       return Response.json(data, { status: response.status });
     }
 

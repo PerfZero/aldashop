@@ -239,7 +239,11 @@ export default function AuthModal({ isOpen, onClose }) {
       if (response.ok) {
         setConfirmationMessage(data.detail || 'Письмо с подтверждением отправлено повторно на вашу электронную почту.');
       } else {
-        setConfirmationMessage(data.error || data.detail || 'Ошибка при отправке письма. Попробуйте позже.');
+        if (response.status === 429) {
+          setConfirmationMessage(data.error || 'Вы превысили лимит. Повторите попытку позже.');
+        } else {
+          setConfirmationMessage(data.error || data.detail || 'Ошибка при отправке письма. Попробуйте позже.');
+        }
       }
     } catch (error) {
       setConfirmationMessage('Произошла ошибка при отправке письма. Попробуйте позже.');

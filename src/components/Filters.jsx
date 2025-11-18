@@ -1,12 +1,28 @@
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import FiltersSkeleton from './FiltersSkeleton';
 import styles from './Filters.module.css';
 
-export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {} }) {
+export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {}, categories = [] }) {
+  const pathname = usePathname();
   const [inStockDelivery, setInStockDelivery] = useState(() => appliedFilters.in_stock === true);
   const [tempFilters, setTempFilters] = useState(appliedFilters);
   const [expandedFilters, setExpandedFilters] = useState({});
+  const [expandedCategories, setExpandedCategories] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = sessionStorage.getItem('expandedCategories');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Error parsing expandedCategories:', e);
+        }
+      }
+    }
+    return { categories: true };
+  });
 
   const filteredFilters = filters.filter(filter => filter.slug !== 'sort' && filter.slug !== 'in_stock');
 
@@ -34,6 +50,19 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
       };
       
       sessionStorage.setItem('expandedFilters', JSON.stringify(newState));
+      
+      return newState;
+    });
+  };
+
+  const toggleCategory = (categoryId) => {
+    setExpandedCategories(prev => {
+      const newState = {
+        ...prev,
+        [categoryId]: !prev[categoryId]
+      };
+      
+      sessionStorage.setItem('expandedCategories', JSON.stringify(newState));
       
       return newState;
     });
@@ -137,20 +166,100 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
           </label>
         </div>
 
-        {filteredFilters.map((filter, index) => (
-          <div key={index} className={styles.filter}>
-            <div className={styles.filter__header} onClick={() => toggleFilter(filter.slug)}>
-              <h3 className={styles.filter__title}>{filter.title}</h3>
+        {categories && categories.length > 0 && (
+          <div className={styles.filter}>
+            <div className={styles.filter__header} onClick={() => toggleCategory('categories')}>
               <svg 
-                className={`${styles.filter__arrow} ${expandedFilters[filter.slug] ? styles.filter__arrow_expanded : ''}`}
-                width="8" 
-                height="12" 
-                viewBox="0 0 8 12" 
+                className={`${styles.filter__arrow} ${expandedCategories.categories ? styles.filter__arrow_expanded : ''}`}
+                width="16" 
+                height="10" 
+                viewBox="0 0 16 10" 
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
               >
-              <path d="M1.25 0.5L6.75 6L1.25 11.5" stroke="#323433" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+                <path d="M13 2.25L7.5 7.75L2 2.25" stroke="#323433" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <h3 className={styles.filter__title}>Категории</h3>
+            </div>
+            {expandedCategories.categories && (() => {
+              const sortedCategories = [...categories].sort((a, b) => {
+                const aIsActive = pathname === `/categories/${a.slug}` || pathname?.startsWith(`/categories/${a.slug}/`);
+                const bIsActive = pathname === `/categories/${b.slug}` || pathname?.startsWith(`/categories/${b.slug}/`);
+                if (aIsActive && !bIsActive) return -1;
+                if (!aIsActive && bIsActive) return 1;
+                return 0;
+              });
+
+              return (
+                <div className={styles.filter__options}>
+                  {sortedCategories.map((category, index) => {
+                    const isActive = pathname === `/categories/${category.slug}` || pathname?.startsWith(`/categories/${category.slug}/`);
+                    return (
+                      <div key={category.id}>
+                        <div 
+                          className={`${styles.category__header} ${isActive ? styles.category__header_active : ''}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleCategory(`category-${category.id}`);
+                          }}
+                        >
+                          <svg 
+                            className={`${styles.category__arrow} ${expandedCategories[`category-${category.id}`] ? styles.category__arrow_expanded : ''}`}
+                            width="16" 
+                            height="10" 
+                            viewBox="0 0 16 10" 
+                            fill="none" 
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path d="M13 2.25L7.5 7.75L2 2.25" stroke="#323433" strokeLinecap="round" strokeLinejoin="round"/>
+                          </svg>
+                          <span className={styles.category__title}>{category.title}</span>
+                        </div>
+                        {expandedCategories[`category-${category.id}`] && category.subcategories && category.subcategories.length > 0 && (
+                          <div className={styles.category__subcategories}>
+                            {category.subcategories.map((subcategory) => {
+                              const href = `/categories/${category.slug}/${subcategory.slug}`;
+                              const isSubActive = pathname === href;
+                              return (
+                                <Link 
+                                  key={subcategory.id} 
+                                  href={href}
+                                  scroll={false}
+                                  className={`${styles.category__link} ${isSubActive ? styles.category__link_active : ''}`}
+                                >
+                                  {subcategory.title}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                        {isActive && index < sortedCategories.length - 1 && (
+                          <div className={styles.category__divider}></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {filteredFilters.map((filter, index) => (
+          <div key={index} className={styles.filter}>
+            <div className={styles.filter__header} onClick={() => toggleFilter(filter.slug)}>
+              <svg 
+                className={`${styles.filter__arrow} ${expandedFilters[filter.slug] ? styles.filter__arrow_expanded : ''}`}
+                width="16" 
+                height="10" 
+                viewBox="0 0 16 10" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path d="M13 2.25L7.5 7.75L2 2.25" stroke="#323433" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <h3 className={styles.filter__title}>{filter.title}</h3>
           </div>
             
             {expandedFilters[filter.slug] && (

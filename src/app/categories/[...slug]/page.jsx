@@ -590,6 +590,7 @@ function CategoryPageContent() {
           error={error}
           onApply={handleFiltersApply}
           appliedFilters={appliedFilters}
+          categories={categories}
         />
         <div className={`${styles.products} ${showFilters ? styles.filtersOpen : ''}`}>
           {isProductsLoading && products.length === 0 ? (

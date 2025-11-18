@@ -236,6 +236,9 @@ export function AuthProvider({ children }) {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error(data.error || 'Вы превысили лимит. Повторите попытку позже.');
+        }
         throw new Error(data.error || 'Ошибка сброса пароля');
       }
 
