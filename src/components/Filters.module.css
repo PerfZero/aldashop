@@ -116,22 +116,32 @@ border-radius: 100px;
 .filter__options {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  padding-top: 12px;
 }
 
 .checkboxLabel {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   cursor: pointer;
   font-family: "Montserrat", sans-serif;
   font-size: 14px;
   color: #323433;
+  padding: 4px 0;
+  transition: color 0.2s ease;
+}
+
+.checkboxLabel:hover {
+  color: #a45b38;
 }
 
 .checkboxLabel input[type="checkbox"] {
   width: 16px;
   height: 16px;
   accent-color: #a45b38;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .filter__range {
@@ -518,25 +528,9 @@ border-radius: 100px;
   margin-top: 10px;
 }
 
-.checkboxLabel {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-family: "Montserrat", sans-serif;
-  font-size: 14px;
-  color: #323433;
-}
-
-.checkboxInput {
-  width: 16px;
-  height: 16px;
-  accent-color: #a45b38;
-  cursor: pointer;
-}
-
 .checkboxText {
   user-select: none;
+  line-height: 1.5;
 }
 
 .filter__sizes {

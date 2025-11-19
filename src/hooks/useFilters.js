@@ -41,10 +41,10 @@ const fetchFilters = async (categoryId, subcategoryId, dynamicFilters = {}) => {
 
 export const useFilters = (categoryId, subcategoryId, dynamicFilters = {}) => {
   return useQuery({
-    queryKey: ['filters', categoryId, subcategoryId],
+    queryKey: ['filters', categoryId, subcategoryId, dynamicFilters],
     queryFn: () => fetchFilters(categoryId, subcategoryId, dynamicFilters),
-    enabled: !!(categoryId || subcategoryId), // Запускать только если есть ID
-    staleTime: 15 * 60 * 1000, // 15 минут
-    gcTime: 60 * 60 * 1000, // 1 час
+    enabled: !!(categoryId || subcategoryId),
+    staleTime: 15 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
   });
 };

@@ -1,14 +1,25 @@
 export async function POST(request) {
   try {
     const body = await request.json();
-
+    const cookieHeader = request.headers.get('cookie');
+    const authHeader = request.headers.get('authorization');
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'accept': 'application/json',
+    };
+    
+    if (authHeader) {
+      headers['Authorization'] = authHeader;
+    }
+    
+    if (cookieHeader) {
+      headers['Cookie'] = cookieHeader;
+    }
 
     const response = await fetch('https://aldalinde.ru/api/products/subcategory-filters/', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'accept': 'application/json',
-      },
+      headers,
       body: JSON.stringify(body),
     });
 
