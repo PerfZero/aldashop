@@ -733,7 +733,7 @@ font-family: "Montserrat", sans-serif;
 
 .dropdown__container {
   display: flex;
-  max-width: 1440px;
+  max-width: 100%;
   margin: 0 auto;
   padding: 0 20px;
   gap: 40px;

@@ -114,8 +114,6 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
       }
     });
     
-    console.log('🟢 Filters handleApply:', finalFilters);
-    
     if (onApply) {
       onApply(finalFilters);
     }
@@ -227,6 +225,9 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                                   href={href}
                                   scroll={false}
                                   className={`${styles.category__link} ${isSubActive ? styles.category__link_active : ''}`}
+                                  onClick={() => {
+                                    console.log('[Filters] Клик по подкатегории в фильтрах:', { categoryId: category.id, subcategoryId: subcategory.id, href });
+                                  }}
                                 >
                                   {subcategory.title}
                                 </Link>

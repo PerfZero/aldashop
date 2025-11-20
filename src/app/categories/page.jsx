@@ -34,7 +34,9 @@ function CategoryPageContent() {
     
     const categoryIdFromUrl = searchParams.get('category_id');
     if (categoryIdFromUrl) {
-      setCategoryId(parseInt(categoryIdFromUrl));
+      const newCategoryId = parseInt(categoryIdFromUrl);
+      console.log('[categories/page] Смена категории из URL:', { categoryId: newCategoryId, pathname });
+      setCategoryId(newCategoryId);
     }
   }, [pathname, searchParams]);
   const [subcategoryId, setSubcategoryId] = useState(null);
@@ -81,7 +83,6 @@ function CategoryPageContent() {
       if (typeof window === 'undefined') return;
       if (e.persisted) {
         const saved = sessionStorage.getItem('showFilters');
-        console.log('pageshow (persisted) sync showFilters (root):', saved);
         if (saved !== null) {
           setShowFilters(saved === 'true');
         }
@@ -94,8 +95,12 @@ function CategoryPageContent() {
 
   // Загружаем категории и фильтры через TanStack Query
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-  const filtersCategoryId = slugDep ? categoryId : null;
-  const { data: filters = [], isLoading: filtersLoading } = useFilters(filtersCategoryId, subcategoryId, dynamicFilters);
+  
+  useEffect(() => {
+    console.log('[categories/page] Изменение параметров для фильтров:', { categoryId, subcategoryId, dynamicFilters });
+  }, [categoryId, subcategoryId, dynamicFilters]);
+  
+  const { data: filters = [], isLoading: filtersLoading } = useFilters(categoryId, subcategoryId, dynamicFilters);
 
   // Используем TanStack Query для загрузки товаров
   
@@ -164,12 +169,10 @@ function CategoryPageContent() {
       if (typeof window === 'undefined') return;
       
       const url = new URL(window.location.href);
-      console.log('🔧 updateUrlWithDynamicFilters called with:', { filters, isReset });
     
     // Удаляем все динамические параметры
     Object.keys(url.searchParams).forEach(key => {
       if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id'].includes(key)) {
-        console.log('🗑️ Deleting dynamic param:', key);
         url.searchParams.delete(key);
       }
     });
@@ -186,7 +189,6 @@ function CategoryPageContent() {
       });
     }
 
-      console.log('🔧 Final URL:', url.toString());
       window.history.replaceState({}, '', url.toString());
     } catch (error) {
       console.error('Error in updateUrlWithDynamicFilters:', error);
@@ -225,7 +227,6 @@ function CategoryPageContent() {
 
 
   const handleFiltersApply = (newFilters) => {
-    console.log('🟡 handleFiltersApply received:', newFilters);
     setAppliedFilters(newFilters);
     
     if (typeof window !== 'undefined') {
@@ -328,10 +329,6 @@ function CategoryPageContent() {
   };
 
   useEffect(() => {
-    console.log('🟠 appliedFilters changed:', appliedFilters);
-  }, [appliedFilters]);
-
-  useEffect(() => {
     scrollRestoredRef.current = false;
   }, [slugDep]);
 
@@ -359,6 +356,7 @@ function CategoryPageContent() {
       const cat = sortedData.find(c => c.slug === catSlug);
       if (cat) {
         const sub = (cat.subcategories || []).find(s => s.slug === subSlug && subSlug !== 'all');
+        console.log('[categories/page] Смена категории (подкатегория):', { categoryId: cat.id, subcategoryId: sub?.id, slug: catSlug, subSlug });
         setCategoryId(cat.id);
         setSubcategoryId(sub ? sub.id : null);
         setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
@@ -371,6 +369,7 @@ function CategoryPageContent() {
     
     const cat = sortedData.find(c => c.slug === currentSlug);
     if (cat) {
+      console.log('[categories/page] Смена категории:', { categoryId: cat.id, subcategoryId: null, slug: currentSlug });
       setCategoryId(cat.id);
       setSubcategoryId(null);
       setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
@@ -382,6 +381,7 @@ function CategoryPageContent() {
     for (const c of sortedData) {
       const sub = (c.subcategories || []).find(s => s.slug === currentSlug);
       if (sub) {
+        console.log('[categories/page] Смена категории (подкатегория найдена):', { categoryId: c.id, subcategoryId: sub.id, slug: currentSlug });
         setCategoryId(c.id);
         setSubcategoryId(sub.id);
         setCurrentCategory({ id: c.id, slug: c.slug, title: c.title, description: c.description, photo_cover: c.photo_cover });
@@ -465,7 +465,6 @@ function CategoryPageContent() {
           onClick={() => {
             const next = !showFilters;
             setShowFilters(next);
-            try { console.log('showFilters toggle:', { from: showFilters, to: next }); } catch {}
             if (typeof window !== 'undefined') {
               sessionStorage.setItem('showFilters', next.toString());
             }
@@ -494,7 +493,6 @@ function CategoryPageContent() {
           isVisible={isClient ? showFilters : false} 
           onClose={() => {
             setShowFilters(false);
-            try { console.log('Filters onClose: set showFilters to false'); } catch {}
             if (typeof window !== 'undefined') {
               sessionStorage.setItem('showFilters', 'false');
             }

@@ -97,12 +97,6 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
     });
   }
 
-  console.log('🚀 Sending request to API:', {
-    url: '/api/products/models-list',
-    requestBody,
-    filters
-  });
-
   const response = await fetch('/api/products/models-list', {
     method: 'POST',
     headers: {
@@ -134,8 +128,6 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
 export const useInfiniteProducts = (filters, categoryId, subcategoryId, sortBy) => {
   const serializedFilters = JSON.stringify(filters || {});
   const queryKey = ['products', filters, categoryId, subcategoryId, sortBy, serializedFilters];
-  
-  console.log('🔵 useInfiniteProducts query key:', queryKey);
   
   return useInfiniteQuery({
     queryKey,

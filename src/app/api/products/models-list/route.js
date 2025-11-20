@@ -47,13 +47,6 @@ export async function POST(request) {
     const cookieHeader = request.headers.get('cookie');
     const authHeader = request.headers.get('authorization');
     
-    console.log('📡 API received request:', {
-      body,
-      hasAuth: !!authHeader,
-      hasCookie: !!cookieHeader
-    });
-    
-    
     const headers = {
       'Content-Type': 'application/json',
       'accept': 'application/json',

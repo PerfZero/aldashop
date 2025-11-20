@@ -241,7 +241,10 @@ export default function Header() {
                 className={`${styles.header__navLink} ${
                   activeMenu === category.id ? styles.active : ""
                 }`}
-                onClick={() => handleMenuClick(category.id)}
+                onClick={() => {
+                  console.log('[Header] Клик по категории в хедере:', { categoryId: category.id, slug: category.slug });
+                  handleMenuClick(category.id);
+                }}
               >
                 {category.title}
               </Link>
@@ -333,12 +336,15 @@ export default function Header() {
                         }
 
                         return (
-                          <Link
-                            key={subcategory.id}
-                            href={`/categories/${subcategory.slug}`}
-                            className={styles.mobileMenu__categoryItem}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
+                  <Link
+                    key={subcategory.id}
+                    href={`/categories/${subcategory.slug}`}
+                    className={styles.mobileMenu__categoryItem}
+                    onClick={() => {
+                      console.log('[Header] Клик по подкатегории в мобильном меню:', { subcategoryId: subcategory.id, slug: subcategory.slug });
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
                             <img
                               src={imageSrc}
                               alt={subcategory.title}
@@ -458,6 +464,9 @@ export default function Header() {
                     key={subcategory.id}
                     href={`/categories/${subcategory.slug}`}
                     className={styles.dropdown__link}
+                    onClick={() => {
+                      console.log('[Header] Клик по подкатегории в dropdown:', { categoryId: isDropdownOpen, subcategoryId: subcategory.id, slug: subcategory.slug });
+                    }}
                   >
                     {subcategory.title}
                   </Link>

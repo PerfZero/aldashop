@@ -41,8 +41,6 @@ export async function POST(request) {
 
     const data = await response.json();
     
-    console.log('🔍 Filters data from server:', JSON.stringify(data, null, 2));
-    
     return Response.json(data);
   } catch (error) {
     console.error('[subcategory-filters] internal error:', error);
