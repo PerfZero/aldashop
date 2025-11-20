@@ -43,7 +43,7 @@ export const useFilters = (categoryId, subcategoryId, dynamicFilters = {}) => {
   return useQuery({
     queryKey: ['filters', categoryId, subcategoryId, dynamicFilters],
     queryFn: () => fetchFilters(categoryId, subcategoryId, dynamicFilters),
-    enabled: !!(categoryId || subcategoryId),
+    enabled: true,
     staleTime: 15 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });

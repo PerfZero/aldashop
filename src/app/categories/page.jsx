@@ -94,7 +94,8 @@ function CategoryPageContent() {
 
   // Загружаем категории и фильтры через TanStack Query
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-  const { data: filters = [], isLoading: filtersLoading } = useFilters(categoryId, subcategoryId, dynamicFilters);
+  const filtersCategoryId = slugDep ? categoryId : null;
+  const { data: filters = [], isLoading: filtersLoading } = useFilters(filtersCategoryId, subcategoryId, dynamicFilters);
 
   // Используем TanStack Query для загрузки товаров
   
