@@ -61,11 +61,96 @@
   flex: 1;
 }
 
-.pdfViewer {
+.pdfContainer {
   width: 100%;
-  height: 100%;
-  max-height: calc(90vh - 120px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.document {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.pdfPage {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.pdfControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  padding: 10px 0;
+}
+
+.pageButton {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  padding: 8px 16px;
+  background: #a45b38;
+  color: #fff;
   border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.pageButton:hover:not(:disabled) {
+  background: #8a4a2f;
+}
+
+.pageButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  color: #323433;
+}
+
+.loading {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: #323433;
+  padding: 20px;
+  text-align: center;
+}
+
+.error {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  color: #d32f2f;
+  padding: 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+}
+
+.downloadLink {
+  color: #a45b38;
+  text-decoration: underline;
+  font-size: 14px;
+}
+
+.downloadLink:hover {
+  color: #8a4a2f;
 }
 
 .text {
@@ -130,10 +215,6 @@
     width: min(700px, 90vw);
     max-height: min(calc(700px * 297 / 210), 85vh);
   }
-  
-  .pdfViewer {
-    max-height: calc(85vh - 120px);
-  }
 }
 
 @media screen and (max-width: 768px) {
@@ -155,11 +236,29 @@
   }
   
   .content {
-    padding: 20px;
+    padding: 15px;
   }
   
-  .pdfViewer {
-    max-height: calc(85vh - 100px);
+  .pdfContainer {
+    gap: 10px;
+  }
+  
+  .pdfPage {
+    width: 100% !important;
+  }
+  
+  .pdfControls {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .pageButton {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+  
+  .pageInfo {
+    font-size: 12px;
   }
   
   .text {
@@ -189,9 +288,5 @@
   .modal {
     max-width: 1200px;
     max-height: 85vh;
-  }
-  
-  .pdfViewer {
-    max-height: calc(85vh - 120px);
   }
 }
