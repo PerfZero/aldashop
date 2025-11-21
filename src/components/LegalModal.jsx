@@ -54,12 +54,8 @@ export default function LegalModal({ isOpen, onClose, title, content, type, pdfU
       
       const loadPdf = async () => {
         try {
-          if (pdfUrl.startsWith('http')) {
-            setPdfData(pdfUrl);
-            return;
-          }
-          
-          const encodedUrl = encodeURIComponent(pdfUrl);
+          const fullUrl = pdfUrl.startsWith('http') ? pdfUrl : `https://aldalinde.ru${pdfUrl}`;
+          const encodedUrl = encodeURIComponent(fullUrl);
           const proxyUrl = `/api/pdf-proxy?url=${encodedUrl}`;
           
           try {
@@ -75,7 +71,6 @@ export default function LegalModal({ isOpen, onClose, title, content, type, pdfU
             console.warn('Proxy failed, using direct URL:', proxyError);
           }
           
-          const fullUrl = pdfUrl.startsWith('http') ? pdfUrl : `https://aldalinde.ru${pdfUrl}`;
           setPdfData(fullUrl);
         } catch (err) {
           console.error('Error loading PDF:', err);
