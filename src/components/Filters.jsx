@@ -1,12 +1,16 @@
 
 import { useState, useEffect } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import FiltersSkeleton from './FiltersSkeleton';
 import styles from './Filters.module.css';
 
 export default function Filters({ isVisible, onClose, filters = [], loading = false, error = null, onApply, appliedFilters = {}, categories = [] }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const isCategoriesPage = pathname === '/categories';
+  const isCategorySlugPage = pathname?.startsWith('/categories/') && pathname !== '/categories';
   const [inStockDelivery, setInStockDelivery] = useState(() => appliedFilters.in_stock === true);
   const [tempFilters, setTempFilters] = useState(appliedFilters);
   const [expandedFilters, setExpandedFilters] = useState({});
@@ -30,6 +34,19 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
     setInStockDelivery(appliedFilters.in_stock === true);
     setTempFilters(appliedFilters);
   }, [appliedFilters]);
+
+  useEffect(() => {
+    if (isCategoriesPage && categories.length > 0) {
+      const categoryIdFromUrl = searchParams.get('category_id');
+      if (categoryIdFromUrl) {
+        setExpandedCategories(prev => ({
+          ...prev,
+          categories: true,
+          [`category-${categoryIdFromUrl}`]: true
+        }));
+      }
+    }
+  }, [isCategoriesPage, categories, searchParams]);
 
   useEffect(() => {
     const saved = sessionStorage.getItem('expandedFilters');
@@ -164,7 +181,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
           </label>
         </div>
 
-        {categories && categories.length > 0 && (
+        {categories && categories.length > 0 && !isCategorySlugPage && (
           <div className={styles.filter}>
             <div className={styles.filter__header} onClick={() => toggleCategory('categories')}>
               <svg 
@@ -191,7 +208,9 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
               return (
                 <div className={styles.filter__options}>
                   {sortedCategories.map((category, index) => {
-                    const isActive = pathname === `/categories/${category.slug}` || pathname?.startsWith(`/categories/${category.slug}/`);
+                    const isActive = isCategoriesPage 
+                      ? searchParams.get('category_id') === String(category.id)
+                      : pathname === `/categories/${category.slug}` || pathname?.startsWith(`/categories/${category.slug}/`);
                     return (
                       <div key={category.id}>
                         <div 
@@ -199,7 +218,22 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            toggleCategory(`category-${category.id}`);
+                            if (isCategoriesPage) {
+                              const url = new URL(window.location.href);
+                              if (searchParams.get('category_id') === String(category.id)) {
+                                url.searchParams.delete('category_id');
+                                url.searchParams.delete('subcategory_id');
+                              } else {
+                                url.searchParams.set('category_id', String(category.id));
+                                url.searchParams.delete('subcategory_id');
+                              }
+                              router.push(url.pathname + url.search, { scroll: false });
+                              if (category.subcategories && category.subcategories.length > 0) {
+                                toggleCategory(`category-${category.id}`);
+                              }
+                            } else {
+                              toggleCategory(`category-${category.id}`);
+                            }
                           }}
                         >
                           <svg 
@@ -218,7 +252,34 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                           <div className={styles.category__subcategories}>
                             {category.subcategories.map((subcategory) => {
                               const href = `/categories/${category.slug}/${subcategory.slug}`;
-                              const isSubActive = pathname === href;
+                              const isSubActive = isCategoriesPage
+                                ? searchParams.get('category_id') === String(category.id) && searchParams.get('subcategory_id') === String(subcategory.id)
+                                : pathname === href;
+                              
+                              if (isCategoriesPage) {
+                                return (
+                                  <button
+                                    key={subcategory.id}
+                                    className={`${styles.category__link} ${isSubActive ? styles.category__link_active : ''}`}
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      const url = new URL(window.location.href);
+                                      if (isSubActive) {
+                                        url.searchParams.delete('category_id');
+                                        url.searchParams.delete('subcategory_id');
+                                      } else {
+                                        url.searchParams.set('category_id', String(category.id));
+                                        url.searchParams.set('subcategory_id', String(subcategory.id));
+                                      }
+                                      router.push(url.pathname + url.search, { scroll: false });
+                                    }}
+                                  >
+                                    {subcategory.title}
+                                  </button>
+                                );
+                              }
+                              
                               return (
                                 <Link 
                                   key={subcategory.id} 

@@ -595,6 +595,7 @@ border-radius: 100px;
   display: flex;
   flex-direction: column;
   margin-top: 4px;
+  align-items: flex-start;
   margin-bottom: 8px;
 }
 

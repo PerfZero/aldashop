@@ -26,19 +26,6 @@ function CategoryPageContent() {
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
   const [categoryId, setCategoryId] = useState(null);
-  
-  // Отслеживание изменений URL параметров
-  useEffect(() => {
-    const urlDynamicFilters = parseDynamicFiltersFromUrl();
-    setDynamicFilters(urlDynamicFilters);
-    
-    const categoryIdFromUrl = searchParams.get('category_id');
-    if (categoryIdFromUrl) {
-      const newCategoryId = parseInt(categoryIdFromUrl);
-      console.log('[categories/page] Смена категории из URL:', { categoryId: newCategoryId, pathname });
-      setCategoryId(newCategoryId);
-    }
-  }, [pathname, searchParams]);
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [currentSubcategory, setCurrentSubcategory] = useState(null);
@@ -48,6 +35,8 @@ function CategoryPageContent() {
   const [dynamicFilters, setDynamicFilters] = useState({});
   const loadMoreRef = useRef(null);
   const scrollRestoredRef = useRef(false);
+
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
 
   useEffect(() => {
     setIsClient(true);
@@ -92,9 +81,44 @@ function CategoryPageContent() {
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
-
-  // Загружаем категории и фильтры через TanStack Query
-  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  useEffect(() => {
+    const urlDynamicFilters = parseDynamicFiltersFromUrl();
+    setDynamicFilters(urlDynamicFilters);
+    
+    const categoryIdFromUrl = searchParams.get('category_id');
+    const subcategoryIdFromUrl = searchParams.get('subcategory_id');
+    
+    if (categoryIdFromUrl) {
+      const newCategoryId = parseInt(categoryIdFromUrl);
+      const newSubcategoryId = subcategoryIdFromUrl ? parseInt(subcategoryIdFromUrl) : null;
+      console.log('[categories/page] Смена категории из URL:', { categoryId: newCategoryId, subcategoryId: newSubcategoryId, pathname });
+      setCategoryId(newCategoryId);
+      setSubcategoryId(newSubcategoryId);
+      
+      if (categories.length > 0) {
+        const category = categories.find(c => c.id === newCategoryId);
+        if (category) {
+          setCurrentCategory({ id: category.id, slug: category.slug, title: category.title, description: category.description, photo_cover: category.photo_cover });
+          
+          if (newSubcategoryId) {
+            const subcategory = category.subcategories?.find(s => s.id === newSubcategoryId);
+            if (subcategory) {
+              setCurrentSubcategory({ id: subcategory.id, slug: subcategory.slug, title: subcategory.title, description: subcategory.description, photo_cover: subcategory.photo_cover });
+            } else {
+              setCurrentSubcategory(null);
+            }
+          } else {
+            setCurrentSubcategory(null);
+          }
+        }
+      }
+    } else {
+      setCategoryId(null);
+      setSubcategoryId(null);
+      setCurrentCategory(null);
+      setCurrentSubcategory(null);
+    }
+  }, [pathname, searchParams, categories]);
   
   useEffect(() => {
     console.log('[categories/page] Изменение параметров для фильтров:', { categoryId, subcategoryId, dynamicFilters });
@@ -391,30 +415,43 @@ function CategoryPageContent() {
     }
   }, [categories, slugDep]);
 
-
-
-  useEffect(() => {
-    const urlDynamicFilters = parseDynamicFiltersFromUrl();
-    setDynamicFilters(urlDynamicFilters);
-    
-    // Проверяем, есть ли category_id в URL
-    const url = new URL(window.location.href);
-    const categoryIdFromUrl = url.searchParams.get('category_id');
-    if (categoryIdFromUrl) {
-      setCategoryId(parseInt(categoryIdFromUrl));
-    }
-  }, []);
-
   useEffect(() => {
     const handleUrlChange = () => {
       const urlDynamicFilters = parseDynamicFiltersFromUrl();
       setDynamicFilters(urlDynamicFilters);
       
-      // Проверяем, есть ли category_id в URL
       const url = new URL(window.location.href);
       const categoryIdFromUrl = url.searchParams.get('category_id');
+      const subcategoryIdFromUrl = url.searchParams.get('subcategory_id');
+      
       if (categoryIdFromUrl) {
-        setCategoryId(parseInt(categoryIdFromUrl));
+        const newCategoryId = parseInt(categoryIdFromUrl);
+        const newSubcategoryId = subcategoryIdFromUrl ? parseInt(subcategoryIdFromUrl) : null;
+        setCategoryId(newCategoryId);
+        setSubcategoryId(newSubcategoryId);
+        
+        if (categories.length > 0) {
+          const category = categories.find(c => c.id === newCategoryId);
+          if (category) {
+            setCurrentCategory({ id: category.id, slug: category.slug, title: category.title, description: category.description, photo_cover: category.photo_cover });
+            
+            if (newSubcategoryId) {
+              const subcategory = category.subcategories?.find(s => s.id === newSubcategoryId);
+              if (subcategory) {
+                setCurrentSubcategory({ id: subcategory.id, slug: subcategory.slug, title: subcategory.title, description: subcategory.description, photo_cover: subcategory.photo_cover });
+              } else {
+                setCurrentSubcategory(null);
+              }
+            } else {
+              setCurrentSubcategory(null);
+            }
+          }
+        }
+      } else {
+        setCategoryId(null);
+        setSubcategoryId(null);
+        setCurrentCategory(null);
+        setCurrentSubcategory(null);
       }
 
       const saved = sessionStorage.getItem('showFilters');
@@ -423,7 +460,7 @@ function CategoryPageContent() {
 
     window.addEventListener('popstate', handleUrlChange);
     return () => window.removeEventListener('popstate', handleUrlChange);
-  }, []);
+  }, [categories]);
 
 
   const breadcrumbs = [

@@ -27,6 +27,7 @@ export default function AuthModal({ isOpen, onClose }) {
   const [confirmationMessage, setConfirmationMessage] = useState('');
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [isResending, setIsResending] = useState(false);
+  const [isResendingFromError, setIsResendingFromError] = useState(false);
   const [showPasswords, setShowPasswords] = useState({
     password: false,
     confirmPassword: false
@@ -250,6 +251,45 @@ export default function AuthModal({ isOpen, onClose }) {
     } finally {
       setIsResending(false);
     }
+  };
+
+  const handleResendEmailFromError = async (email) => {
+    setIsResendingFromError(true);
+    try {
+      const response = await fetch('/api/auth/resend-email-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setErrors(prev => ({ ...prev, general: data.detail || 'Письмо с подтверждением отправлено повторно на вашу электронную почту.' }));
+      } else {
+        if (response.status === 429) {
+          setErrors(prev => ({ ...prev, general: data.error || 'Вы превысили лимит. Повторите попытку позже.' }));
+        } else {
+          setErrors(prev => ({ ...prev, general: data.error || data.detail || 'Ошибка при отправке письма. Попробуйте позже.' }));
+        }
+      }
+    } catch (error) {
+      setErrors(prev => ({ ...prev, general: 'Произошла ошибка при отправке письма. Попробуйте позже.' }));
+    } finally {
+      setIsResendingFromError(false);
+    }
+  };
+
+  const isEmailNotVerifiedError = (error) => {
+    if (!error) return false;
+    const errorLower = error.toLowerCase();
+    return errorLower.includes('email не подтвержден') || 
+           errorLower.includes('не подтвержден') || 
+           errorLower.includes('проверьте вашу почту') ||
+           errorLower.includes('email not verified') ||
+           errorLower.includes('not verified');
   };
 
   const openDocumentModal = async (e, documentType = 'terms') => {
@@ -578,7 +618,19 @@ export default function AuthModal({ isOpen, onClose }) {
                     {isLoading ? "Загрузка..." : (isLogin ? "Войти" : "Зарегистрироваться")}
                   </button>
                   {errors.general && (
-                    <span className={styles.errorText}>{errors.general}</span>
+                    <div className={styles.errorContainer}>
+                      <span className={styles.errorText}>{errors.general}</span>
+                      {isLogin && isEmailNotVerifiedError(errors.general) && (
+                        <button
+                          type="button"
+                          className={styles.resendButton}
+                          onClick={() => handleResendEmailFromError(formData.email)}
+                          disabled={isResendingFromError}
+                        >
+                          {isResendingFromError ? 'Отправка...' : 'Отправить еще раз'}
+                        </button>
+                      )}
+                    </div>
                   )}
                 </form>
 

@@ -123,6 +123,13 @@ margin-bottom: 15px;
 }
 
 
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
 .errorText {
     font-family: "Montserrat", sans-serif;
     font-weight: 400;
