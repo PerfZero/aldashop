@@ -54,20 +54,29 @@ export default function LegalModal({ isOpen, onClose, title, content, type, pdfU
       
       const loadPdf = async () => {
         try {
+          if (pdfUrl.startsWith('http')) {
+            setPdfData(pdfUrl);
+            return;
+          }
+          
           const encodedUrl = encodeURIComponent(pdfUrl);
           const proxyUrl = `/api/pdf-proxy?url=${encodedUrl}`;
           
-          const response = await fetch(proxyUrl);
-          
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Proxy error:', response.status, errorText);
-            throw new Error(`HTTP error! status: ${response.status}`);
+          try {
+            const response = await fetch(proxyUrl);
+            
+            if (response.ok) {
+              const blob = await response.blob();
+              const blobUrl = URL.createObjectURL(blob);
+              setPdfData(blobUrl);
+              return;
+            }
+          } catch (proxyError) {
+            console.warn('Proxy failed, using direct URL:', proxyError);
           }
           
-          const blob = await response.blob();
-          const blobUrl = URL.createObjectURL(blob);
-          setPdfData(blobUrl);
+          const fullUrl = pdfUrl.startsWith('http') ? pdfUrl : `https://aldalinde.ru${pdfUrl}`;
+          setPdfData(fullUrl);
         } catch (err) {
           console.error('Error loading PDF:', err);
           setError('Ошибка загрузки PDF. Возможно, проблема с CORS или файл поврежден.');
