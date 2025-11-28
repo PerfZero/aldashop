@@ -9,6 +9,7 @@ import QueryClientProviderWrapper from '../components/QueryClientProvider';
 
 import QueryParamProviderWrapper from '../components/QueryParamProvider';
 import ScrollRestoration from '../components/ScrollRestoration';
+import CookieConsent from '../components/CookieConsent';
 import './globals.css';
 
 export const metadata = {
@@ -55,6 +56,7 @@ export default function RootLayout({ children }) {
                     {children}
                   </main>
                   <Footer />
+                  <CookieConsent />
 
                 </FavouritesProvider>
               </CartProvider>

@@ -1,0 +1,112 @@
+.banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-top: 1px solid #c1a286;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  padding: 20px;
+}
+
+.content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.text {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #323433;
+  margin: 0;
+}
+
+.link {
+  background: none;
+  border: none;
+  color: #a45b38;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  transition: color 0.3s ease;
+}
+
+.link:hover {
+  color: #8a4a2f;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.acceptButton,
+.rejectButton,
+.settingsButton {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  padding: 10px 20px;
+  border: 1px solid #c1a286;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.acceptButton {
+  background: #a45b38;
+  color: #fff;
+  border-color: #a45b38;
+}
+
+.acceptButton:hover {
+  background: #8a4a2f;
+  border-color: #8a4a2f;
+}
+
+.rejectButton {
+  background: #fff;
+  color: #323433;
+}
+
+.rejectButton:hover {
+  background: #f5f5f5;
+}
+
+.settingsButton {
+  background: #fff;
+  color: #a45b38;
+}
+
+.settingsButton:hover {
+  background: #f5f5f5;
+}
+
+@media screen and (max-width: 768px) {
+  .banner {
+    padding: 15px;
+  }
+
+  .text {
+    font-size: 13px;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .acceptButton,
+  .rejectButton,
+  .settingsButton {
+    width: 100%;
+  }
+}
+

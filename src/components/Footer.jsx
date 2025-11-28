@@ -35,13 +35,15 @@ const Footer = () => {
     const typeMap = {
       terms: 'consent_personal_data',
       privacy: 'privacy_policy',
-      offer: 'public_offer'
+      offer: 'public_offer',
+      cookies: 'cookie_policy'
     };
 
     const titles = {
       terms: 'Согласие на обработку персональных данных',
       privacy: 'Политика конфиденциальности',
-      offer: 'Публичная оферта'
+      offer: 'Публичная оферта',
+      cookies: 'Политика использования cookies'
     };
 
     const apiType = typeMap[type];
@@ -217,6 +219,9 @@ const Footer = () => {
           </button>
           <button onClick={() => openModal('privacy')} className={styles.legalLink}>
             Политика конфиденциальности
+          </button>
+          <button onClick={() => openModal('cookies')} className={styles.legalLink}>
+            Политика использования cookies
           </button>
         </nav>
       </div>
