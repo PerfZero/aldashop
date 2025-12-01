@@ -70,6 +70,7 @@ export default function CartPage() {
   const [selectedSavedAddress, setSelectedSavedAddress] = useState('');
   const [pickupAddresses, setPickupAddresses] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
+  const [canEditProfile, setCanEditProfile] = useState(true);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -211,6 +212,7 @@ export default function CartPage() {
           if (response.ok) {
             const data = await response.json();
             setAutocompleteData(data);
+            setCanEditProfile(data.can_edit_profile !== false);
             
             if (data.pickup_addresses && data.pickup_addresses.length > 0) {
               const pickupAddressesList = data.pickup_addresses.map(address => address.full_address);
@@ -235,7 +237,6 @@ export default function CartPage() {
                 return newData;
               });
               
-              // Очищаем ошибки валидации при загрузке данных
               setValidationErrors({});
             } else {
             }
@@ -375,18 +376,33 @@ export default function CartPage() {
     return errors;
   };
 
+  const isFieldEditable = (fieldName, fieldValue) => {
+    if (fieldName === 'email') {
+      return true;
+    }
+    
+    if (['firstName', 'lastName', 'patronymic', 'phone'].includes(fieldName)) {
+      if (!canEditProfile && fieldValue && fieldValue.trim()) {
+        return false;
+      }
+    }
+    
+    return true;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     
-    // Обрабатываем специальные поля
+    if (!isFieldEditable(name, formData[name])) {
+      return;
+    }
+    
     let processedValue = value;
     if (name === 'inn') {
       processedValue = value.replace(/\D/g, '');
     } else if (name === 'phone') {
-      // Маска сама форматирует, просто убираем лишние символы
       processedValue = value;
     } else if (['firstName', 'lastName', 'patronymic'].includes(name)) {
-      // Разрешаем только буквы, пробелы и дефисы для ФИО
       processedValue = value.replace(/[^а-яёa-z\s-]/gi, '');
     }
     
@@ -847,6 +863,7 @@ export default function CartPage() {
                           required
                           value={formData.firstName}
                           onChange={handleInputChange}
+                          readOnly={!isFieldEditable('firstName', formData.firstName)}
                           className={validationErrors.firstName ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>
@@ -867,6 +884,7 @@ export default function CartPage() {
                           required
                           value={formData.lastName}
                           onChange={handleInputChange}
+                          readOnly={!isFieldEditable('lastName', formData.lastName)}
                           className={validationErrors.lastName ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>
@@ -889,6 +907,7 @@ export default function CartPage() {
                           required
                           value={formData.patronymic}
                           onChange={handleInputChange}
+                          readOnly={!isFieldEditable('patronymic', formData.patronymic)}
                           className={validationErrors.patronymic ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>
@@ -979,6 +998,7 @@ export default function CartPage() {
                           placeholder=" " 
                           value={formData.phone}
                           onChange={handleInputChange}
+                          readOnly={!isFieldEditable('phone', formData.phone)}
                           className={validationErrors.phone ? styles.errorInput : ''}
                         />
                         <span className={styles.floatingLabel}>

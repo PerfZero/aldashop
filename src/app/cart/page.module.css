@@ -339,6 +339,13 @@ color: #a45b38;
     font-family: 'Montserrat', sans-serif;
     font-size: 16px;
   }
+
+  .inputField input[readonly], .inputField textarea[readonly] {
+    background-color: #F0F0F0;
+    color: #666;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
   
   .inputField input::placeholder, .inputField textarea::placeholder {
     color: rgba(193, 175, 134, 0.5);
@@ -913,6 +920,20 @@ flex: 1;
   height: 55px;
   font-family: 'Montserrat', sans-serif;
   font-size: 16px;
+}
+
+.inputContainer input[readonly] {
+  background-color: #F0F0F0;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.inputContainer input[readonly] input {
+  background-color: #F0F0F0;
+  color: #666;
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .floatingLabel {
