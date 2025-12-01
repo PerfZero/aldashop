@@ -577,7 +577,34 @@ color: #a45b38;
     font-family: 'Montserrat', sans-serif;
     font-size: 14px;
     height: 40px !important;
+  }
 
+  .promoCodeForm .inputContainer {
+    position: relative;
+  }
+
+  .promoCodeForm .inputContainer .floatingLabel {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(193, 175, 134, 0.5);
+    transition: all 0.2s ease;
+    pointer-events: none;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 14px;
+    background-color: transparent;
+  }
+
+  .promoCodeForm .inputContainer:hover .floatingLabel,
+  .promoCodeForm .inputContainer .promoCodeInput:focus + .floatingLabel,
+  .promoCodeForm .inputContainer.hasValue .floatingLabel {
+    top: -8px;
+    font-size: 10px;
+    color: #c1a286;
+    transform: translateY(0);
+    background-color: #F9F8F4;
+    padding: 0 4px;
   }
   
   .promoCodeButton {
@@ -891,7 +918,7 @@ flex: 1;
 .floatingLabel {
   position: absolute;
   left: 15px;
-  top: 35%;
+  top: 26px;
   transform: translateY(-50%);
   color: rgba(193, 175, 134, 0.5);
   transition: all 0.2s ease;
@@ -1056,7 +1083,7 @@ flex: 1;
 }
 
 .promoCodeInput.success {
-  border-color: #27ae60;
+  border-color: #C8C8C8;
 }
 
 .promoCodeButton.loading {
@@ -1073,11 +1100,12 @@ flex: 1;
   color: #e74c3c;
   font-size: 12px;
   margin-top: 5px;
+  width: 100%;
   font-family: 'Montserrat', sans-serif;
 }
 
 .promoCodeSuccess {
-  color: #27ae60;
+  color: #333;
   font-size: 12px;
   margin-top: 5px;
   font-family: 'Montserrat', sans-serif;

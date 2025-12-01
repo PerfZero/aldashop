@@ -81,7 +81,7 @@ export async function GET() {
         delivery: {
           type: 'pickup',
           city: 'Краснодарский край, г. Сочи',
-          pickupAddress: 'ул. Кипарисовая, 56'
+          pickupAddress: ''
         },
         items: [
           {

@@ -755,6 +755,16 @@ margin-top: 20px;
   color: rgba(50, 52, 51, 0.6);
 }
 
+
+
+
+@media screen and (max-width: 1240px) {
+  .delivery__blocks {
+    gap: 20px;
+    padding: 50px 20px;
+  }
+}
+
 @media screen and (max-width: 768px) {
   .payment__row{
     flex-direction: column;

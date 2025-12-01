@@ -43,7 +43,7 @@ export default function CartPage() {
     street: '',
     house: '',
     postalCode: '',
-    pickupAddress: 'ул. Кипарисовая, 56',
+    pickupAddress: '',
     pickupAddressId: null,
     apartment: '',
     isLegalEntity: false,
@@ -68,14 +68,7 @@ export default function CartPage() {
   const [showSavedAddresses, setShowSavedAddresses] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [selectedSavedAddress, setSelectedSavedAddress] = useState('');
-  const [pickupAddresses, setPickupAddresses] = useState([
-    'ул. Кипарисовая, 56',
-    'ул. Морская, 24',
-    'ул. Морская, 24',
-    'ул. Морская, 24',
-    'ул. Морская, 24',
-    'ул. Приморская, 118'
-  ]);
+  const [pickupAddresses, setPickupAddresses] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
@@ -222,6 +215,11 @@ export default function CartPage() {
             if (data.pickup_addresses && data.pickup_addresses.length > 0) {
               const pickupAddressesList = data.pickup_addresses.map(address => address.full_address);
               setPickupAddresses(pickupAddressesList);
+              setFormData(prev => ({
+                ...prev,
+                pickupAddress: data.pickup_addresses[0].full_address,
+                pickupAddressId: data.pickup_addresses[0].id || null
+              }));
             }
             
             if (data.profile_fields) {
@@ -470,11 +468,13 @@ export default function CartPage() {
     
     try {
       const currentTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const token = localStorage.getItem('accessToken');
       
       const response = await fetch('https://aldalinde.ru/api/order/check-promo/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
         },
         body: JSON.stringify({
           promo_code: promoCode.trim(),
@@ -1307,10 +1307,10 @@ export default function CartPage() {
               <>
                 {showPromoCodeInput ? (
                   <div className={styles.promoCodeForm}>
-                    <div className={styles.inputContainer}>
+                    <div className={`${styles.inputContainer} ${promoCode ? styles.hasValue : ''}`}>
                       <input 
                         type="text" 
-                        className={`${styles.promoCodeInput} ${promoCodeStatus === 'invalid' ? styles.error : ''} ${promoCodeStatus === 'valid' ? styles.success : ''}`}
+                        className={`${styles.promoCodeInput} ${promoCodeStatus === 'invalid' ? styles.error : ''}`}
                         placeholder=" "
                         value={promoCode}
                         onChange={(e) => {
@@ -1320,9 +1320,9 @@ export default function CartPage() {
                             setPromoCodeError('');
                           }
                         }}
-                        disabled={promoCodeStatus === 'loading'}
+                        disabled={promoCodeStatus === 'loading' || promoCodeStatus === 'valid'}
                       />
-                      <span className={styles.floatingLabel}>Введите промокод</span>
+                      <span className={styles.floatingLabel}>Промокод</span>
                     </div>
                     <button 
                       type="button" 

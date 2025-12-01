@@ -26,7 +26,7 @@ export default function CartClient() {
     city: 'Сочи',
     street: '',
     house: '',
-    pickupAddress: 'ул. Кипарисовая, 56',
+    pickupAddress: '',
     apartment: '',
     isLegalEntity: false,
     delivery: 'pickup',
@@ -127,7 +127,7 @@ export default function CartClient() {
         if (data.pickup_addresses && data.pickup_addresses.length > 0) {
           setFormData(prev => ({
             ...prev,
-            pickupAddress: data.pickup_addresses[0].full_address || 'ул. Кипарисовая, 56'
+            pickupAddress: data.pickup_addresses[0].full_address
           }));
         }
       }
@@ -470,7 +470,7 @@ export default function CartClient() {
                       value={promoCode}
                       onChange={(e) => setPromoCode(e.target.value)}
                     />
-                    <span className={styles.floatingLabel}>Введите промокод</span>
+                    <span className={styles.floatingLabel}>Промокод</span>
                   </div>
                   <button 
                     type="button" 
