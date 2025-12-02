@@ -116,32 +116,69 @@ border-radius: 100px;
 .filter__options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 6px;
   padding-top: 12px;
 }
 
 .checkboxLabel {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  margin-left: 5px;
   cursor: pointer;
-  font-family: "Montserrat", sans-serif;
+  font-family: "Tenor Sans", sans-serif;
   font-size: 14px;
+    line-height: 150%;
   color: #323433;
-  padding: 4px 0;
   transition: color 0.2s ease;
+  user-select: none;
 }
 
 .checkboxLabel:hover {
-  color: #a45b38;
+  color: #323433;
 }
 
-.checkboxLabel input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #a45b38;
+.checkboxLabel:hover .checkboxInput {
+  border-color: #a45b38;
+}
+
+.checkboxInput {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  margin: 0;
   cursor: pointer;
   flex-shrink: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 1.5px solid rgba(50, 52, 51, 0.3);
+  border-radius: 2px;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.checkboxInput:checked {
+  background: #a45b38;
+  border-color: #a45b38;
+}
+
+.checkboxInput:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -55%) rotate(45deg);
+  width: 3px;
+  height: 6px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  box-sizing: border-box;
+}
+
+.checkboxInput:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(164, 91, 56, 0.2);
 }
 
 .filter__range {
@@ -530,7 +567,10 @@ border-radius: 100px;
 
 .checkboxText {
   user-select: none;
-  line-height: 1.5;
+  line-height: 150%;
+  font-family: "Tenor Sans", sans-serif;
+  font-size: 14px;
+  color: inherit;
 }
 
 .filter__sizes {

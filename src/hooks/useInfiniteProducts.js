@@ -3,6 +3,8 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 const fetchProducts = async ({ pageParam = 1, queryKey }) => {
   const [, filters, categoryId, subcategoryId, sortBy] = queryKey;
   
+  console.log('[useInfiniteProducts] Запрос товаров:', { filters, categoryId, subcategoryId, sortBy, pageParam });
+  
   const requestBody = {
     page: pageParam,
     limit: 12
@@ -97,6 +99,8 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
     });
   }
 
+  console.log('[useInfiniteProducts] Тело запроса к API:', JSON.stringify(requestBody, null, 2));
+
   const response = await fetch('/api/products/models-list', {
     method: 'POST',
     headers: {
@@ -116,6 +120,14 @@ const fetchProducts = async ({ pageParam = 1, queryKey }) => {
 
   const data = await response.json();
   
+  console.log('[useInfiniteProducts] Ответ от API:', { 
+    status: response.status, 
+    count: data.count, 
+    resultsCount: data.results?.length || 0,
+    hasFlagType: !!requestBody.flag_type,
+    flagType: requestBody.flag_type,
+    categoryId: requestBody.category_id
+  });
 
   return {
     products: data.results || [],

@@ -11,6 +11,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
   const searchParams = useSearchParams();
   const isCategoriesPage = pathname === '/categories';
   const isCategorySlugPage = pathname?.startsWith('/categories/') && pathname !== '/categories';
+  const hasFlagType = searchParams.get('flag_type');
   const [inStockDelivery, setInStockDelivery] = useState(() => appliedFilters.in_stock === true);
   const [tempFilters, setTempFilters] = useState(appliedFilters);
   const [expandedFilters, setExpandedFilters] = useState({});
@@ -181,7 +182,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
           </label>
         </div>
 
-        {categories && categories.length > 0 && !isCategorySlugPage && (
+        {categories && categories.length > 0 && !isCategorySlugPage && !hasFlagType && (
           <div className={styles.filter}>
             <div className={styles.filter__header} onClick={() => toggleCategory('categories')}>
               <svg 

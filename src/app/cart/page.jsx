@@ -48,7 +48,6 @@ export default function CartPage() {
     apartment: '',
     isLegalEntity: false,
     delivery: 'pickup',
-    payment: 'sbp',
     comment: '',
     coordinates: null,
     fullAddress: '',
@@ -556,7 +555,7 @@ export default function CartPage() {
       email: formData.email,
       message: formData.comment || null,
       pickup: formData.delivery === 'pickup',
-      pay_method: formData.payment,
+      pay_method: 'sbp',
       first_name: formData.firstName,
       last_name: formData.lastName,
       patronymic: formData.patronymic,
@@ -630,19 +629,40 @@ export default function CartPage() {
         Object.assign(headers, authHeaders);
       }
       
-      const response = await fetch('https://aldalinde.ru/api/order/create-order/', {
+      const orderResponse = await fetch('https://aldalinde.ru/api/order/create-order/', {
         method: 'POST',
         headers,
         body: JSON.stringify(orderData)
       });
 
-      const result = await response.json();
+      const orderResult = await orderResponse.json();
 
-      if (response.ok) {
-        alert(`Заказ успешно оформлен!`);
+      if (!orderResponse.ok) {
+        alert(`Ошибка при оформлении заказа: ${orderResult.error || 'Неизвестная ошибка'}`);
+        return;
+      }
+
+      const orderId = orderResult.id || orderResult.order_id;
+      if (!orderId) {
+        alert('Ошибка: не получен ID заказа');
+        return;
+      }
+
+      const paymentResponse = await fetch('https://aldalinde.ru/api/payment/create-payment/', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ 
+          order_id: parseInt(orderId, 10)
+        })
+      });
+
+      const paymentResult = await paymentResponse.json();
+
+      if (paymentResponse.ok && paymentResult.payment_url) {
+        window.open(paymentResult.payment_url, '_blank');
         clearCart();
       } else {
-        alert(`Ошибка при оформлении заказа: ${result.error || 'Неизвестная ошибка'}`);
+        alert(`Ошибка при создании платежа: ${paymentResult.error || 'Неизвестная ошибка'}`);
       }
     } catch (error) {
       console.error('Ошибка при отправке заказа:', error);
@@ -1228,51 +1248,6 @@ export default function CartPage() {
                         />
                       </div>
                     )}
-                  </div>
-                </div>
-              </div>
-              
-              <div className={styles.formSection}>
-                <h2 className={styles.sectionTitle}>Способ оплаты</h2>
-                <div className={styles.formContent}>
-                  <div className={styles.paymentOptions}>
-                    <div className={styles.radioField}>
-                      <label className={styles.radioOption}>
-                        <input 
-                          type="radio" 
-                          name="payment" 
-                          value="sbp"
-                          checked={formData.payment === 'sbp'}
-                          onChange={handleRadioChange}
-                        />
-                        <div className={styles.radioContent}>
-                          <span className={styles.radioCircle}></span>
-                          <div>
-                            <p className={styles.radioTitle}>Оплата через СБП</p>
-                            <p className={styles.radioDesc}>Оплата через банковское приложение, не нужно вводить данные карты</p>
-                          </div>
-                        </div>
-                      </label>
-                    </div>
-                    
-                    <div className={styles.radioField}>
-                      <label className={styles.radioOption}>
-                        <input 
-                          type="radio" 
-                          name="payment" 
-                          value="card"
-                          checked={formData.payment === 'card'}
-                          onChange={handleRadioChange}
-                        />
-                        <div className={styles.radioContent}>
-                          <span className={styles.radioCircle}></span>
-                          <div>
-                            <p className={styles.radioTitle}>Оплата картой на сайте</p>
-                            <p className={styles.radioDesc}>После подтверждения заказа вы попадете на форму оплаты</p>
-                          </div>
-                        </div>
-                      </label>
-                    </div>
                   </div>
                 </div>
               </div>

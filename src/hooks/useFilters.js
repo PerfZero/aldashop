@@ -1,8 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 
 const fetchFilters = async (categoryId, subcategoryId, dynamicFilters = {}) => {
-  console.log('[useFilters] Вызов фильтров:', { categoryId, subcategoryId, dynamicFilters });
-  
   const requestBody = {};
   
   if (categoryId) {
@@ -19,8 +17,6 @@ const fetchFilters = async (categoryId, subcategoryId, dynamicFilters = {}) => {
       requestBody[key] = dynamicFilters[key];
     }
   });
-  
-  console.log('[useFilters] Запрос фильтров:', requestBody);
   
   const response = await fetch('/api/products/subcategory-filters', {
     method: 'POST',
@@ -44,8 +40,6 @@ const fetchFilters = async (categoryId, subcategoryId, dynamicFilters = {}) => {
 };
 
 export const useFilters = (categoryId, subcategoryId, dynamicFilters = {}, enabled = true) => {
-  console.log('[useFilters] Хук вызван с параметрами:', { categoryId, subcategoryId, dynamicFilters, enabled });
-  
   return useQuery({
     queryKey: ['filters', categoryId, subcategoryId, dynamicFilters],
     queryFn: () => fetchFilters(categoryId, subcategoryId, dynamicFilters),

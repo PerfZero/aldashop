@@ -29,6 +29,8 @@ function CategoryPageContent() {
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [currentSubcategory, setCurrentSubcategory] = useState(null);
+  const [noCategoryInfo, setNoCategoryInfo] = useState(null);
+  const [noCategoryInfoLoading, setNoCategoryInfoLoading] = useState(false);
 
   const [sort, setSort] = useQueryParam('sort', NumberParam);
   
@@ -60,6 +62,26 @@ function CategoryPageContent() {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (pathname === '/categories' && !categoryId && !subcategoryId) {
+      setNoCategoryInfoLoading(true);
+      fetch('https://aldalinde.ru/api/products/get_info_no_category')
+        .then(res => res.json())
+        .then(response => {
+          if (response.success && response.data) {
+            setNoCategoryInfo(response.data);
+          }
+          setNoCategoryInfoLoading(false);
+        })
+        .catch(err => {
+          console.error('Ошибка загрузки данных get_info_no_category:', err);
+          setNoCategoryInfoLoading(false);
+        });
+    } else {
+      setNoCategoryInfo(null);
+    }
+  }, [pathname, categoryId, subcategoryId]);
 
   useEffect(() => {
     if (isClient) {
@@ -112,22 +134,48 @@ function CategoryPageContent() {
           }
         }
       }
-    } else {
-      setCategoryId(null);
-      setSubcategoryId(null);
-      setCurrentCategory(null);
-      setCurrentSubcategory(null);
+    } else if (pathname === '/categories') {
+      const hasFlagType = searchParams.get('flag_type');
+      if (!hasFlagType) {
+        setCategoryId(null);
+        setSubcategoryId(null);
+        setCurrentCategory(null);
+        setCurrentSubcategory(null);
+      }
     }
   }, [pathname, searchParams, categories]);
   
   useEffect(() => {
-    console.log('[categories/page] Изменение параметров для фильтров:', { categoryId, subcategoryId, dynamicFilters });
-  }, [categoryId, subcategoryId, dynamicFilters]);
+    console.log('[categories/page] Изменение параметров:', { 
+      categoryId, 
+      subcategoryId, 
+      dynamicFilters,
+      mergedFilters: { ...appliedFilters, ...dynamicFilters }
+    });
+  }, [categoryId, subcategoryId, dynamicFilters, appliedFilters]);
   
   const { data: filters = [], isLoading: filtersLoading } = useFilters(categoryId, subcategoryId, dynamicFilters);
 
+  const mergedFilters = useMemo(() => {
+    const urlCategoryId = searchParams.get('category_id');
+    const urlSubcategoryId = searchParams.get('subcategory_id');
+    const filters = { ...appliedFilters, ...dynamicFilters };
+    
+    if (urlCategoryId && !filters.category_id) {
+      filters.category_id = parseInt(urlCategoryId);
+    }
+    if (urlSubcategoryId && !filters.subcategory_id) {
+      filters.subcategory_id = parseInt(urlSubcategoryId);
+    }
+    
+    return filters;
+  }, [appliedFilters, dynamicFilters, searchParams]);
+
   // Используем TanStack Query для загрузки товаров
   
+  const effectiveCategoryId = categoryId || (searchParams.get('category_id') ? parseInt(searchParams.get('category_id')) : null);
+  const effectiveSubcategoryId = subcategoryId || (searchParams.get('subcategory_id') ? parseInt(searchParams.get('subcategory_id')) : null);
+
   const {
     data,
     fetchNextPage,
@@ -136,7 +184,7 @@ function CategoryPageContent() {
     isLoading: isProductsLoading,
     isError: isProductsError,
     error: productsError
-  } = useInfiniteProducts(appliedFilters, categoryId, subcategoryId, sortBy);
+  } = useInfiniteProducts(mergedFilters, effectiveCategoryId, effectiveSubcategoryId, sortBy);
   
   // Объединяем все страницы товаров в один массив
   const products = useMemo(() => {
@@ -194,9 +242,9 @@ function CategoryPageContent() {
       
       const url = new URL(window.location.href);
     
-    // Удаляем все динамические параметры
+    // Удаляем все динамические параметры, кроме важных
     Object.keys(url.searchParams).forEach(key => {
-      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id'].includes(key)) {
+      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id', 'flag_type'].includes(key)) {
         url.searchParams.delete(key);
       }
     });
@@ -273,9 +321,12 @@ function CategoryPageContent() {
         url.searchParams.delete('depth_max');
         url.searchParams.delete('sort');
         
+        const paramsToKeep = ['flag_type', 'category_id', 'subcategory_id'];
         const paramsToDelete = [];
         for (const [key] of url.searchParams.entries()) {
-          paramsToDelete.push(key);
+          if (!paramsToKeep.includes(key)) {
+            paramsToDelete.push(key);
+          }
         }
         paramsToDelete.forEach(key => url.searchParams.delete(key));
         
@@ -346,6 +397,15 @@ function CategoryPageContent() {
             }
           }
         });
+
+        const flagType = url.searchParams.get('flag_type');
+        const categoryIdParam = url.searchParams.get('category_id');
+        if (flagType) {
+          url.searchParams.set('flag_type', flagType);
+        }
+        if (categoryIdParam) {
+          url.searchParams.set('category_id', categoryIdParam);
+        }
       }
       
       window.history.replaceState({}, '', url.toString());
@@ -481,14 +541,22 @@ function CategoryPageContent() {
       
       <div className={styles.hero}>
         <div className={styles.hero__content}>
-          <h1 className={styles.hero__title}>{currentSubcategory?.title || currentCategory?.title || 'Категория'}</h1>
+          <h1 className={styles.hero__title}>
+            {currentSubcategory?.title || currentCategory?.title || noCategoryInfo?.title || 'Категория'}
+          </h1>
           <p className={styles.hero__description}>
-            {currentSubcategory?.description || currentCategory?.description || 'Описание категории'}
+            {currentSubcategory?.description || currentCategory?.description || noCategoryInfo?.description || 'Описание категории'}
           </p>
           <img 
-            className={`${styles.hero__img} ${((currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null)) ? styles.photo_cover : ''}`} 
-            src={(currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null) ? (currentSubcategory?.photo_cover?.startsWith('http') ? (currentSubcategory?.photo_cover || currentCategory?.photo_cover) : `https://aldalinde.ru${currentSubcategory?.photo_cover || currentCategory?.photo_cover}`) : "/category.png"} 
-            alt={currentSubcategory?.title || currentCategory?.title || 'Категория'} 
+            className={`${styles.hero__img} ${((currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null) || (noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null)) ? styles.photo_cover : ''}`} 
+            src={
+              (currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null)
+                ? (currentSubcategory?.photo_cover?.startsWith('http') ? (currentSubcategory?.photo_cover || currentCategory?.photo_cover) : `https://aldalinde.ru${currentSubcategory?.photo_cover || currentCategory?.photo_cover}`)
+                : (noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null)
+                  ? (noCategoryInfo.photo_cover.startsWith('http') ? noCategoryInfo.photo_cover : `https://aldalinde.ru${noCategoryInfo.photo_cover}`)
+                  : "/category.png"
+            } 
+            alt={currentSubcategory?.title || currentCategory?.title || noCategoryInfo?.title || 'Категория'} 
             onError={(e) => {
               e.target.src = "/category.png";
             }}

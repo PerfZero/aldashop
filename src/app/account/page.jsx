@@ -9,6 +9,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFavourites } from '../../contexts/FavouritesContext';
 import ProductCard from '../../components/ProductCard';
 import ChangePasswordModal from '../../components/ChangePasswordModal';
+import PaymentStatusModal from '../../components/PaymentStatusModal';
 
 const menuItems = [
   {
@@ -68,6 +69,8 @@ export default function AccountPage() {
   const [completedOrdersPage, setCompletedOrdersPage] = useState(1);
   const [completedOrdersTotalPages, setCompletedOrdersTotalPages] = useState(1);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] = useState(false);
+  const [isPaymentStatusModalOpen, setIsPaymentStatusModalOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
 
   const toggleOrderExpand = async (orderId) => {
     if (expandedOrderId === orderId) {
@@ -110,7 +113,16 @@ export default function AccountPage() {
     if (tabFromUrl && ['account', 'favorites', 'orders'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
-  }, [searchParams]);
+
+    const statuspay = searchParams.get('statuspay');
+    if (statuspay === 'true' || statuspay === 'false') {
+      setPaymentStatus(statuspay === 'true');
+      setIsPaymentStatusModalOpen(true);
+      const params = new URLSearchParams(searchParams);
+      params.delete('statuspay');
+      router.replace(`?${params.toString()}`, { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
@@ -353,15 +365,24 @@ export default function AccountPage() {
           const payMethod = selectedOrderDetails.pay_method || 'Не указан';
           const message = selectedOrderDetails.message || '';
           
-          let currentStep = 0;
-          if (selectedOrderDetails.status_with_date?.includes('Ожидает подтверждения')) currentStep = 0;
-          else if (selectedOrderDetails.status_with_date?.includes('Оплачен')) currentStep = 1;
-          else if (selectedOrderDetails.status_with_date?.includes('Собран')) currentStep = 2;
-          else if (selectedOrderDetails.status_with_date?.includes('Отправлен')) currentStep = 3;
-          else if (isCompleted) currentStep = 4;
-          else currentStep = 0;
+          let currentStep = -1;
+          if (selectedOrderDetails.status === 'awaiting') {
+            currentStep = -1;
+          } else if (selectedOrderDetails.status === 'accept' || selectedOrderDetails.status_with_date?.includes('Принят')) {
+            currentStep = 0;
+          } else if (selectedOrderDetails.status_with_date?.includes('Оплачен')) {
+            currentStep = 1;
+          } else if (selectedOrderDetails.status_with_date?.includes('Собран')) {
+            currentStep = 2;
+          } else if (selectedOrderDetails.status_with_date?.includes('Отправлен')) {
+            currentStep = 3;
+          } else if (isCompleted) {
+            currentStep = 4;
+          } else {
+            currentStep = -1;
+          }
           
-          const progressWidth = isCompleted ? '100%' : `${(currentStep / (steps.length - 1)) * 100}%`;
+          const progressWidth = isCompleted ? '100%' : currentStep >= 0 ? `${(currentStep / (steps.length - 1)) * 100}%` : '0%';
           
           return (
             <div className={styles.orders__content}>
@@ -382,7 +403,7 @@ export default function AccountPage() {
                   ) : (
                     <>
                                           <div className={styles.order__collected}>В обработке</div>
-                    <div className={styles.order__progress_status}>Прогресс: <span>{Math.round((currentStep / (steps.length - 1)) * 100)}%</span></div>
+                    <div className={styles.order__progress_status}>Прогресс: <span>{currentStep >= 0 ? Math.round((currentStep / (steps.length - 1)) * 100) : 0}%</span></div>
                     </>
                   )}
                 </div>
@@ -392,7 +413,7 @@ export default function AccountPage() {
                     <div
                       key={step}
                       className={`${styles.order__step} ${
-                        (isCompleted || index <= currentStep) ? styles.order__step_active : ''
+                        (isCompleted || (currentStep >= 0 && index <= currentStep)) ? styles.order__step_active : ''
                       }`}
                     >
                       <div className={styles.order__step_dot}></div>
@@ -418,7 +439,7 @@ export default function AccountPage() {
                       <div className={styles.order__message}><span>Комментарий к заказу:</span> {message}</div>
                     )}
                  
-                    {!isCompleted && (
+                    {!isCompleted && selectedOrderDetails.can_pay === true && (
                       <div className={styles.order__pay_action}>
                         <button className={styles.order__pay_button}>
                           Оплатить
@@ -520,15 +541,24 @@ export default function AccountPage() {
               const productCount = order.product_count || '0';
               const paidFor = order.paid_for || '0';
               
-              let currentStep = 0;
-              if (order.status_with_date?.includes('Ожидает подтверждения')) currentStep = 0;
-              else if (order.status_with_date?.includes('Оплачен')) currentStep = 1;
-              else if (order.status_with_date?.includes('Собран')) currentStep = 2;
-              else if (order.status_with_date?.includes('Отправлен')) currentStep = 3;
-              else if (isCompleted) currentStep = 4;
-              else currentStep = 0;
+              let currentStep = -1;
+              if (order.status === 'awaiting') {
+                currentStep = -1;
+              } else if (order.status === 'accept' || order.status_with_date?.includes('Принят')) {
+                currentStep = 0;
+              } else if (order.status_with_date?.includes('Оплачен')) {
+                currentStep = 1;
+              } else if (order.status_with_date?.includes('Собран')) {
+                currentStep = 2;
+              } else if (order.status_with_date?.includes('Отправлен')) {
+                currentStep = 3;
+              } else if (isCompleted) {
+                currentStep = 4;
+              } else {
+                currentStep = -1;
+              }
               
-              const progressWidth = isCompleted ? '100%' : `${(currentStep / (steps.length - 1)) * 100}%`;
+              const progressWidth = isCompleted ? '100%' : currentStep >= 0 ? `${(currentStep / (steps.length - 1)) * 100}%` : '0%';
               
               return (
                 <React.Fragment key={`${orderNumber}-${index}`}>
@@ -560,7 +590,7 @@ export default function AccountPage() {
                         <div
                           key={step}
                           className={`${styles.order__step} ${
-                            (isCompleted || stepIndex <= currentStep) ? styles.order__step_active : ''
+                            (isCompleted || (currentStep >= 0 && stepIndex <= currentStep)) ? styles.order__step_active : ''
                           }`}
                         >
                           <div className={styles.order__step_dot}></div>
@@ -584,17 +614,19 @@ export default function AccountPage() {
                           <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
                           <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
                           <div className={styles.order__payment_status}>Оплачено: <span>{paidFor} руб.</span><span> / {totalAmount} руб.</span></div>
-                          <div className={styles.order__progress_status}>Прогресс: <span>{Math.round((currentStep / (steps.length - 1)) * 100)}%</span></div>
+                          <div className={styles.order__progress_status}>Прогресс: <span>{currentStep >= 0 ? Math.round((currentStep / (steps.length - 1)) * 100) : 0}%</span></div>
                           <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
                           <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
-                          <div className={styles.order__pay_action}>
-                            <button className={styles.order__pay_button}>
-                              Оплатить
-                              <svg width="30" height="30" viewBox="0 0 32 12" fill="none">
-                                <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="currentColor"/>
-                              </svg>
-                            </button>
-                          </div>
+                          {order.can_pay === true && (
+                            <div className={styles.order__pay_action}>
+                              <button className={styles.order__pay_button}>
+                                Оплатить
+                                <svg width="30" height="30" viewBox="0 0 32 12" fill="none">
+                                  <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="currentColor"/>
+                                </svg>
+                              </button>
+                            </div>
+                          )}
                         </>
                       )}
                     </div>
@@ -723,6 +755,11 @@ export default function AccountPage() {
       <ChangePasswordModal 
         isOpen={isChangePasswordModalOpen}
         onClose={() => setIsChangePasswordModalOpen(false)}
+      />
+      <PaymentStatusModal
+        isOpen={isPaymentStatusModalOpen}
+        onClose={() => setIsPaymentStatusModalOpen(false)}
+        isSuccess={paymentStatus}
       />
     </main>
   );
