@@ -448,7 +448,6 @@ export default function AccountPage() {
                   <div className={styles.order__expanded_details_info}>
                     <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
                     <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
-                    <div className={styles.order__payment_method}><span>Способ оплаты:</span> {payMethod}</div>
 
                     {!isCompleted && (
                       <div className={styles.order__payment_status}><span>Оплачено:</span> <span className={styles.order__paid}>{paidFor} руб.</span><span className={styles.order__total}> / {totalAmount} руб.</span></div>

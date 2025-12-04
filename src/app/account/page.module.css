@@ -382,7 +382,7 @@ justify-content: center;
 }
 
 .order__contact_info ,.order__total_cost , .order__pay_action{
-  text-align: right;
+
   margin-bottom: 5px;
 }
 
@@ -441,9 +441,7 @@ margin-bottom: 30px;
   ;
 }
 
-.order__quantity{
-  text-align: right;
-}
+
 
 .order__pay_action{
   text-align: right;
@@ -482,7 +480,6 @@ font-weight: 500;
 font-size: 16px;
 line-height: 150%;
 color: #323433;
-margin-top: 30px;
 }
 
 .order__payment_status span{
@@ -844,9 +841,7 @@ margin-bottom: 30px;
   margin-bottom: 40px;
 }
 
-.order__expanded_details_info .order__contact_info{
-  text-align: left;
-}
+
 
 
 .orders__expanded_order_wrapper{
@@ -855,13 +850,9 @@ padding: 30px;
 
 }
 
-.order__expanded_details_info .order__payment_method{
-  text-align: right;
-}
 
 
 .order__expanded_details_info .order__payment_card{
-  text-align: right;
   font-family: "Montserrat", sans-serif;
 font-weight: 500;
 font-size: 16px;
@@ -871,11 +862,11 @@ color: #a45b38;
 
 
 .order__expanded_details_info {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   flex-wrap: wrap;
-  height: 210px;
+  
 }
 
 .order__payment_method, 
