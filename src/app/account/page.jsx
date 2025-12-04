@@ -635,7 +635,7 @@ export default function AccountPage() {
                         </>
                       ) : (
                         <>
-                          <div className={styles.order__collected}>Собран 15.01.2025</div>
+                          <div className={styles.order__collected}>{order.status_with_date || 'Статус обновляется'}</div>
                           <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
                           <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
                           <div className={styles.order__payment_status}>Оплачено: <span>{paidFor} руб.</span><span> / {totalAmount} руб.</span></div>
