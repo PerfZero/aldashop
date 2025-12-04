@@ -635,10 +635,11 @@ export default function AccountPage() {
                       ) : (
                         <>
                           <div className={styles.order__collected}>{order.status_with_date || 'Статус обновляется'}</div>
+                          <div className={styles.order__progress_status}>Прогресс: <span>{currentStep >= 0 ? Math.round((currentStep / (steps.length - 1)) * 100) : 0}%</span></div>
+
                           <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
                           <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
                           <div className={styles.order__payment_status}>Оплачено: <span>{paidFor} руб.</span><span> / {totalAmount} руб.</span></div>
-                          <div className={styles.order__progress_status}>Прогресс: <span>{currentStep >= 0 ? Math.round((currentStep / (steps.length - 1)) * 100) : 0}%</span></div>
                           <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
                           <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                           {order.can_pay === true && (

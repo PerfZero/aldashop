@@ -375,9 +375,9 @@ justify-content: center;
 
 .order__details {
   padding-top: 30px;
-  display: flex;
-  height: 220px;
-  flex-direction: column;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr 1fr;
   flex-wrap: wrap;
 }
 
@@ -444,7 +444,6 @@ margin-bottom: 30px;
 
 
 .order__pay_action{
-  text-align: right;
   margin-top: auto;
   display: flex;
   justify-content: flex-end;
@@ -495,7 +494,7 @@ color: #a45b38;
 }
 
 .order__progress_status{
-  text-align: right;
+
   margin-bottom: 10px;
 }
 
@@ -527,7 +526,6 @@ font-weight: 400;
 font-size: 20px;
 
 color: #a45b38;
-margin-bottom: 30px;
 }
 
 .order_quantity{
@@ -539,6 +537,19 @@ margin-bottom: 30px;
   width: 30px;
 }
 
+.order__details > *:nth-child(2){
+  text-align: right;
+}
+
+.order__details > *:nth-child(4){
+  text-align: right;
+
+  
+}
+
+.order__details > *:nth-child(6){
+  text-align: right;
+}
 
 .favorites__title{
     font-family: "Tenor Sans", sans-serif;
