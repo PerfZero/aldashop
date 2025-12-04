@@ -120,7 +120,8 @@ export default function AccountPage() {
       setIsPaymentStatusModalOpen(true);
       const params = new URLSearchParams(searchParams);
       params.delete('statuspay');
-      router.replace(`?${params.toString()}`, { scroll: false });
+      const newUrl = params.toString() ? `/account?${params.toString()}` : '/account';
+      router.replace(newUrl, { scroll: false });
     }
   }, [searchParams, router]);
 
@@ -258,17 +259,14 @@ export default function AccountPage() {
 
       const paymentResult = await paymentResponse.json();
 
-      if (paymentResponse.ok && paymentResult.payment_url) {
-        window.open(paymentResult.payment_url, '_blank');
-        router.push(`/account?tab=orders&statuspay=true`);
+      if (paymentResponse.ok && paymentResult.paymentLink) {
+        window.open(paymentResult.paymentLink, '_blank');
       } else {
         alert(`Ошибка при создании платежа: ${paymentResult.error || 'Неизвестная ошибка'}`);
-        router.push(`/account?tab=orders&statuspay=false`);
       }
     } catch (error) {
       console.error('Ошибка при создании платежа:', error);
       alert('Ошибка при создании платежа');
-      router.push(`/account?tab=orders&statuspay=false`);
     }
   };
 

@@ -1,47 +1,45 @@
 'use client';
 
+import Link from 'next/link';
 import styles from './PaymentStatusModal.module.css';
 
 const PaymentStatusModal = ({ isOpen, onClose, isSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modal_overlay} onClick={onClose}>
-      <div className={styles.modal_content} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.modal_header}>
-          <h2 className={styles.modal_title}>
-            {isSuccess ? 'Оплата успешна' : 'Ошибка оплаты'}
-          </h2>
-          <button className={styles.modal_close} onClick={onClose}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    <div className={styles.overlay} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className={styles.modal}>
+        <div className={styles.icon}>
+          {isSuccess ? (
+            <svg width="70" height="70" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M34.9992 58.7999C21.8392 58.7999 11.1992 48.16 11.1992 35C11.1992 21.84 21.8392 11.2 34.9992 11.2C48.1592 11.2 58.7992 21.84 58.7992 35C58.7992 48.16 48.1592 58.7999 34.9992 58.7999ZM34.9992 14C23.3792 14 13.9992 23.38 13.9992 35C13.9992 46.6199 23.3792 56 34.9992 56C46.6192 56 55.9992 46.6199 55.9992 35C55.9992 23.38 46.6192 14 34.9992 14Z" fill="#C1A286"/>
+              <path d="M32.1995 45.3601L20.0195 33.1801L21.9795 31.2201L32.1995 41.4401L48.0195 25.6201L49.9795 27.5801L32.1995 45.3601Z" fill="#C1A286"/>
             </svg>
-          </button>
+          ) : (
+            <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g clipPath="url(#clip0_2617_12081)">
+                <path d="M25 0C11.193 0 0 11.193 0 25C0 38.8078 11.193 50 25 50C38.8078 50 50 38.8078 50 25C50 11.193 38.8078 0 25 0ZM25 46.9242C12.9383 46.9242 3.125 37.0617 3.125 24.9999C3.125 12.9382 12.9383 3.1249 25 3.1249C37.0617 3.1249 46.875 12.9382 46.875 24.9999C46.875 37.0616 37.0617 46.9242 25 46.9242ZM33.8383 16.1617C33.2281 15.5516 32.2391 15.5516 31.6289 16.1617L25 22.7906L18.3711 16.1617C17.7609 15.5516 16.7719 15.5516 16.1609 16.1617C15.5508 16.7719 15.5508 17.7609 16.1609 18.3711L22.7898 25L16.1609 31.6289C15.5508 32.2383 15.5508 33.229 16.1609 33.8383C16.7711 34.4485 17.7602 34.4485 18.3711 33.8383L25 27.2094L31.6289 33.8383C32.2391 34.4485 33.2281 34.4485 33.8383 33.8383C34.4484 33.229 34.4484 32.2383 33.8383 31.6289L27.2094 25L33.8383 18.3711C34.4492 17.7602 34.4492 16.7711 33.8383 16.1617Z" fill="#C1A286"/>
+              </g>
+              <defs>
+                <clipPath id="clip0_2617_12081">
+                  <rect width="50" height="50" fill="white"/>
+                </clipPath>
+              </defs>
+            </svg>
+          )}
         </div>
+        
+        <h2 className={styles.title}>
+          {isSuccess ? 'Оплата успешна' : 'Ошибка оплаты'}
+        </h2>
 
-        <div className={styles.modal_body}>
-          <div className={`${styles.status_icon} ${isSuccess ? styles.status_icon_success : styles.status_icon_error}`}>
-            {isSuccess ? (
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            ) : (
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
-          </div>
-          <p className={styles.status_message}>
-            {isSuccess 
-              ? 'Ваш заказ успешно оплачен. Мы свяжемся с вами в ближайшее время.'
-              : 'Произошла ошибка при оплате. Пожалуйста, попробуйте еще раз или свяжитесь с поддержкой.'}
-          </p>
-        </div>
-
-        <div className={styles.modal_actions}>
-          <button className={styles.modal_button} onClick={onClose}>
-            Закрыть
-          </button>
+        <div className={styles.actions}>
+          <Link href="/" className={styles.homeButton} onClick={onClose}>
+            На главную
+            <svg width="31" height="13" viewBox="0 0 31 13" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M30.5303 7.03033C30.8232 6.73744 30.8232 6.26256 30.5303 5.96967L25.7574 1.1967C25.4645 0.903806 24.9896 0.903806 24.6967 1.1967C24.4038 1.48959 24.4038 1.96447 24.6967 2.25736L28.9393 6.5L24.6967 10.7426C24.4038 11.0355 24.4038 11.5104 24.6967 11.8033C24.9896 12.0962 25.4645 12.0962 25.7574 11.8033L30.5303 7.03033ZM0 7.25H30V5.75H0V7.25Z" fill="#fff" />
+            </svg>
+          </Link>
         </div>
       </div>
     </div>
