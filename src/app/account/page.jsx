@@ -118,12 +118,8 @@ export default function AccountPage() {
     if (statuspay === 'true' || statuspay === 'false') {
       setPaymentStatus(statuspay === 'true');
       setIsPaymentStatusModalOpen(true);
-      const params = new URLSearchParams(searchParams);
-      params.delete('statuspay');
-      const newUrl = params.toString() ? `/account?${params.toString()}` : '/account';
-      router.replace(newUrl, { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams]);
 
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
@@ -790,7 +786,15 @@ export default function AccountPage() {
       />
       <PaymentStatusModal
         isOpen={isPaymentStatusModalOpen}
-        onClose={() => setIsPaymentStatusModalOpen(false)}
+        onClose={() => {
+          setIsPaymentStatusModalOpen(false);
+          const params = new URLSearchParams(searchParams);
+          if (params.has('statuspay')) {
+            params.delete('statuspay');
+            const newUrl = params.toString() ? `/account?${params.toString()}` : '/account';
+            router.replace(newUrl, { scroll: false });
+          }
+        }}
         isSuccess={paymentStatus}
       />
     </main>
