@@ -235,12 +235,40 @@ export default function AccountPage() {
   const handleLogout = async () => {
     try {
       await logout();
-      // После выхода перенаправляем на главную страницу
       window.location.href = '/';
     } catch (error) {
       console.error('Logout error:', error);
-      // В случае ошибки все равно перенаправляем на главную
       window.location.href = '/';
+    }
+  };
+
+  const handlePay = async (orderId) => {
+    try {
+      const headers = getAuthHeaders();
+      const paymentResponse = await fetch('https://aldalinde.ru/api/payment/create-payment/', {
+        method: 'POST',
+        headers: {
+          ...headers,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          order_id: parseInt(orderId, 10)
+        })
+      });
+
+      const paymentResult = await paymentResponse.json();
+
+      if (paymentResponse.ok && paymentResult.payment_url) {
+        window.open(paymentResult.payment_url, '_blank');
+        router.push(`/account?tab=orders&statuspay=true`);
+      } else {
+        alert(`Ошибка при создании платежа: ${paymentResult.error || 'Неизвестная ошибка'}`);
+        router.push(`/account?tab=orders&statuspay=false`);
+      }
+    } catch (error) {
+      console.error('Ошибка при создании платежа:', error);
+      alert('Ошибка при создании платежа');
+      router.push(`/account?tab=orders&statuspay=false`);
     }
   };
 
@@ -441,7 +469,10 @@ export default function AccountPage() {
                  
                     {!isCompleted && selectedOrderDetails.can_pay === true && (
                       <div className={styles.order__pay_action}>
-                        <button className={styles.order__pay_button}>
+                        <button 
+                          className={styles.order__pay_button}
+                          onClick={() => handlePay(selectedOrderDetails.id)}
+                        >
                           Оплатить
                           <svg width="30" height="30" viewBox="0 0 32 12" fill="none">
                             <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="currentColor"/>
@@ -619,7 +650,10 @@ export default function AccountPage() {
                           <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                           {order.can_pay === true && (
                             <div className={styles.order__pay_action}>
-                              <button className={styles.order__pay_button}>
+                              <button 
+                                className={styles.order__pay_button}
+                                onClick={() => handlePay(order.id)}
+                              >
                                 Оплатить
                                 <svg width="30" height="30" viewBox="0 0 32 12" fill="none">
                                   <path d="M31.0303 6.53033C31.3232 6.23744 31.3232 5.76256 31.0303 5.46967L26.2574 0.696699C25.9645 0.403806 25.4896 0.403806 25.1967 0.696699C24.9038 0.989593 24.9038 1.46447 25.1967 1.75736L29.4393 6L25.1967 10.2426C24.9038 10.5355 24.9038 11.0104 25.1967 11.3033C25.4896 11.5962 25.9645 11.5962 26.2574 11.3033L31.0303 6.53033ZM0.5 6.75H30.5V5.25H0.5V6.75Z" fill="currentColor"/>

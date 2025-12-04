@@ -492,10 +492,10 @@ export default function AuthModal({ isOpen, onClose }) {
                   <img src="/ya.svg" alt="Яндекс" />
                   Вход через Яндекс
                 </button>
-                <button className={`${styles.socialButton} ${styles.googleButton}`}>
+                {/* <button className={`${styles.socialButton} ${styles.googleButton}`}>
                   <img src="/google.svg" alt="Google" />
                   Вход через Google
-                </button>
+                </button> */}
               </div>
 
               <div className={styles.divider}>

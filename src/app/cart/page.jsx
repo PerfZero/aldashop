@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { IMaskInput } from 'react-imask';
 import styles from './page.module.css';
 import { useCart } from '../components/CartContext';
@@ -14,6 +15,7 @@ import LegalModal from '../../components/LegalModal';
 export default function CartPage() {
   const { cartItems, removeFromCart, removeAllFromCart, updateQuantity, clearCart } = useCart();
   const { isAuthenticated, getAuthHeaders } = useAuth();
+  const router = useRouter();
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
   const [showPromoCodeInput, setShowPromoCodeInput] = useState(false);
@@ -642,28 +644,8 @@ export default function CartPage() {
         return;
       }
 
-      const orderId = orderResult.id || orderResult.order_id;
-      if (!orderId) {
-        alert('Ошибка: не получен ID заказа');
-        return;
-      }
-
-      const paymentResponse = await fetch('https://aldalinde.ru/api/payment/create-payment/', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ 
-          order_id: parseInt(orderId, 10)
-        })
-      });
-
-      const paymentResult = await paymentResponse.json();
-
-      if (paymentResponse.ok && paymentResult.payment_url) {
-        window.open(paymentResult.payment_url, '_blank');
-        clearCart();
-      } else {
-        alert(`Ошибка при создании платежа: ${paymentResult.error || 'Неизвестная ошибка'}`);
-      }
+      clearCart();
+      router.push('/account?tab=orders');
     } catch (error) {
       console.error('Ошибка при отправке заказа:', error);
       alert('Ошибка при оформлении заказа');
