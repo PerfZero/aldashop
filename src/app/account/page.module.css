@@ -638,6 +638,24 @@ margin-bottom: 30px;
 
   }
 
+  .order__expanded_item_details{
+    flex-wrap: wrap;
+    gap: 2px !important;
+  }
+
+  .order__expanded_item_quantity{
+    align-self: flex-start !important;
+    margin: 0 !important;
+  }
+
+  .order{
+    padding: 15px;
+  }
+
+  .order__details *{
+    font-size: 12px !important;
+  }
+
   .account__menu_item_active .account__menu_label{
     border-bottom: none;
   }
@@ -650,6 +668,76 @@ margin-bottom: 30px;
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
   }
+
+  .order__collected,
+.order__delivery_method,
+.order__delivery_address,
+.order__payment_status,
+.order__progress_status,
+.order__contact_info,
+.order__total_cost,
+.order__quantity,
+.order__pay_action {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 150%;
+  color: #323433;
+
+}
+
+
+.order__step_dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  top: 3px;
+  background: #fff;
+  left: 0px;
+  outline: 4px solid #c1a286;
+  margin-bottom: 0px;
+  position: relative;
+  z-index: 2;
+}
+
+.order__step_text{
+  font-size: 12px;
+}
+
+.order__expanded_details_info *{
+  font-size: 12px !important;
+}
+
+.order__pay_button{
+  padding: 5px 10px;
+  height: 30px;
+}
+
+.order__expanded_item{
+  flex-direction: column;
+}
+
+.orders__expanded_order_wrapper{
+  padding: 15px !important;
+}
+
+.order__date {
+  text-align: left;
+}
+
+.order__delivery_text{
+  text-align: right;
+}
+
+.order__header *{
+  font-size: 12px; 
+}
+
+.order__step_active .order__step_dot {
+  background: #C1A286;
+  background: #fff;
+  outline: 4px solid #A45B38;
+}
 }
 
 @media (max-width: 480px) {

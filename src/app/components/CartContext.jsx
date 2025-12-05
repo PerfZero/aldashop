@@ -37,19 +37,23 @@ export function CartProvider({ children }) {
           if (response.ok) {
             const data = await response.json();
             // Преобразуем данные из API в формат корзины
-            const apiCartItems = (data.results || data).map(item => ({
-              id: item.product.id,
-              name: item.product.title || `Товар ${item.product.id}`,
-              price: item.product.price,
-              image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
-              quantity: item.quantity,
-              article: item.product.generated_article || `ART${item.product.id}`,
-              inStock: item.product.in_stock,
-              isBestseller: item.product.bestseller,
-              color: item.product.color?.title,
-              material: item.product.material?.title,
-              dimensions: item.product.sizes ? `${item.product.sizes.width}×${item.product.sizes.height}×${item.product.sizes.depth} см` : null,
-            })) || [];
+            const apiCartItems = (data.results || data).map(item => {
+              const mainPhoto = item.product.photos?.find(photo => photo.main_photo === true);
+              const photoToUse = mainPhoto || item.product.photos?.[0];
+              return {
+                id: item.product.id,
+                name: item.product.title || `Товар ${item.product.id}`,
+                price: item.product.price,
+                image: photoToUse?.photo ? `https://aldalinde.ru${photoToUse.photo}` : '/sofa.png',
+                quantity: item.quantity,
+                article: item.product.generated_article || `ART${item.product.id}`,
+                inStock: item.product.in_stock,
+                isBestseller: item.product.bestseller,
+                color: item.product.color?.title,
+                material: item.product.material?.title,
+                dimensions: item.product.sizes ? `${item.product.sizes.width}×${item.product.sizes.height}×${item.product.sizes.depth} см` : null,
+              };
+            }) || [];
             setCartItems(apiCartItems);
           } else {
             setCartItems([]);
@@ -61,19 +65,23 @@ export function CartProvider({ children }) {
             
             if (response.ok) {
               const data = await response.json();
-              const apiCartItems = (data.results || data).map(item => ({
-                id: item.product.id,
-                name: item.product.title || `Товар ${item.product.id}`,
-                price: item.product.price,
-                image: item.product.photos?.[0]?.photo ? `https://aldalinde.ru${item.product.photos[0].photo}` : '/sofa.png',
-                quantity: item.quantity,
-                article: item.product.generated_article || `ART${item.product.id}`,
-                inStock: item.product.in_stock,
-                isBestseller: item.product.bestseller,
-                color: item.product.color?.title,
-                material: item.product.material?.title,
-                dimensions: item.product.sizes ? `${item.product.sizes.width}×${item.product.sizes.height}×${item.product.sizes.depth} см` : null,
-              })) || [];
+              const apiCartItems = (data.results || data).map(item => {
+                const mainPhoto = item.product.photos?.find(photo => photo.main_photo === true);
+                const photoToUse = mainPhoto || item.product.photos?.[0];
+                return {
+                  id: item.product.id,
+                  name: item.product.title || `Товар ${item.product.id}`,
+                  price: item.product.price,
+                  image: photoToUse?.photo ? `https://aldalinde.ru${photoToUse.photo}` : '/sofa.png',
+                  quantity: item.quantity,
+                  article: item.product.generated_article || `ART${item.product.id}`,
+                  inStock: item.product.in_stock,
+                  isBestseller: item.product.bestseller,
+                  color: item.product.color?.title,
+                  material: item.product.material?.title,
+                  dimensions: item.product.sizes ? `${item.product.sizes.width}×${item.product.sizes.height}×${item.product.sizes.depth} см` : null,
+                };
+              }) || [];
               setCartItems(apiCartItems);
             } else {
               setCartItems([]);

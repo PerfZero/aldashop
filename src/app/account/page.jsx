@@ -256,7 +256,7 @@ export default function AccountPage() {
       const paymentResult = await paymentResponse.json();
 
       if (paymentResponse.ok && paymentResult.paymentLink) {
-        window.open(paymentResult.paymentLink, '_blank');
+        window.location.href = paymentResult.paymentLink;
       } else {
         alert(`Ошибка при создании платежа: ${paymentResult.error || 'Неизвестная ошибка'}`);
       }
@@ -486,9 +486,11 @@ export default function AccountPage() {
                     {selectedOrderDetails.products && selectedOrderDetails.products.map((product, index) => (
                       <div key={product.id || index} className={styles.order__expanded_item}>
                         <div className={styles.order__expanded_item_image}>
-                          {product.photos && product.photos.length > 0 && (
-                            <img src={product.photos[0].photo} alt={product.title} />
-                          )}
+                          {product.photos && product.photos.length > 0 && (() => {
+                            const mainPhoto = product.photos.find(photo => photo.main_photo === true);
+                            const photoToShow = mainPhoto || product.photos[0];
+                            return <img src={photoToShow.photo} alt={product.title} />;
+                          })()}
                         </div>
                         <div className={styles.order__expanded_item_info}>
                           <div className={styles.order__expanded_item_title}>{product.title}</div>
