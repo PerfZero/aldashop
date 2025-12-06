@@ -18,8 +18,8 @@ import styles from './page.module.css';
 function CategoryPageContent() {
   const params = useParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
-  const [sortBy, setSortBy] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState(3);
+  const [showFilters, setShowFilters] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
@@ -36,25 +36,6 @@ function CategoryPageContent() {
 
   useEffect(() => {
     setIsClient(true);
-    const saved = sessionStorage.getItem('showFilters');
-    if (saved === 'true') {
-      setShowFilters(true);
-    }
-    
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        const currentSaved = sessionStorage.getItem('showFilters');
-        if (currentSaved !== null) {
-          setShowFilters(currentSaved === 'true');
-        }
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
   }, []);
 
   useEffect(() => {
@@ -474,11 +455,6 @@ function CategoryPageContent() {
       
       const urlFilters = parseAllFiltersFromUrl();
       setAppliedFilters(urlFilters);
-      
-      const saved = sessionStorage.getItem('showFilters');
-      if (saved !== null) {
-        setShowFilters(saved === 'true');
-      }
     };
 
     window.addEventListener('popstate', handleUrlChange);
@@ -494,11 +470,6 @@ function CategoryPageContent() {
         
         const urlFilters = parseAllFiltersFromUrl();
         setAppliedFilters(urlFilters);
-        
-        const saved = sessionStorage.getItem('showFilters');
-        if (saved !== null) {
-          setShowFilters(saved === 'true');
-        }
       }
     };
     window.addEventListener('pageshow', handlePageShow);

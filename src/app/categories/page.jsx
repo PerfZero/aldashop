@@ -20,8 +20,8 @@ function CategoryPageContent() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
-  const [sortBy, setSortBy] = useState(null);
-  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState(3);
+  const [showFilters, setShowFilters] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
@@ -42,25 +42,6 @@ function CategoryPageContent() {
 
   useEffect(() => {
     setIsClient(true);
-    const saved = sessionStorage.getItem('showFilters');
-    if (saved === 'true') {
-      setShowFilters(true);
-    }
-    
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        const currentSaved = sessionStorage.getItem('showFilters');
-        if (currentSaved !== null) {
-          setShowFilters(currentSaved === 'true');
-        }
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
   }, []);
 
   useEffect(() => {
@@ -89,19 +70,6 @@ function CategoryPageContent() {
     }
   }, [showFilters, isClient]);
 
-  useEffect(() => {
-    const handlePageShow = (e) => {
-      if (typeof window === 'undefined') return;
-      if (e.persisted) {
-        const saved = sessionStorage.getItem('showFilters');
-        if (saved !== null) {
-          setShowFilters(saved === 'true');
-        }
-      }
-    };
-    window.addEventListener('pageshow', handlePageShow);
-    return () => window.removeEventListener('pageshow', handlePageShow);
-  }, []);
 
   useEffect(() => {
     const urlDynamicFilters = parseDynamicFiltersFromUrl();
@@ -514,8 +482,6 @@ function CategoryPageContent() {
         setCurrentSubcategory(null);
       }
 
-      const saved = sessionStorage.getItem('showFilters');
-      if (saved !== null) setShowFilters(saved === 'true');
     };
 
     window.addEventListener('popstate', handleUrlChange);
