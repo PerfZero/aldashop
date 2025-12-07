@@ -46,8 +46,24 @@ export default function RootLayout({ children }) {
           src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"
           strategy="beforeInteractive"
         />
+        <Script id="yandex-metrika" strategy="afterInteractive">
+          {`
+            (function(m,e,t,r,i,k,a){
+              m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+              m[i].l=1*new Date();
+              for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
+              k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
+            })(window, document, 'script', 'https://mc.yandex.ru/metrika/tag.js?id=105719616', 'ym');
+            ym(105719616, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
+          `}
+        </Script>
       </head>
       <body className={`${montserrat.variable} ${tenorSans.variable}`}>
+        <noscript>
+          <div>
+            <img src="https://mc.yandex.ru/watch/105719616" style={{position: 'absolute', left: '-9999px'}} alt="" />
+          </div>
+        </noscript>
         <QueryClientProviderWrapper>
           <QueryParamProviderWrapper>
             <AuthProvider>

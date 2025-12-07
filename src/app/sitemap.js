@@ -20,13 +20,13 @@ export default async function sitemap() {
   let productPages = [];
 
   try {
-    const categoriesRes = await fetch('https://aldalinde.ru/api/categories', {
-      next: { revalidate: 3600 },
+    const categoriesRes = await fetch('https://aldalinde.ru/api/products/category-list/', {
+      cache: 'no-store',
     });
-    const categoriesData = await categoriesRes.json();
-    
-    if (categoriesData.success && categoriesData.data) {
-      categoriesData.data.forEach((category) => {
+    const categories = await categoriesRes.json();
+
+    if (Array.isArray(categories)) {
+      categories.forEach((category) => {
         categoryPages.push({
           url: `${baseUrl}/categories/${category.slug}`,
           lastModified: new Date(),
@@ -34,7 +34,7 @@ export default async function sitemap() {
           priority: 0.8,
         });
 
-        if (category.subcategories) {
+        if (category.subcategories && Array.isArray(category.subcategories)) {
           category.subcategories.forEach((sub) => {
             categoryPages.push({
               url: `${baseUrl}/categories/${category.slug}/${sub.slug}`,
@@ -47,25 +47,44 @@ export default async function sitemap() {
       });
     }
   } catch (error) {
-    console.error('Ошибка загрузки категорий для sitemap:', error);
+    console.error('Sitemap: ошибка загрузки категорий:', error);
   }
 
   try {
-    const productsRes = await fetch('https://aldalinde.ru/api/products/models-list', {
-      next: { revalidate: 3600 },
-    });
-    const productsData = await productsRes.json();
-    
-    if (productsData.success && productsData.data) {
-      productPages = productsData.data.map((product) => ({
-        url: `${baseUrl}/product/${product.id}`,
-        lastModified: new Date(),
-        changeFrequency: 'weekly',
-        priority: 0.6,
-      }));
+    let allProducts = [];
+    let page = 1;
+    let hasMore = true;
+    const limit = 100;
+
+    while (hasMore) {
+      const res = await fetch('https://aldalinde.ru/api/products/models-list/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ page, limit }),
+        cache: 'no-store',
+      });
+
+      const data = await res.json();
+
+      if (data.results && Array.isArray(data.results)) {
+        allProducts = [...allProducts, ...data.results];
+        hasMore = data.results.length === limit;
+        page++;
+      } else {
+        hasMore = false;
+      }
+
+      if (page > 50) break;
     }
+
+    productPages = allProducts.map((product) => ({
+      url: `${baseUrl}/product/${product.id}`,
+      lastModified: new Date(),
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    }));
   } catch (error) {
-    console.error('Ошибка загрузки товаров для sitemap:', error);
+    console.error('Sitemap: ошибка загрузки товаров:', error);
   }
 
   return [...staticPages, ...categoryPages, ...productPages];
