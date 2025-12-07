@@ -19,8 +19,13 @@ function CategoryPageContent() {
   const params = useParams();
   const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
   const [sortBy, setSortBy] = useState(3);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    setShowFilters(!isMobile);
+  }, []);
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
   const [categoryId, setCategoryId] = useState(null);
