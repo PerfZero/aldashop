@@ -574,6 +574,40 @@ export default function ProductPage({ params }) {
     );
   }
 
+  const mainPhoto = product.photos?.find(photo => photo.main_photo) || product.photos?.[0];
+  const productJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.description || '',
+    image: mainPhoto?.photo || '',
+    sku: product.generated_article || '',
+    brand: {
+      '@type': 'Brand',
+      name: 'ALDA',
+    },
+    offers: {
+      '@type': 'Offer',
+      url: `https://aldalinde.ru/product/${product.id}`,
+      priceCurrency: 'RUB',
+      price: product.discounted_price || product.price,
+      availability: product.in_stock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      seller: {
+        '@type': 'Organization',
+        name: 'ALDA',
+      },
+    },
+    ...(product.avg_rating && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: product.avg_rating,
+        reviewCount: product.reviews_count || 1,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+  };
+
   const breadcrumbs = [
     { text: 'Главная', href: '/' }
   ];
@@ -601,6 +635,10 @@ export default function ProductPage({ params }) {
 
   return (
     <main className={styles.page}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
       <Breadcrumbs items={breadcrumbs} />
       
       <div className={styles.product}>
