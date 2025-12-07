@@ -129,7 +129,7 @@ export default function CookieConsent() {
               Отклонить
             </button>
             <button onClick={() => setShowSettings(true)} className={styles.settingsButton}>
-              Настроить
+            Изменить
             </button>
             <button onClick={handleAcceptAll} className={styles.acceptButton}>
               Принять все
