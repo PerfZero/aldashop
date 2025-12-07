@@ -97,6 +97,13 @@
 @media screen and (max-width: 768px) {
   .banner {
     padding: 15px;
+
+    width: 100%;
+  }
+
+  .content {
+    flex-direction: column;
+    gap: 20px;
   }
 
   .text {
@@ -105,6 +112,7 @@
 
   .buttons {
     flex-direction: column;
+    width: 100%;
   }
 
   .acceptButton,

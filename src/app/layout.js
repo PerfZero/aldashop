@@ -30,6 +30,9 @@ export const metadata = {
     follow: true,
   },
   viewport: 'width=device-width, initial-scale=1',
+  verification: {
+    yandex: 'bb9d33b0513040a9',
+  },
 };
 
 const montserrat = Montserrat({ subsets: ['latin', 'cyrillic'], variable: '--font-montserrat' });
