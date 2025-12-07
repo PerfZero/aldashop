@@ -12,6 +12,33 @@ import ScrollRestoration from '../components/ScrollRestoration';
 import CookieConsent from '../components/CookieConsent';
 import './globals.css';
 
+const organizationJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'ALDA',
+  url: 'https://aldalinde.ru',
+  logo: 'https://aldalinde.ru/logo.svg',
+  description: 'ALDA - интернет-магазин качественной мебели. Диваны, кресла, пуфы и другая мягкая мебель для вашего дома.',
+  address: {
+    '@type': 'PostalAddress',
+    addressLocality: 'Сочи',
+    addressRegion: 'Краснодарский край',
+    addressCountry: 'RU',
+  },
+};
+
+const webSiteJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'ALDA',
+  url: 'https://aldalinde.ru',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: 'https://aldalinde.ru/search?q={search_term_string}',
+    'query-input': 'required name=search_term_string',
+  },
+};
+
 export const metadata = {
   title: {
     default: 'ALDA - Мебель, которую выбирают сердцем',
@@ -42,6 +69,14 @@ export default function RootLayout({ children }) {
   return (
     <html lang="ru">
       <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(webSiteJsonLd) }}
+        />
         <Script 
           src="https://api-maps.yandex.ru/2.1/?lang=ru_RU"
           strategy="beforeInteractive"

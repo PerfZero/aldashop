@@ -8,52 +8,6 @@ import DeliverySection from './components/DeliverySection';
 import EmailVerificationModal from '../components/EmailVerificationModal';
 import ResetPasswordModal from '../components/ResetPasswordModal';
 
-function OrganizationJsonLd() {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'ALDA',
-    url: 'https://aldalinde.ru',
-    logo: 'https://aldalinde.ru/logo.svg',
-    description: 'ALDA - интернет-магазин качественной мебели. Диваны, кресла, пуфы и другая мягкая мебель для вашего дома.',
-    address: {
-      '@type': 'PostalAddress',
-      addressLocality: 'Сочи',
-      addressRegion: 'Краснодарский край',
-      addressCountry: 'RU',
-    },
-    sameAs: [],
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-    />
-  );
-}
-
-function WebSiteJsonLd() {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'ALDA',
-    url: 'https://aldalinde.ru',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: 'https://aldalinde.ru/search?q={search_term_string}',
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-    />
-  );
-}
-
 function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setShowResetModal, searchParams }) {
   const [mainPageData, setMainPageData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,8 +39,6 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
 
   return (
     <div className={styles.page}>
-      <OrganizationJsonLd />
-      <WebSiteJsonLd />
       <EmailVerificationModal 
         isOpen={showEmailModal} 
         onClose={() => setShowEmailModal(false)}
