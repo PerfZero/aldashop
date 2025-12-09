@@ -9,6 +9,35 @@ export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  const tryRefreshToken = useCallback(async () => {
+    try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        return false;
+      }
+
+      const response = await fetch('/api/auth/token/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('accessToken', data.access);
+        return true;
+      } else {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        return false;
+      }
+    } catch (error) {
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     const initializeAuth = async () => {
       const accessToken = localStorage.getItem('accessToken');
@@ -17,7 +46,7 @@ export function AuthProvider({ children }) {
       if (accessToken) {
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 секунд таймаут
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
           
           const response = await fetch('/api/user/profile', {
             headers: {
@@ -33,12 +62,30 @@ export function AuthProvider({ children }) {
             const userData = await response.json();
             setUser(userData.user_data);
             setIsAuthenticated(true);
+          } else if (response.status === 401) {
+            const refreshed = await tryRefreshToken();
+            if (refreshed) {
+              const newAccessToken = localStorage.getItem('accessToken');
+              const retryResponse = await fetch('/api/user/profile', {
+                headers: {
+                  'Authorization': `Bearer ${newAccessToken}`,
+                },
+              });
+              
+              if (retryResponse.ok) {
+                const userData = await retryResponse.json();
+                setUser(userData.user_data);
+                setIsAuthenticated(true);
+              } else {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+              }
+            }
           } else {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
           }
         } catch (error) {
-          // Не удаляем токены при сетевых ошибках или таймаутах
           if (error.name === 'TypeError' && error.message.includes('fetch') || 
               error.name === 'AbortError') {
           } else {
@@ -53,7 +100,7 @@ export function AuthProvider({ children }) {
     };
 
     initializeAuth();
-  }, []);
+  }, [tryRefreshToken]);
 
   const mergeSessionData = async (accessToken) => {
     try {
