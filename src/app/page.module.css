@@ -15,10 +15,35 @@
   background-size: cover;
 }
 
-.loadingScreen{
+.loadingBar {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
-  height: 100vh;
-  background: #fff;
+  height: 3px;
+  background: rgba(193, 162, 134, 0.2);
+  z-index: 9999;
+}
+
+.loadingBarProgress {
+  height: 100%;
+  background: #A45B38;
+  animation: loadingAnimation 1s ease-in-out infinite;
+}
+
+@keyframes loadingAnimation {
+  0% {
+    width: 0;
+    margin-left: 0;
+  }
+  50% {
+    width: 70%;
+    margin-left: 15%;
+  }
+  100% {
+    width: 0;
+    margin-left: 100%;
+  }
 }
 
 .promo__title {

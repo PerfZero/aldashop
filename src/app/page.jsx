@@ -33,12 +33,10 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
   }, []);
 
 
-  if (isLoading) {
-    return <div className={styles.loadingScreen}></div>;
-  }
 
   return (
     <div className={styles.page}>
+      {isLoading && <div className={styles.loadingBar}><div className={styles.loadingBarProgress}></div></div>}
       <EmailVerificationModal 
         isOpen={showEmailModal} 
         onClose={() => setShowEmailModal(false)}
@@ -376,7 +374,7 @@ export default function Home() {
   }, []);
 
   return (
-    <Suspense fallback={<div className={styles.loadingScreen}></div>}>
+    <Suspense fallback={<div className={styles.loadingBar}><div className={styles.loadingBarProgress}></div></div>}>
       <HomeContent 
         showEmailModal={showEmailModal}
         setShowEmailModal={setShowEmailModal}
