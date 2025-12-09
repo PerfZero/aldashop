@@ -2,6 +2,7 @@ import { Montserrat, Tenor_Sans } from 'next/font/google';
 import Script from 'next/script';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import PromoBanner from '../components/PromoBanner';
 import { CartProvider } from './components/CartContext';
 import { AuthProvider } from '../contexts/AuthContext';
 import { FavouritesProvider } from '../contexts/FavouritesContext';
@@ -105,6 +106,7 @@ export default function RootLayout({ children }) {
               <CartProvider>
                 <FavouritesProvider>
                   <ScrollRestoration />
+                  <PromoBanner />
                   <Header />
                   <main>
                     {children}
