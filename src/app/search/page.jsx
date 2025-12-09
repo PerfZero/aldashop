@@ -20,6 +20,7 @@ function SearchPageContent() {
     page_size: 12,
     count: 0
   });
+  const [searchInfo, setSearchInfo] = useState(null);
 
   const sortOptions = [
     { value: 1, label: 'Популярные' },
@@ -84,6 +85,21 @@ function SearchPageContent() {
   
 
   useEffect(() => {
+    fetch('https://aldalinde.ru/api/products/get_info_no_category')
+      .then(res => res.json())
+      .then(response => {
+        console.log('Search page get_info_no_category:', response);
+        if (response.success && response.data) {
+          console.log('Setting searchInfo:', response.data);
+          setSearchInfo(response.data);
+        }
+      })
+      .catch(err => {
+        console.error('Ошибка загрузки данных get_info_no_category:', err);
+      });
+  }, []);
+
+  useEffect(() => {
     if (!query) return;
     setProducts([]);
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -121,6 +137,26 @@ function SearchPageContent() {
           <p className={styles.hero__description}>
             Найдено товаров: {pagination.count}
           </p>
+          {(() => {
+            console.log('searchInfo in render:', searchInfo);
+            console.log('search_photo_cover:', searchInfo?.search_photo_cover);
+            if (searchInfo?.search_photo_cover) {
+              const imgSrc = searchInfo.search_photo_cover.startsWith('http') ? searchInfo.search_photo_cover : `https://aldalinde.ru${searchInfo.search_photo_cover}`;
+              console.log('Image src will be:', imgSrc);
+              return (
+                <img 
+                  className={`${styles.hero__img} ${styles.photo_cover}`}
+                  src={imgSrc}
+                  alt="Поиск"
+                  onError={(e) => {
+                    console.log('Image load error:', e.target.src);
+                    e.target.src = "/category.png";
+                  }}
+                />
+              );
+            }
+            return null;
+          })()}
         </div>
       </div>
 

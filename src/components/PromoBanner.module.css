@@ -28,14 +28,14 @@
   font-weight: bold;
   font-family: Tenor Sans, sans-serif;
   text-shadow: 
-    -0.05px -0.05px 0 #fff,
-    0.05px -0.05px 0 #fff,
-    -0.05px 0.05px 0 #fff,
-    0.05px 0.05px 0 #fff,
-    -0.05px 0 0 #fff,
-    0.05px 0 0 #fff,
-    0 -0.05px 0 #fff,
-    0 0.05px 0 #fff;
+    -0.001px -0.001px 0 #fff,
+    0.001px -0.001px 0 #fff,
+    -0.001px 0.001px 0 #fff,
+    0.001px 0.001px 0 #fff,
+    -0.001px 0 0 #fff,
+    0.001px 0 0 #fff,
+    0 -0.001px 0 #fff,
+    0 0.001px 0 #fff;
 }
 
 @media (max-width: 768px) {
