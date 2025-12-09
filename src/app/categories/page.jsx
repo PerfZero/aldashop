@@ -519,12 +519,12 @@ function CategoryPageContent() {
             {currentSubcategory?.description || currentCategory?.description || noCategoryInfo?.description || 'Описание категории'}
           </p>
           <img 
-            className={`${styles.hero__img} ${((currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null) || (noCategoryInfo?.search_photo_cover && noCategoryInfo.search_photo_cover !== null)) ? styles.photo_cover : ''}`} 
+            className={`${styles.hero__img} ${((currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null) || (noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null)) ? styles.photo_cover : ''}`} 
             src={
               (currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null)
                 ? (currentSubcategory?.photo_cover?.startsWith('http') ? (currentSubcategory?.photo_cover || currentCategory?.photo_cover) : `https://aldalinde.ru${currentSubcategory?.photo_cover || currentCategory?.photo_cover}`)
-                : (noCategoryInfo?.search_photo_cover && noCategoryInfo.search_photo_cover !== null)
-                  ? (noCategoryInfo.search_photo_cover.startsWith('http') ? noCategoryInfo.search_photo_cover : `https://aldalinde.ru${noCategoryInfo.search_photo_cover}`)
+                : (noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null)
+                  ? (noCategoryInfo.photo_cover.startsWith('http') ? noCategoryInfo.photo_cover : `https://aldalinde.ru${noCategoryInfo.photo_cover}`)
                   : "/category.png"
             } 
             alt={currentSubcategory?.title || currentCategory?.title || noCategoryInfo?.title || 'Категория'} 

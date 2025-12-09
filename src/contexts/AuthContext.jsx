@@ -11,8 +11,10 @@ export function AuthProvider({ children }) {
 
   const tryRefreshToken = useCallback(async () => {
     try {
+      console.log('[AuthContext] Попытка обновить токен...');
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) {
+        console.log('[AuthContext] Refresh token отсутствует');
         return false;
       }
 
@@ -27,27 +29,35 @@ export function AuthProvider({ children }) {
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('accessToken', data.access);
+        console.log('[AuthContext] Токен успешно обновлен');
         return true;
       } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.log('[AuthContext] Ошибка обновления токена:', response.status, errorData);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         return false;
       }
     } catch (error) {
+      console.log('[AuthContext] Исключение при обновлении токена:', error);
       return false;
     }
   }, []);
 
   useEffect(() => {
     const initializeAuth = async () => {
+      console.log('[AuthContext] Инициализация авторизации...');
       const accessToken = localStorage.getItem('accessToken');
-      
+      const refreshToken = localStorage.getItem('refreshToken');
+      console.log('[AuthContext] Access token:', accessToken ? 'присутствует' : 'отсутствует');
+      console.log('[AuthContext] Refresh token:', refreshToken ? 'присутствует' : 'отсутствует');
       
       if (accessToken) {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 10000);
           
+          console.log('[AuthContext] Запрос профиля пользователя...');
           const response = await fetch('/api/user/profile', {
             headers: {
               'Authorization': `Bearer ${accessToken}`,
@@ -57,14 +67,18 @@ export function AuthProvider({ children }) {
           
           clearTimeout(timeoutId);
 
+          console.log('[AuthContext] Ответ профиля:', response.status);
 
           if (response.ok) {
             const userData = await response.json();
             setUser(userData.user_data);
             setIsAuthenticated(true);
+            console.log('[AuthContext] Пользователь авторизован:', userData.user_data.email);
           } else if (response.status === 401) {
+            console.log('[AuthContext] Access token истёк (401), пробуем обновить...');
             const refreshed = await tryRefreshToken();
             if (refreshed) {
+              console.log('[AuthContext] Повторный запрос профиля с новым токеном...');
               const newAccessToken = localStorage.getItem('accessToken');
               const retryResponse = await fetch('/api/user/profile', {
                 headers: {
@@ -76,16 +90,22 @@ export function AuthProvider({ children }) {
                 const userData = await retryResponse.json();
                 setUser(userData.user_data);
                 setIsAuthenticated(true);
+                console.log('[AuthContext] Пользователь авторизован после обновления токена:', userData.user_data.email);
               } else {
+                console.log('[AuthContext] Повторный запрос профиля не удался:', retryResponse.status);
                 localStorage.removeItem('accessToken');
                 localStorage.removeItem('refreshToken');
               }
+            } else {
+              console.log('[AuthContext] Не удалось обновить токен, выход из системы');
             }
           } else {
+            console.log('[AuthContext] Ошибка профиля:', response.status);
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
           }
         } catch (error) {
+          console.log('[AuthContext] Ошибка при инициализации:', error.name, error.message);
           if (error.name === 'TypeError' && error.message.includes('fetch') || 
               error.name === 'AbortError') {
           } else {
@@ -94,9 +114,11 @@ export function AuthProvider({ children }) {
           }
         }
       } else {
+        console.log('[AuthContext] Access token отсутствует, пользователь не авторизован');
       }
       
       setIsLoading(false);
+      console.log('[AuthContext] Инициализация завершена');
     };
 
     initializeAuth();
