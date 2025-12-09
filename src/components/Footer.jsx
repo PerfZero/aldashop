@@ -220,9 +220,6 @@ const Footer = () => {
           <button onClick={() => openModal('privacy')} className={styles.legalLink}>
             Политика конфиденциальности
           </button>
-          <button onClick={() => openModal('cookies')} className={styles.legalLink}>
-            Политика использования cookies
-          </button>
         </nav>
       </div>
 

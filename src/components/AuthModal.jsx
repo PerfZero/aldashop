@@ -484,14 +484,14 @@ export default function AuthModal({ isOpen, onClose }) {
             <div className={styles.content}>
               <div className={styles.socialAuth}>
                 <h3>{isLogin ? "Быстрый вход" : "Быстрая регистрация"}</h3>
-                <button className={`${styles.socialButton} ${styles.vkButton}`}>
+                <a href="https://aldalinde.ru/api/oauth/vk/custom/?process=login&next=/dashboard/" className={`${styles.socialButton} ${styles.vkButton}`}>
                   <img src="/vk.svg" alt="Вконтакте" />
                   Вход через Вконтакте
-                </button>
-                <button className={`${styles.socialButton} ${styles.yandexButton}`}>
+                </a>
+                <a href="https://aldalinde.ru/api/oauth/yandex/custom/?process=login&next=/dashboard/" className={`${styles.socialButton} ${styles.yandexButton}`}>
                   <img src="/ya.svg" alt="Яндекс" />
                   Вход через Яндекс
-                </button>
+                </a>
                 {/* <button className={`${styles.socialButton} ${styles.googleButton}`}>
                   <img src="/google.svg" alt="Google" />
                   Вход через Google
