@@ -2,6 +2,11 @@
   "name": "alda",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "@pbe/react-yandex-maps": {
+      "react": "$react"
+    }
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
