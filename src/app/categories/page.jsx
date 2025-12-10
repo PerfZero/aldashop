@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from 'rea
 import { useParams, usePathname, useSearchParams } from 'next/navigation';
 import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
 import Image from 'next/image';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Filters from '@/components/Filters';
 import ProductCard from '@/components/ProductCard';
@@ -13,6 +15,7 @@ import { useInfiniteProducts } from '@/hooks/useInfiniteProducts';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import { useCategories } from '@/hooks/useCategories';
 import { useFilters } from '@/hooks/useFilters';
+import { useNoCategoryInfo } from '@/hooks/useNoCategoryInfo';
 import styles from './[...slug]/page.module.css';
 
 function CategoryPageContent() {
@@ -34,8 +37,6 @@ function CategoryPageContent() {
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
   const [currentSubcategory, setCurrentSubcategory] = useState(null);
-  const [noCategoryInfo, setNoCategoryInfo] = useState(null);
-  const [noCategoryInfoLoading, setNoCategoryInfoLoading] = useState(false);
 
   const [sort, setSort] = useQueryParam('sort', NumberParam);
   
@@ -44,30 +45,13 @@ function CategoryPageContent() {
   const scrollRestoredRef = useRef(false);
 
   const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  
+  const shouldFetchNoCategoryInfo = pathname === '/categories' && !categoryId && !subcategoryId;
+  const { data: noCategoryInfo, isLoading: noCategoryInfoLoading } = useNoCategoryInfo(shouldFetchNoCategoryInfo);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  useEffect(() => {
-    if (pathname === '/categories' && !categoryId && !subcategoryId) {
-      setNoCategoryInfoLoading(true);
-      fetch('https://aldalinde.ru/api/products/get_info_no_category')
-        .then(res => res.json())
-        .then(response => {
-          if (response.success && response.data) {
-            setNoCategoryInfo(response.data);
-          }
-          setNoCategoryInfoLoading(false);
-        })
-        .catch(err => {
-          console.error('Ошибка загрузки данных get_info_no_category:', err);
-          setNoCategoryInfoLoading(false);
-        });
-    } else {
-      setNoCategoryInfo(null);
-    }
-  }, [pathname, categoryId, subcategoryId]);
 
   useEffect(() => {
     if (isClient) {
@@ -75,48 +59,105 @@ function CategoryPageContent() {
     }
   }, [showFilters, isClient]);
 
+  const parseDynamicFiltersFromUrl = useCallback(() => {
+    try {
+      if (typeof window === 'undefined') return {};
+      
+      const url = new URL(window.location.href);
+      const dynamicFilters = {};
+    
+      for (const [key, value] of url.searchParams.entries()) {
+        if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id'].includes(key)) {
+          if (key === 'flag_type') {
+            dynamicFilters[key] = value;
+          } else if (value && value.includes(',')) {
+            dynamicFilters[key] = value.split(',').map(v => {
+              const num = parseInt(v);
+              return isNaN(num) ? v : num;
+            });
+          } else if (value) {
+            const num = parseInt(value);
+            dynamicFilters[key] = isNaN(num) ? value : num;
+          }
+        }
+      }
+      
+      return dynamicFilters;
+    } catch (error) {
+      return {};
+    }
+  }, []);
+
+  const searchParamsString = searchParams?.toString() || '';
+  
+  const urlDynamicFiltersMemo = useMemo(() => {
+    return parseDynamicFiltersFromUrl();
+  }, [searchParamsString, parseDynamicFiltersFromUrl]);
+
+  const prevFiltersRef = useRef(null);
+  const prevCategoryRef = useRef({ categoryId: null, subcategoryId: null });
+
+  const categoryParams = useMemo(() => {
+    if (typeof window === 'undefined') return { categoryId: null, subcategoryId: null, flagType: null };
+    try {
+      const url = new URL(window.location.href);
+      return {
+        categoryId: url.searchParams.get('category_id'),
+        subcategoryId: url.searchParams.get('subcategory_id'),
+        flagType: url.searchParams.get('flag_type')
+      };
+    } catch {
+      return { categoryId: null, subcategoryId: null, flagType: null };
+    }
+  }, [searchParamsString]);
 
   useEffect(() => {
-    const urlDynamicFilters = parseDynamicFiltersFromUrl();
-    setDynamicFilters(urlDynamicFilters);
+    const urlDynamicFilters = urlDynamicFiltersMemo;
     
-    const categoryIdFromUrl = searchParams.get('category_id');
-    const subcategoryIdFromUrl = searchParams.get('subcategory_id');
+    const filtersString = JSON.stringify(urlDynamicFilters);
+    if (prevFiltersRef.current !== filtersString) {
+      prevFiltersRef.current = filtersString;
+      setDynamicFilters(urlDynamicFilters);
+    }
     
-    if (categoryIdFromUrl) {
-      const newCategoryId = parseInt(categoryIdFromUrl);
-      const newSubcategoryId = subcategoryIdFromUrl ? parseInt(subcategoryIdFromUrl) : null;
-      console.log('[categories/page] Смена категории из URL:', { categoryId: newCategoryId, subcategoryId: newSubcategoryId, pathname });
-      setCategoryId(newCategoryId);
-      setSubcategoryId(newSubcategoryId);
+    if (categoryParams.categoryId) {
+      const newCategoryId = parseInt(categoryParams.categoryId);
+      const newSubcategoryId = categoryParams.subcategoryId ? parseInt(categoryParams.subcategoryId) : null;
       
-      if (categories.length > 0) {
-        const category = categories.find(c => c.id === newCategoryId);
-        if (category) {
-          setCurrentCategory({ id: category.id, slug: category.slug, title: category.title, description: category.description, photo_cover: category.photo_cover });
-          
-          if (newSubcategoryId) {
-            const subcategory = category.subcategories?.find(s => s.id === newSubcategoryId);
-            if (subcategory) {
-              setCurrentSubcategory({ id: subcategory.id, slug: subcategory.slug, title: subcategory.title, description: subcategory.description, photo_cover: subcategory.photo_cover });
+      if (prevCategoryRef.current.categoryId !== newCategoryId || prevCategoryRef.current.subcategoryId !== newSubcategoryId) {
+        prevCategoryRef.current = { categoryId: newCategoryId, subcategoryId: newSubcategoryId };
+        console.log('[categories/page] Смена категории из URL:', { categoryId: newCategoryId, subcategoryId: newSubcategoryId, pathname });
+        setCategoryId(newCategoryId);
+        setSubcategoryId(newSubcategoryId);
+        
+        if (categories.length > 0) {
+          const category = categories.find(c => c.id === newCategoryId);
+          if (category) {
+            setCurrentCategory({ id: category.id, slug: category.slug, title: category.title, description: category.description, photo_cover: category.photo_cover });
+            
+            if (newSubcategoryId) {
+              const subcategory = category.subcategories?.find(s => s.id === newSubcategoryId);
+              if (subcategory) {
+                setCurrentSubcategory({ id: subcategory.id, slug: subcategory.slug, title: subcategory.title, description: subcategory.description, photo_cover: subcategory.photo_cover });
+              } else {
+                setCurrentSubcategory(null);
+              }
             } else {
               setCurrentSubcategory(null);
             }
-          } else {
-            setCurrentSubcategory(null);
           }
         }
       }
     } else if (pathname === '/categories') {
-      const hasFlagType = searchParams.get('flag_type');
-      if (!hasFlagType) {
+      if (!categoryParams.flagType && (prevCategoryRef.current.categoryId !== null || prevCategoryRef.current.subcategoryId !== null)) {
+        prevCategoryRef.current = { categoryId: null, subcategoryId: null };
         setCategoryId(null);
         setSubcategoryId(null);
         setCurrentCategory(null);
         setCurrentSubcategory(null);
       }
     }
-  }, [pathname, searchParams, categories]);
+  }, [pathname, searchParamsString, categories, urlDynamicFiltersMemo, categoryParams]);
   
   useEffect(() => {
     console.log('[categories/page] Изменение параметров:', { 
@@ -239,36 +280,6 @@ function CategoryPageContent() {
       console.error('Error in updateUrlWithDynamicFilters:', error);
     }
   };
-
-  const parseDynamicFiltersFromUrl = () => {
-    try {
-      if (typeof window === 'undefined') return {};
-      
-      const url = new URL(window.location.href);
-      const dynamicFilters = {};
-    
-    for (const [key, value] of url.searchParams.entries()) {
-      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id'].includes(key)) {
-        if (key === 'flag_type') {
-          dynamicFilters[key] = value;
-        } else if (value && value.includes(',')) {
-          dynamicFilters[key] = value.split(',').map(v => {
-            const num = parseInt(v);
-            return isNaN(num) ? v : num;
-          });
-        } else if (value) {
-          const num = parseInt(value);
-          dynamicFilters[key] = isNaN(num) ? value : num;
-        }
-      }
-    }
-      
-      return dynamicFilters;
-    } catch (error) {
-      return {};
-    }
-  };
-
 
 
   const handleFiltersApply = (newFilters) => {
@@ -506,34 +517,77 @@ function CategoryPageContent() {
     return product;
   };
 
+  const heroTitle = currentSubcategory?.title || currentCategory?.title || noCategoryInfo?.title;
+  const heroDescription = currentSubcategory?.description || currentCategory?.description || noCategoryInfo?.description;
+  const heroPhoto = (currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) 
+    ? (currentSubcategory.photo_cover.startsWith('http') ? currentSubcategory.photo_cover : `https://aldalinde.ru${currentSubcategory.photo_cover}`)
+    : (currentCategory?.photo_cover && currentCategory.photo_cover !== null)
+      ? (currentCategory.photo_cover.startsWith('http') ? currentCategory.photo_cover : `https://aldalinde.ru${currentCategory.photo_cover}`)
+      : (noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null)
+        ? (noCategoryInfo.photo_cover.startsWith('http') ? noCategoryInfo.photo_cover : `https://aldalinde.ru${noCategoryInfo.photo_cover}`)
+        : null;
+  const showHero = heroTitle || heroDescription || heroPhoto;
+  const isLoadingHero = (noCategoryInfoLoading && shouldFetchNoCategoryInfo) || (categoriesLoading && pathname === '/categories' && !categoryId && !subcategoryId && !noCategoryInfo);
+
   return (
     <main className={styles.page}>
       <Breadcrumbs items={breadcrumbs} />
       
-      <div className={styles.hero}>
-        <div className={styles.hero__content}>
-          <h1 className={styles.hero__title}>
-            {currentSubcategory?.title || currentCategory?.title || noCategoryInfo?.title || 'Категория'}
-          </h1>
-          <p className={styles.hero__description}>
-            {currentSubcategory?.description || currentCategory?.description || noCategoryInfo?.description || 'Описание категории'}
-          </p>
-          <img 
-            className={`${styles.hero__img} ${((currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null) || (noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null)) ? styles.photo_cover : ''}`} 
-            src={
-              (currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null)
-                ? (currentSubcategory?.photo_cover?.startsWith('http') ? (currentSubcategory?.photo_cover || currentCategory?.photo_cover) : `https://aldalinde.ru${currentSubcategory?.photo_cover || currentCategory?.photo_cover}`)
-                : (noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null)
-                  ? (noCategoryInfo.photo_cover.startsWith('http') ? noCategoryInfo.photo_cover : `https://aldalinde.ru${noCategoryInfo.photo_cover}`)
-                  : "/category.png"
-            } 
-            alt={currentSubcategory?.title || currentCategory?.title || noCategoryInfo?.title || 'Категория'} 
-            onError={(e) => {
-              e.target.src = "/category.png";
-            }}
-          />
+      {showHero || isLoadingHero ? (
+        <div className={styles.hero}>
+          <div className={`${styles.hero__content} ${isLoadingHero ? styles.skeleton : ''}`}>
+            {isLoadingHero ? (
+              <>
+                <div className={styles.hero__skeleton_bg} />
+                <div 
+                  className={styles.hero__skeleton_text}
+                  style={{ 
+                    height: '32px', 
+                    width: '300px', 
+                    marginBottom: '20px', 
+                    zIndex: 3, 
+                    position: 'relative'
+                  }} 
+                />
+                <div 
+                  className={styles.hero__skeleton_text}
+                  style={{ 
+                    height: '20px', 
+                    width: '600px', 
+                    maxWidth: '824px', 
+                    zIndex: 3, 
+                    position: 'relative', 
+                    margin: '0 auto'
+                  }} 
+                />
+              </>
+            ) : (
+              <>
+                {heroTitle && (
+                  <h1 className={styles.hero__title}>
+                    {heroTitle}
+                  </h1>
+                )}
+                {heroDescription && (
+                  <p className={styles.hero__description}>
+                    {heroDescription}
+                  </p>
+                )}
+                {heroPhoto && (
+                  <img 
+                    className={`${styles.hero__img} ${styles.photo_cover}`} 
+                    src={heroPhoto} 
+                    alt={heroTitle || 'Категория'} 
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className={styles.controls}>
         <button 

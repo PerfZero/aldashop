@@ -18,6 +18,8 @@ export default function CartPage() {
   const router = useRouter();
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [discountType, setDiscountType] = useState(null);
+  const [discountTypeName, setDiscountTypeName] = useState('');
   const [showPromoCodeInput, setShowPromoCodeInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [promoCodeStatus, setPromoCodeStatus] = useState(null);
@@ -198,7 +200,7 @@ export default function CartPage() {
 
   useEffect(() => {
     calculateTotal();
-  }, [cartItems, discount]);
+  }, [cartItems, discount, discountType]);
 
   useEffect(() => {
     const loadAutocompleteData = async () => {
@@ -276,6 +278,8 @@ export default function CartPage() {
       setPromoCodeStatus(null);
       setPromoCodeError('');
       setDiscount(0);
+      setDiscountType(null);
+      setDiscountTypeName('');
     }
   }, [cartItems]);
 
@@ -287,8 +291,18 @@ export default function CartPage() {
 
   const calculateTotal = () => {
     const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    setTotalPrice(total - discount);
+    let calculatedDiscount = discount;
+    
+    if (discountType && discountType !== 'in_item' && total > 0) {
+      calculatedDiscount = (total * discount) / 100;
+    }
+    
+    setTotalPrice(total - calculatedDiscount);
   };
+
+  useEffect(() => {
+    calculateTotal();
+  }, [cartItems, discount, discountType]);
   
   const validateField = (name, value) => {
     const errors = {};
@@ -504,10 +518,14 @@ export default function CartPage() {
       if (response.ok && data.is_valid) {
         setPromoCodeStatus('valid');
         setDiscount(data.discount || 0);
+        setDiscountType(data.type || null);
+        setDiscountTypeName(data.type_name || '');
         setPromoCodeError('');
       } else {
         setPromoCodeStatus('invalid');
         setDiscount(0);
+        setDiscountType(null);
+        setDiscountTypeName('');
         setPromoCodeError('Неверный промокод');
       }
     } catch (error) {
@@ -1270,15 +1288,25 @@ export default function CartPage() {
               </div>
             </div>
             
-            <div className={styles.summaryRow}>
-              <div className={styles.summaryRowTitle}>
-                <span>Скидка</span>
-                <div className={styles.summaryRowPrice}>
-                  <span>{discount.toLocaleString()}</span>
-                ₽
+            {discount > 0 && (
+              <div className={styles.summaryRow}>
+                <div className={styles.summaryRowTitle}>
+                  <span>Скидка</span>
+                  <div className={styles.summaryRowPrice}>
+                    <span>
+                      {(() => {
+                        const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                        const calculatedDiscount = discountType === 'in_item' 
+                          ? discount 
+                          : (total * discount) / 100;
+                        return calculatedDiscount.toLocaleString();
+                      })()}
+                    </span>
+                    ₽
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
             
             {isAuthenticated && (
               <>
@@ -1316,7 +1344,14 @@ export default function CartPage() {
                     )}
                     {promoCodeStatus === 'valid' && (
                       <div className={styles.promoCodeSuccess}>
-                        Промокод применен! Скидка: {discount.toLocaleString()} ₽
+                        Промокод применен! Скидка: {(() => {
+                          const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                          const calculatedDiscount = discountType === 'in_item' 
+                            ? discount 
+                            : (total * discount) / 100;
+                          return `${calculatedDiscount.toLocaleString()} ₽`;
+                        })()}
+                        {discountType !== 'in_item' && ` (${discount}%)`}
                       </div>
                     )}
                   </div>

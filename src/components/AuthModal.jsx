@@ -137,7 +137,7 @@ export default function AuthModal({ isOpen, onClose }) {
               setConfirmationMessage(result.message || 'Регистрация успешна. На вашу почту отправлено письмо с подтверждением.');
               setShowConfirmationMessage(true);
             } else {
-              setErrors(prev => ({ ...prev, general: result.error }));
+              setErrors(prev => ({ ...prev, general: result.error, isEmailExists: result.isEmailExists }));
             }
           } else {
             const result = await login(formData.email, formData.password);
@@ -620,6 +620,29 @@ export default function AuthModal({ isOpen, onClose }) {
                   {errors.general && (
                     <div className={styles.errorContainer}>
                       <span className={styles.errorText}>{errors.general}</span>
+                      {!isLogin && errors.isEmailExists && (
+                        <button
+                          type="button"
+                          className={styles.resendButton}
+                          onClick={() => {
+                            setIsLogin(true);
+                            setErrors({});
+                            setIsSubmitted(false);
+                            setFormData({
+                              name: '',
+                              email: formData.email,
+                              password: '',
+                              confirmPassword: ''
+                            });
+                            setShowPasswords({
+                              password: false,
+                              confirmPassword: false
+                            });
+                          }}
+                        >
+                          Войти
+                        </button>
+                      )}
                       {isLogin && isEmailNotVerifiedError(errors.general) && (
                         <button
                           type="button"

@@ -3,6 +3,7 @@
   background: #a45b38;
   padding: 10px 20px;
   text-align: center;
+  min-height: 38px;
 }
 
 .promoBanner__container {

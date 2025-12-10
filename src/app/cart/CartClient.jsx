@@ -12,6 +12,8 @@ export default function CartClient() {
   
   const [totalPrice, setTotalPrice] = useState(0);
   const [discount, setDiscount] = useState(0);
+  const [discountType, setDiscountType] = useState(null);
+  const [discountTypeName, setDiscountTypeName] = useState('');
   const [showPromoCodeInput, setShowPromoCodeInput] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [innStatus, setInnStatus] = useState(null);
@@ -46,7 +48,7 @@ export default function CartClient() {
 
   useEffect(() => {
     calculateTotal();
-  }, [cartItems, discount]);
+  }, [cartItems, discount, discountType]);
 
   useEffect(() => {
     if (isMapLoading && typeof window !== 'undefined' && window.ymaps) {
@@ -137,7 +139,13 @@ export default function CartClient() {
 
   const calculateTotal = () => {
     const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    setTotalPrice(total - discount);
+    let calculatedDiscount = discount;
+    
+    if (discountType && discountType !== 'in_item' && total > 0) {
+      calculatedDiscount = (total * discount) / 100;
+    }
+    
+    setTotalPrice(total - calculatedDiscount);
   };
   
   const handleInputChange = (e) => {
@@ -180,19 +188,29 @@ export default function CartClient() {
     
     try {
       const token = localStorage.getItem('accessToken');
+      const currentTotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
       const response = await fetch('/api/order/check-promo', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ promo_code: promoCode })
+        body: JSON.stringify({ 
+          promo_code: promoCode,
+          current_total: currentTotal
+        })
       });
       
       if (response.ok) {
         const data = await response.json();
-        setDiscount(data.discount || 0);
-        setShowPromoCodeInput(false);
+        if (data.is_valid) {
+          setDiscount(data.discount || 0);
+          setDiscountType(data.type || null);
+          setDiscountTypeName(data.type_name || '');
+          setShowPromoCodeInput(false);
+        } else {
+          alert('Неверный промокод');
+        }
       } else {
         alert('Неверный промокод');
       }
@@ -448,15 +466,25 @@ export default function CartClient() {
             </div>
           </div>
           
-          <div className={styles.summaryRow}>
-            <div className={styles.summaryRowTitle}>
-              <span>Скидка</span>
-              <div className={styles.summaryRowPrice}>
-                <span>{discount.toLocaleString()}</span>
-                ₽
+          {discount > 0 && (
+            <div className={styles.summaryRow}>
+              <div className={styles.summaryRowTitle}>
+                <span>Скидка</span>
+                <div className={styles.summaryRowPrice}>
+                  <span>
+                    {(() => {
+                      const total = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                      const calculatedDiscount = discountType === 'in_item' 
+                        ? discount 
+                        : (total * discount) / 100;
+                      return calculatedDiscount.toLocaleString();
+                    })()}
+                  </span>
+                  ₽
+                </div>
               </div>
             </div>
-          </div>
+          )}
           
           {isAuthenticated && (
             <>

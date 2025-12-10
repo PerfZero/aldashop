@@ -38,6 +38,10 @@
   background: rgba(0,0,0,0.3);
 }
 
+.hero__content.skeleton:before{
+  display: none;
+}
+
 .hero__title{
   font-family: "Tenor Sans", sans-serif;
 font-weight: 400;
@@ -191,6 +195,31 @@ align-items: flex-start;
 
   .products{
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.hero__skeleton_bg {
+  height: 329px;
+  width: 100%;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  z-index: -1;
+  background-color: #a45b38;
+}
+
+.hero__skeleton_text {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  animation: skeletonPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.6;
   }
 }
 

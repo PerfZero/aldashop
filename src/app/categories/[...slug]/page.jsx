@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from 'rea
 import { useParams } from 'next/navigation';
 import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
 import Image from 'next/image';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import Breadcrumbs from '@/components/Breadcrumbs';
 import Filters from '@/components/Filters';
 import ProductCard from '@/components/ProductCard';
@@ -494,26 +496,75 @@ function CategoryPageContent() {
     return product;
   };
 
+  const heroTitle = currentSubcategory?.title || currentCategory?.title;
+  const heroDescription = currentSubcategory?.description || currentCategory?.description;
+  const heroPhoto = (currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) 
+    ? (currentSubcategory.photo_cover.startsWith('http') ? currentSubcategory.photo_cover : `https://aldalinde.ru${currentSubcategory.photo_cover}`)
+    : (currentCategory?.photo_cover && currentCategory.photo_cover !== null)
+      ? (currentCategory.photo_cover.startsWith('http') ? currentCategory.photo_cover : `https://aldalinde.ru${currentCategory.photo_cover}`)
+      : null;
+  const showHero = heroTitle || heroDescription || heroPhoto;
+  const isLoadingHero = categoriesLoading && !currentCategory && !currentSubcategory;
+
   return (
     <main className={styles.page}>
       <Breadcrumbs items={breadcrumbs} />
       
-      <div className={styles.hero}>
-        <div className={styles.hero__content}>
-          <h1 className={styles.hero__title}>{currentSubcategory?.title || currentCategory?.title || 'Категория'}</h1>
-          <p className={styles.hero__description}>
-            {currentSubcategory?.description || currentCategory?.description || 'Описание категории'}
-          </p>
-          <img 
-            className={`${styles.hero__img} ${((currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null)) ? styles.photo_cover : ''}`} 
-            src={(currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) || (currentCategory?.photo_cover && currentCategory.photo_cover !== null) ? (currentSubcategory?.photo_cover?.startsWith('http') ? (currentSubcategory?.photo_cover || currentCategory?.photo_cover) : `https://aldalinde.ru${currentSubcategory?.photo_cover || currentCategory?.photo_cover}`) : "/category.png"} 
-            alt={currentSubcategory?.title || currentCategory?.title || 'Категория'} 
-            onError={(e) => {
-              e.target.src = "/category.png";
-            }}
-          />
+      {showHero || isLoadingHero ? (
+        <div className={styles.hero}>
+          <div className={`${styles.hero__content} ${isLoadingHero ? styles.skeleton : ''} ${heroPhoto ? styles.photo_cover : ''}`}>
+            {isLoadingHero ? (
+              <>
+                <div className={styles.hero__skeleton_bg} />
+                <div 
+                  className={styles.hero__skeleton_text}
+                  style={{ 
+                    height: '32px', 
+                    width: '300px', 
+                    marginBottom: '20px', 
+                    zIndex: 3, 
+                    position: 'relative'
+                  }} 
+                />
+                <div 
+                  className={styles.hero__skeleton_text}
+                  style={{ 
+                    height: '20px', 
+                    width: '600px', 
+                    maxWidth: '824px', 
+                    zIndex: 3, 
+                    position: 'relative', 
+                    margin: '0 auto'
+                  }} 
+                />
+              </>
+            ) : (
+              <>
+                {heroTitle && (
+                  <h1 className={styles.hero__title}>
+                    {heroTitle}
+                  </h1>
+                )}
+                {heroDescription && (
+                  <p className={styles.hero__description}>
+                    {heroDescription}
+                  </p>
+                )}
+                {heroPhoto && (
+                  <img 
+                    className={`${styles.hero__img} ${styles.photo_cover}`} 
+                    src={heroPhoto} 
+                    alt={heroTitle || 'Категория'} 
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                )}
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div className={styles.controls}>
         <button 

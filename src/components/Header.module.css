@@ -6,6 +6,7 @@
 .header__container {
   max-width: 1728px;
   margin: 0 auto;
+  height: 97px;
   padding: 20px;
   display: flex;
   align-items: center;

@@ -205,7 +205,11 @@ export function AuthProvider({ children }) {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Ошибка регистрации');
+        let errorMessage = data.error || 'Ошибка регистрации';
+        if (data.email && Array.isArray(data.email) && data.email.length > 0) {
+          errorMessage = data.email[0];
+        }
+        return { success: false, error: errorMessage, isEmailExists: data.email && Array.isArray(data.email) && data.email.length > 0 };
       }
 
       const loginResult = await login(email, password);

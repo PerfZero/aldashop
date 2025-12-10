@@ -49,17 +49,20 @@ export default function PromoBanner() {
     return () => clearInterval(timer);
   }, [bannerData]);
 
-  if (!bannerData) return null;
-
   return (
     <div className={styles.promoBanner}>
       <div className={styles.promoBanner__container}>
-        <span className={styles.promoBanner__text}>{bannerData.text}</span>
-        <span className={styles.promoBanner__timer}>
-          {timeLeft.days}Д {String(timeLeft.hours).padStart(2, '0')}Ч {String(timeLeft.minutes).padStart(2, '0')}М
-        </span>
+        {bannerData?.text && (
+          <span className={styles.promoBanner__text}>{bannerData.text}</span>
+        )}
+        {bannerData?.description && (
+          <span className={styles.promoBanner__timer}>
+            {timeLeft.days}Д {String(timeLeft.hours).padStart(2, '0')}Ч {String(timeLeft.minutes).padStart(2, '0')}М
+          </span>
+        )}
       </div>
     </div>
   );
 }
+
 
