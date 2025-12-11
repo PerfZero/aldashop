@@ -451,6 +451,8 @@ export function AuthProvider({ children }) {
     user,
     isAuthenticated,
     isLoading,
+    setUser,
+    setIsAuthenticated,
     login,
     register,
     socialLogin,
@@ -461,6 +463,7 @@ export function AuthProvider({ children }) {
     getAuthHeaders,
     getUserProfile,
     updateUserProfile,
+    mergeSessionData,
   };
 
   return (
