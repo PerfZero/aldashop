@@ -154,7 +154,12 @@ export default function Header() {
     }
   };
 
-  // Блокировка прокрутки при открытом мобильном меню
+  useEffect(() => {
+    if (isMobileMenuOpen && categories.length > 0) {
+      setMobileExpandedCategory(categories[0].id);
+    }
+  }, [isMobileMenuOpen, categories]);
+
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
