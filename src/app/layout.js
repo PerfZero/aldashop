@@ -93,6 +93,10 @@ export default function RootLayout({ children }) {
             ym(105719616, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
           `}
         </Script>
+        <Script 
+          src="//code.jivo.ru/widget/sFBefPB63K"
+          strategy="afterInteractive"
+        />
       </head>
       <body className={`${montserrat.variable} ${tenorSans.variable}`}>
         <noscript>
