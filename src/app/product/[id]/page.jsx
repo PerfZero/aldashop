@@ -61,13 +61,16 @@ export async function generateMetadata({ params }) {
   }
 
   const mainPhoto = product.photos?.find(photo => photo.main_photo) || product.photos?.[0];
+  const colorTitle = product.color?.title || product.available_colors?.[0]?.title || '';
+  const titleWithColor = colorTitle ? `${product.title} (${colorTitle})` : product.title;
+  const descriptionText = product.description || `${product.title}${colorTitle ? ` цвет ${colorTitle}` : ''} - купить в интернет-магазине ALDA`;
 
   return {
-    title: product.title,
-    description: product.description || `${product.title} - купить в интернет-магазине ALDA`,
+    title: titleWithColor,
+    description: descriptionText,
     openGraph: {
-      title: product.title,
-      description: product.description || `${product.title} - купить в интернет-магазине ALDA`,
+      title: titleWithColor,
+      description: descriptionText,
       images: mainPhoto?.photo ? [mainPhoto.photo] : [],
       type: 'website',
     },

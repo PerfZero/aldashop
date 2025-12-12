@@ -18,16 +18,18 @@ export async function generateMetadata({ params }) {
       
       if (product && !product.error && product.title) {
         const price = product.discounted_price || product.price;
+        const colorTitle = product.color?.title || product.available_colors?.[0]?.title || '';
+        const titleWithColor = colorTitle ? `${product.title} (${colorTitle})` : product.title;
         const description = product.description 
           ? `${product.description.substring(0, 150)}...` 
-          : `Купить ${product.title} в интернет-магазине ALDA. Цена: ${price?.toLocaleString('ru-RU')} ₽. Доставка по Сочи и Краснодарскому краю.`;
+          : `Купить ${product.title}${colorTitle ? ` цвет ${colorTitle}` : ''} в интернет-магазине ALDA. Цена: ${price?.toLocaleString('ru-RU')} ₽. Доставка по Сочи и Краснодарскому краю.`;
 
         return {
-          title: product.title,
+          title: titleWithColor,
           description: description,
           keywords: `${product.title}, мебель, ${product.category?.title || ''}, ${product.subcategory?.title || ''}, купить, ALDA`,
           openGraph: {
-            title: product.title,
+            title: titleWithColor,
             description: description,
             type: 'website',
             images: product.photos?.length > 0 ? [product.photos[0].photo] : [],
