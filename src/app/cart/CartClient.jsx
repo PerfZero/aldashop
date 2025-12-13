@@ -522,7 +522,7 @@ export default function CartClient() {
           <div className={styles.summaryRow}>
             <div className={styles.summaryRowTitle}>
               <span>Доставка</span>
-              <span>Сочи</span>
+              <span>{formData.city}</span>
             </div>
           </div>
           

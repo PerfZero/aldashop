@@ -10,7 +10,7 @@ import ResetPasswordModal from '../components/ResetPasswordModal';
 
 function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setShowResetModal, searchParams }) {
   const [mainPageData, setMainPageData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchMainPageData = async () => {
@@ -36,7 +36,6 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
 
   return (
     <div className={styles.page}>
-      {isLoading && <div className={styles.loadingBar}><div className={styles.loadingBarProgress}></div></div>}
       <EmailVerificationModal 
         isOpen={showEmailModal} 
         onClose={() => setShowEmailModal(false)}
@@ -48,17 +47,20 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
         uidb64={searchParams?.uidb64}
         token={searchParams?.token}
       />
-      <main className={styles.main}>
+      <div className={styles.main}>
         <section 
           className={styles.promo}
           style={{
-            backgroundImage: mainPageData?.main_image ? `url(${mainPageData.main_image})` : 'url("/main.png")',
+            backgroundImage: mainPageData?.main_image ? `url(${mainPageData.main_image})` : 'none',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundBlendMode: 'overlay',
-            backgroundColor: 'rgba(0, 0, 0, 0.2)'
+            backgroundColor: mainPageData?.main_image ? 'rgba(0, 0, 0, 0.2)' : 'transparent'
           }}
         >
+          {(isLoading || !mainPageData) && !mainPageData?.main_image && (
+            <div className={`${styles.skeleton} ${styles.skeleton_promo}`}></div>
+          )}
           <div className={styles.promo_container}>
             <h1 className={styles.promo__title}>
               {mainPageData?.title || "ALDA — мебель, которую выбирают сердцем"}
@@ -77,25 +79,31 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
             <div className={styles.section__container}>
               <div className={styles.section__image}>
                 <div className={styles.image_container}>
-                  <Image
-                    src={mainPageData?.main_page_items?.[0]?.photo ? `https://aldalinde.ru${mainPageData.main_page_items[0].photo}` : "/pic_1.png"}
-                    alt={mainPageData?.main_page_items?.[0]?.title || "Комфортная мебель"}
-                    width={600}
-                    height={400}
-                    priority
-                    className={styles.base_image}
-                    unoptimized={true}
-                  />
-                  {mainPageData?.main_page_items?.[0]?.photo_interior && (
-                    <Image
-                      src={`https://aldalinde.ru${mainPageData.main_page_items[0].photo_interior}`}
-                      alt={mainPageData?.main_page_items?.[0]?.title || "Комфортная мебель"}
-                      width={600}
-                      height={400}
-                      className={styles.hover_image}
-                      unoptimized={true}
-                    />
-                  )}
+                  {mainPageData?.main_page_items?.[0]?.photo ? (
+                    <>
+                      <Image
+                        src={`https://aldalinde.ru${mainPageData.main_page_items[0].photo}`}
+                        alt={mainPageData?.main_page_items?.[0]?.title || "Комфортная мебель"}
+                        width={600}
+                        height={400}
+                        priority
+                        className={styles.base_image}
+                        unoptimized={true}
+                      />
+                      {mainPageData?.main_page_items?.[0]?.photo_interior && (
+                        <Image
+                          src={`https://aldalinde.ru${mainPageData.main_page_items[0].photo_interior}`}
+                          alt={mainPageData?.main_page_items?.[0]?.title || "Комфортная мебель"}
+                          width={600}
+                          height={400}
+                          className={styles.hover_image}
+                          unoptimized={true}
+                        />
+                      )}
+                    </>
+                  ) : (isLoading || !mainPageData) ? (
+                    <div className={`${styles.skeleton} ${styles.skeleton_image}`}></div>
+                  ) : null}
                 </div>
               </div>
               <div className={styles.section__content}>
@@ -119,24 +127,30 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
               <div className={styles.section__row}>
                 <div className={styles.section__image}>
                   <div className={styles.image_container}>
-                    <Image
-                      src={mainPageData?.main_page_items?.[1]?.photo ? `https://aldalinde.ru${mainPageData.main_page_items[1].photo}` : "/pic_2.png"}
-                      alt={mainPageData?.main_page_items?.[1]?.title || "Комфортная мебель"}
-                      width={600}
-                      height={400}
-                      className={styles.base_image}
-                      unoptimized={true}
-                    />
-                    {mainPageData?.main_page_items?.[1]?.photo_interior && (
-                      <Image
-                        src={`https://aldalinde.ru${mainPageData.main_page_items[1].photo_interior}`}
-                        alt={mainPageData?.main_page_items?.[1]?.title || "Комфортная мебель"}
-                        width={600}
-                        height={400}
-                        className={styles.hover_image}
-                        unoptimized={true}
-                      />
-                    )}
+                    {mainPageData?.main_page_items?.[1]?.photo ? (
+                      <>
+                        <Image
+                          src={`https://aldalinde.ru${mainPageData.main_page_items[1].photo}`}
+                          alt={mainPageData?.main_page_items?.[1]?.title || "Комфортная мебель"}
+                          width={600}
+                          height={400}
+                          className={styles.base_image}
+                          unoptimized={true}
+                        />
+                        {mainPageData?.main_page_items?.[1]?.photo_interior && (
+                          <Image
+                            src={`https://aldalinde.ru${mainPageData.main_page_items[1].photo_interior}`}
+                            alt={mainPageData?.main_page_items?.[1]?.title || "Комфортная мебель"}
+                            width={600}
+                            height={400}
+                            className={styles.hover_image}
+                            unoptimized={true}
+                          />
+                        )}
+                      </>
+                    ) : (isLoading || !mainPageData) ? (
+                      <div className={`${styles.skeleton} ${styles.skeleton_image}`}></div>
+                    ) : null}
                   </div>
                   <h2 className={styles.section__title}>
                     {mainPageData?.main_page_items?.[1]?.title || "Максимум комфорта в минимуме"}
@@ -153,24 +167,30 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
               <div className={styles.section__row}>
                 <div className={styles.section__image}>
                   <div className={styles.image_container}>
-                    <Image
-                      src={mainPageData?.main_page_items?.[2]?.photo ? `https://aldalinde.ru${mainPageData.main_page_items[2].photo}` : "/pic_2.png"}
-                      alt={mainPageData?.main_page_items?.[2]?.title || "Комфортная мебель"}
-                      width={600}
-                      height={400}
-                      className={styles.base_image}
-                      unoptimized={true}
-                    />
-                    {mainPageData?.main_page_items?.[2]?.photo_interior && (
-                      <Image
-                        src={`https://aldalinde.ru${mainPageData.main_page_items[2].photo_interior}`}
-                        alt={mainPageData?.main_page_items?.[2]?.title || "Комфортная мебель"}
-                        width={600}
-                        height={400}
-                        className={styles.hover_image}
-                        unoptimized={true}
-                      />
-                    )}
+                    {mainPageData?.main_page_items?.[2]?.photo ? (
+                      <>
+                        <Image
+                          src={`https://aldalinde.ru${mainPageData.main_page_items[2].photo}`}
+                          alt={mainPageData?.main_page_items?.[2]?.title || "Комфортная мебель"}
+                          width={600}
+                          height={400}
+                          className={styles.base_image}
+                          unoptimized={true}
+                        />
+                        {mainPageData?.main_page_items?.[2]?.photo_interior && (
+                          <Image
+                            src={`https://aldalinde.ru${mainPageData.main_page_items[2].photo_interior}`}
+                            alt={mainPageData?.main_page_items?.[2]?.title || "Комфортная мебель"}
+                            width={600}
+                            height={400}
+                            className={styles.hover_image}
+                            unoptimized={true}
+                          />
+                        )}
+                      </>
+                    ) : (isLoading || !mainPageData) ? (
+                      <div className={`${styles.skeleton} ${styles.skeleton_image}`}></div>
+                    ) : null}
                   </div>
                   <h2 className={styles.section__title}>
                     {mainPageData?.main_page_items?.[2]?.title || "Максимум комфорта в минимуме"}
@@ -192,24 +212,30 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
             <div className={styles.section__container}>
               <div className={styles.section__image}>
                 <div className={styles.image_container}>
-                  <Image
-                    src={mainPageData?.main_page_items?.[3]?.photo ? `https://aldalinde.ru${mainPageData.main_page_items[3].photo}` : "/pic_1.png"}
-                    alt={mainPageData?.main_page_items?.[3]?.title || "Комфортная мебель"}
-                    width={600}
-                    height={400}
-                    priority
-                    className={styles.base_image}
-                    unoptimized={true}
-                  />
-                  {mainPageData?.main_page_items?.[3]?.photo_interior && (
-                    <Image
-                      src={`https://aldalinde.ru${mainPageData.main_page_items[3].photo_interior}`}
-                      alt={mainPageData?.main_page_items?.[3]?.title || "Комфортная мебель"}
-                      width={600}
-                      height={400}
-                      className={styles.hover_image}
-                      unoptimized={true}
-                    />
+                  {mainPageData?.main_page_items?.[3]?.photo ? (
+                    <>
+                      <Image
+                        src={`https://aldalinde.ru${mainPageData.main_page_items[3].photo}`}
+                        alt={mainPageData?.main_page_items?.[3]?.title || "Комфортная мебель"}
+                        width={600}
+                        height={400}
+                        priority
+                        className={styles.base_image}
+                        unoptimized={true}
+                      />
+                      {mainPageData?.main_page_items?.[3]?.photo_interior && (
+                        <Image
+                          src={`https://aldalinde.ru${mainPageData.main_page_items[3].photo_interior}`}
+                          alt={mainPageData?.main_page_items?.[3]?.title || "Комфортная мебель"}
+                          width={600}
+                          height={400}
+                          className={styles.hover_image}
+                          unoptimized={true}
+                        />
+                      )}
+                    </>
+                  ) : (isLoading || !mainPageData) && (
+                    <div className={`${styles.skeleton} ${styles.skeleton_image}`}></div>
                   )}
                 </div>
               </div>
@@ -255,29 +281,37 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
                   </div>
                 </div>
               </div>
-              <div className={styles.about__image}>
-                <Image
-                  src={mainPageData?.about_us_image1 || "/about_1.png"}
-                  alt="О нашей компании"
-                  width={715}
-                  height={323}
-                  priority
-                  unoptimized={true}
-                />
-              </div>
+              {mainPageData?.about_us_image1 ? (
+                <div className={styles.about__image}>
+                  <Image
+                    src={mainPageData.about_us_image1}
+                    alt="О нашей компании"
+                    width={715}
+                    height={323}
+                    priority
+                    unoptimized={true}
+                  />
+                </div>
+              ) : (isLoading || !mainPageData) ? (
+                <div className={`${styles.skeleton} ${styles.skeleton_about}`}></div>
+              ) : null}
             </div>
 
             {/* Второй ряд */}
             <div className={styles.about__row}>
-              <div className={styles.about__image}>
-                <Image
-                  src={mainPageData?.about_us_image2 || "/about_2.png"}
-                  alt="Наше производство"
-                  width={544}
-                  height={317}
-                  unoptimized={true}
-                />
-              </div>
+              {mainPageData?.about_us_image2 ? (
+                <div className={styles.about__image}>
+                  <Image
+                    src={mainPageData.about_us_image2}
+                    alt="Наше производство"
+                    width={544}
+                    height={317}
+                    unoptimized={true}
+                  />
+                </div>
+              ) : (isLoading || !mainPageData) ? (
+                <div className={`${styles.skeleton} ${styles.skeleton_about}`}></div>
+              ) : null}
               <div className={styles.about__content}>
                 <p className={styles.about__text}>
                   {mainPageData?.about_us_description2 || 'Мы сотрудничаем с проверенными фабриками, которые гарантируют высокое качество материалов и мастерство исполнения. Благодаря этому сотрудничеству, мы можем предложить нашим клиентам широкий ассортимент продукции, соответствующую мировым стандартам.'}
@@ -346,7 +380,7 @@ function HomeContent({ showEmailModal, setShowEmailModal, showResetModal, setSho
             </p>
           </div>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
@@ -374,7 +408,7 @@ export default function Home() {
   }, []);
 
   return (
-    <Suspense fallback={<div className={styles.loadingBar}><div className={styles.loadingBarProgress}></div></div>}>
+    <Suspense fallback={null}>
       <HomeContent 
         showEmailModal={showEmailModal}
         setShowEmailModal={setShowEmailModal}

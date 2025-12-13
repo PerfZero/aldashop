@@ -90,9 +90,12 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
 
   const handleReset = () => {
     setTempFilters({});
-    setInStockDelivery(false);
     
     const resetFilters = {};
+    
+    if (inStockDelivery) {
+      resetFilters.in_stock = true;
+    }
     
     if (onApply) {
       onApply(resetFilters);

@@ -108,6 +108,12 @@ export default function AccountPage() {
 
   const steps = ['Принят', 'Оплачен', 'Собран', 'Отправлен', 'Получен'];
 
+  const formatPrice = (price) => {
+    if (!price) return '0';
+    const numPrice = typeof price === 'string' ? parseFloat(price.replace(/\s/g, '')) : price;
+    return numPrice.toLocaleString('ru-RU').replace(/,/g, ' ');
+  };
+
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab');
     if (tabFromUrl && ['account', 'favorites', 'orders'].includes(tabFromUrl)) {
@@ -450,10 +456,13 @@ export default function AccountPage() {
                     <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
 
                     {!isCompleted && (
-                      <div className={styles.order__payment_status}><span>Оплачено:</span> <span className={styles.order__paid}>{paidFor} руб.</span><span className={styles.order__total}> / {totalAmount} руб.</span></div>
+                      <div className={styles.order__payment_status}><span>Оплачено:</span> <span className={styles.order__paid}>{formatPrice(paidFor)} руб.</span><span className={styles.order__total}> / {formatPrice(totalAmount)} руб.</span></div>
                     )}
 
-                    <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
+                    <div className={styles.order__total_cost}>
+                      Сумма заказа:
+                       <span>{formatPrice(totalAmount)} руб.</span>
+                    </div>
                     <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                     
                     {message && (
@@ -479,7 +488,7 @@ export default function AccountPage() {
                 <div className={styles.orders__expanded_order_wrapper}>
                   <div className={styles.orders__expanded_order_title}>
                     <div className={styles.orders__expanded_order_number}>Заказ {orderNumber}</div>
-                    <div className={styles.orders__expanded_order_total}>{totalAmount} ₽</div>
+                    <div className={styles.orders__expanded_order_total}>{formatPrice(totalAmount)} ₽</div>
                   </div>
                   
                   <div className={styles.orders__items_list}>
@@ -603,7 +612,7 @@ export default function AccountPage() {
                         <div className={styles.order__delivery}>
                           <div className={styles.order__delivery_text}>Ожидаемое получение</div>
                           <div className={styles.order__delivery_date}>{order.status_with_date || 'Статус обновляется'}</div>
-                          <div className={styles.order__delivery_days}>15 дней</div>
+                          {/* <div className={styles.order__delivery_days}>15 дней</div> */}
                         </div>
                       )}
                     </div>
@@ -631,7 +640,10 @@ export default function AccountPage() {
                           <div className={styles.order__collected}>Получен {deliveryDate}</div>
                           <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
                           <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
-                          <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
+                          <div className={styles.order__total_cost}>
+                            Сумма заказа: 
+                            <span>{formatPrice(totalAmount)} руб.</span>
+                          </div>
                           <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                         </>
                       ) : (
@@ -641,8 +653,11 @@ export default function AccountPage() {
 
                           <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
                           <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
-                          <div className={styles.order__payment_status}>Оплачено: <span>{paidFor} руб.</span><span> / {totalAmount} руб.</span></div>
-                          <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
+                          <div className={styles.order__payment_status}>Оплачено: <span>{formatPrice(paidFor)} руб.</span><span> / {formatPrice(totalAmount)} руб.</span></div>
+                          <div className={styles.order__total_cost}>
+                            Сумма заказа:
+                             <span>{formatPrice(totalAmount)} руб.</span>
+                          </div>
                           <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                           {order.can_pay === true && (
                             <div className={styles.order__pay_action}>
@@ -721,7 +736,10 @@ export default function AccountPage() {
                           <div className={styles.order__collected}>Получен {deliveryDate}</div>
                           <div className={styles.order__delivery_method}><span>Способ доставки:</span> {deliveryType}</div>
                           <div className={styles.order__delivery_address}><span>Адрес {deliveryType === 'Самовывоз' ? 'самовывоза' : 'доставки'}:</span> {address}</div>
-                          <div className={styles.order__total_cost}>Стоимость товара: <span>{totalAmount} руб.</span></div>
+                          <div className={styles.order__total_cost}>
+                            Сумма заказа:
+                             <span>{formatPrice(totalAmount)} руб.</span>
+                          </div>
                           <div className={styles.order__quantity}>Количество: <span>{productCount} шт.</span></div>
                         </div>
                       </div>
@@ -763,7 +781,7 @@ export default function AccountPage() {
   };
 
   return (
-    <main className={styles.account}>
+    <div className={styles.account}>
       <div className={styles.account__container}>
         <div className={styles.account__menu}>
           {menuItems.map(item => (
@@ -799,7 +817,7 @@ export default function AccountPage() {
         }}
         isSuccess={paymentStatus}
       />
-    </main>
+    </div>
   );
 }
 
@@ -833,9 +851,11 @@ const ProfileView = ({ profileData, onEdit, onLogout, onChangePassword }) => {
       </div>
       
       <div className={styles.account__actions}>
-        <button className={styles.account__button} onClick={onEdit}>
-          Редактировать данные
-        </button>
+        {can_edit && (
+          <button className={styles.account__button} onClick={onEdit}>
+            Редактировать данные
+          </button>
+        )}
         <button className={styles.account__button} onClick={onChangePassword}>
           Обновить пароль
         </button>

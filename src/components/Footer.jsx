@@ -158,7 +158,11 @@ const Footer = () => {
           <h3>Контакты</h3>
           <div className={styles.contactInfo}>
             <div>
-              <p>{footerInfo?.phone || '9 87353 3435'}</p>
+              <p>
+                <a href={`tel:${(footerInfo?.phone || '9 87353 3435').replace(/\s/g, '')}`}>
+                  {footerInfo?.phone || '9 87353 3435'}
+                </a>
+              </p>
               <div className={styles.messengerIcons}>
                 {footerInfo?.whatsapp_link && (
                   <a href={footerInfo.whatsapp_link} target="_blank" rel="noopener noreferrer">

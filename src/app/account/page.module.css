@@ -397,6 +397,12 @@ line-height: 150%;
 color: #323433;
 }
 
+.order__total_cost {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
 .order__total_cost span{
   font-weight: 400;
 }
@@ -601,6 +607,10 @@ margin-bottom: 30px;
 @media (max-width: 768px) {
   .account__container {
     flex-direction: column;
+  }
+
+  .account__form{
+    height: auto;
   }
 
   .account__actions{

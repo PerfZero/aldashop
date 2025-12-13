@@ -139,13 +139,13 @@ export default async function ProductPage({ params }) {
   breadcrumbs.push({ text: product.title, href: `/product/${id}` });
 
   return (
-    <main className={styles.page}>
+    <div className={styles.page}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
       <Breadcrumbs items={breadcrumbs} />
       <ProductClient initialProduct={product} productId={id} />
-    </main>
+    </div>
   );
 }

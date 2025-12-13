@@ -8,8 +8,13 @@
 body{
   background-color: #fff;
   font-family: "Montserrat", sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
 
 }
+
+
 
 *,
 *::before,

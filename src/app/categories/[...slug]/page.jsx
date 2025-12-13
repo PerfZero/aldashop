@@ -284,10 +284,14 @@ function CategoryPageContent() {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
       
-      const isReset = Object.keys(newFilters).length === 0;
+      const isReset = Object.keys(newFilters).length === 0 || (Object.keys(newFilters).length === 1 && newFilters.in_stock === true);
       
       if (isReset) {
-        url.searchParams.delete('in_stock');
+        if (newFilters.in_stock === true) {
+          url.searchParams.set('in_stock', 'true');
+        } else {
+          url.searchParams.delete('in_stock');
+        }
         url.searchParams.delete('bestseller');
         url.searchParams.delete('price_min');
         url.searchParams.delete('price_max');
@@ -301,9 +305,15 @@ function CategoryPageContent() {
         url.searchParams.delete('depth_max');
         url.searchParams.delete('sort');
         
+        const paramsToKeep = [];
+        if (newFilters.in_stock === true) {
+          paramsToKeep.push('in_stock');
+        }
         const paramsToDelete = [];
         for (const [key] of url.searchParams.entries()) {
-          paramsToDelete.push(key);
+          if (!paramsToKeep.includes(key)) {
+            paramsToDelete.push(key);
+          }
         }
         paramsToDelete.forEach(key => url.searchParams.delete(key));
         

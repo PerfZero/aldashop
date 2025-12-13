@@ -356,9 +356,9 @@ color: #323433;
     border-radius: 24px;
     padding: 0 12px;
     height: 44px;
-    flex-direction: row-reverse;
     background: #fff;
     margin-top: 8px;
+    gap: 8px;
 }
 
 .mobileSearch__icon {
@@ -382,8 +382,29 @@ color: #323433;
     font-size: 28px;
     color: #b0a89f;
     cursor: pointer;
-    margin-left: 4px;
     line-height: 1;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mobileSearch__submit {
+    background: #c1a286;
+    border: none;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 20px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    font-family: "Montserrat", sans-serif;
+}
+
+.mobileSearch__submit:hover {
+    background: #a07c5b;
 }
 
 .mobileSearch__resultsList {
