@@ -515,7 +515,7 @@ export default function ProductClient({ initialProduct, productId }) {
           <div className={styles.product__details}>
             {product.production_time && (
               <div className={styles.product__detail}>
-                <span className={styles.product__detail_label}>Сроки изготовления :</span>
+                <span className={styles.product__detail_label}>Сроки изготовления:</span>
                 <span className={styles.product__detail_value}>{product.production_time} </span>
               </div>
             )}
