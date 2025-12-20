@@ -516,7 +516,7 @@ export default function ProductClient({ initialProduct, productId }) {
             {product.production_time && (
               <div className={styles.product__detail}>
                 <span className={styles.product__detail_label}>Сроки изготовления :</span>
-                <span className={styles.product__detail_value}>{product.production_time} дней</span>
+                <span className={styles.product__detail_value}>{product.production_time} </span>
               </div>
             )}
             {product.country && (
