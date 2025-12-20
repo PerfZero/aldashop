@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import FiltersSkeleton from './FiltersSkeleton';
@@ -29,12 +29,33 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
     return { categories: true };
   });
 
-  const filteredFilters = filters.filter(filter => filter.slug !== 'sort' && filter.slug !== 'in_stock');
+  const filteredFilters = useMemo(() => {
+    return filters.filter(filter => filter.slug !== 'sort' && filter.slug !== 'in_stock');
+  }, [filters]);
+
+  const filterKeys = useMemo(() => {
+    return filteredFilters.map(f => f.slug).sort().join(',');
+  }, [filteredFilters]);
 
   useEffect(() => {
     setInStockDelivery(appliedFilters.in_stock === true);
     setTempFilters(appliedFilters);
   }, [appliedFilters]);
+
+  useEffect(() => {
+    const newExpandedFilters = {};
+    filteredFilters.forEach(filter => {
+      newExpandedFilters[filter.slug] = true;
+    });
+    setExpandedFilters(prev => {
+      const prevKeys = Object.keys(prev).sort().join(',');
+      const newKeys = Object.keys(newExpandedFilters).sort().join(',');
+      if (prevKeys === newKeys) {
+        return prev;
+      }
+      return newExpandedFilters;
+    });
+  }, [filterKeys, filteredFilters]);
 
   useEffect(() => {
     if (isCategoriesPage && categories.length > 0) {
@@ -48,30 +69,6 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
       }
     }
   }, [isCategoriesPage, categories, searchParams]);
-
-  useEffect(() => {
-    const saved = sessionStorage.getItem('expandedFilters');
-    if (saved) {
-      try {
-        setExpandedFilters(JSON.parse(saved));
-      } catch (e) {
-        console.error('Error parsing expandedFilters:', e);
-      }
-    }
-  }, []);
-
-  const toggleFilter = (filterSlug) => {
-    setExpandedFilters(prev => {
-      const newState = {
-        ...prev,
-        [filterSlug]: !prev[filterSlug]
-      };
-      
-      sessionStorage.setItem('expandedFilters', JSON.stringify(newState));
-      
-      return newState;
-    });
-  };
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => {
@@ -314,9 +311,9 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
 
         {filteredFilters.map((filter, index) => (
           <div key={index} className={styles.filter}>
-            <div className={styles.filter__header} onClick={() => toggleFilter(filter.slug)}>
+            <div className={styles.filter__header}>
               <svg 
-                className={`${styles.filter__arrow} ${expandedFilters[filter.slug] ? styles.filter__arrow_expanded : ''}`}
+                className={`${styles.filter__arrow} ${styles.filter__arrow_expanded}`}
                 width="16" 
                 height="10" 
                 viewBox="0 0 16 10" 
@@ -328,8 +325,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
               <h3 className={styles.filter__title}>{filter.title}</h3>
           </div>
             
-            {expandedFilters[filter.slug] && (
-              <>
+            <>
                 {filter.type === 'select' && filter.options && filter.slug !== 'colors' && filter.slug !== 'in_stock' && filter.slug !== 'designer' && (
                   <div className={styles.filter__options}>
                     {filter.options.map((option, optionIndex) => (
@@ -629,8 +625,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                     ))}
                   </div>
                 )}
-              </>
-            )}
+            </>
           </div>
         ))}
 
