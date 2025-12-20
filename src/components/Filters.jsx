@@ -311,9 +311,14 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
 
         {filteredFilters.map((filter, index) => (
           <div key={index} className={styles.filter}>
-            <div className={styles.filter__header}>
+            <div className={styles.filter__header} onClick={() => {
+              setExpandedFilters(prev => ({
+                ...prev,
+                [filter.slug]: !prev[filter.slug]
+              }));
+            }}>
               <svg 
-                className={`${styles.filter__arrow} ${styles.filter__arrow_expanded}`}
+                className={`${styles.filter__arrow} ${expandedFilters[filter.slug] ? styles.filter__arrow_expanded : ''}`}
                 width="16" 
                 height="10" 
                 viewBox="0 0 16 10" 
@@ -325,6 +330,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
               <h3 className={styles.filter__title}>{filter.title}</h3>
           </div>
             
+            {expandedFilters[filter.slug] && (
             <>
                 {filter.type === 'select' && filter.options && filter.slug !== 'colors' && filter.slug !== 'in_stock' && filter.slug !== 'designer' && (
                   <div className={styles.filter__options}>
@@ -626,6 +632,7 @@ export default function Filters({ isVisible, onClose, filters = [], loading = fa
                   </div>
                 )}
             </>
+            )}
           </div>
         ))}
 
