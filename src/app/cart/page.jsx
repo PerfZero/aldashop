@@ -74,6 +74,7 @@ export default function CartPage() {
   const [pickupAddresses, setPickupAddresses] = useState([]);
   const [validationErrors, setValidationErrors] = useState({});
   const [canEditProfile, setCanEditProfile] = useState(true);
+  const [allowedRegionNames, setAllowedRegionNames] = useState([]);
 
   useEffect(() => {
     const fetchDocuments = async () => {
@@ -216,6 +217,10 @@ export default function CartPage() {
             const data = await response.json();
             setAutocompleteData(data);
             setCanEditProfile(data.can_edit_profile !== false);
+            
+            if (data.allowed_region_names && Array.isArray(data.allowed_region_names)) {
+              setAllowedRegionNames(data.allowed_region_names);
+            }
             
             if (data.pickup_addresses && data.pickup_addresses.length > 0) {
               const pickupAddressesList = data.pickup_addresses.map(address => address.full_address);
@@ -1245,6 +1250,7 @@ export default function CartPage() {
                           height="400px"
                           selectedCoordinates={formData.coordinates}
                           selectedAddress={formData.fullAddress}
+                          allowedRegionNames={allowedRegionNames}
                         />
                       </div>
                     )}

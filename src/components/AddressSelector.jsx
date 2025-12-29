@@ -199,6 +199,16 @@ const AddressSelector = ({
             });
 
             if (country === 'Россия') {
+              if (!street || !street.trim()) {
+                alert('Пожалуйста, введите адрес с указанием улицы.');
+                return;
+              }
+
+              if (!house || !house.trim()) {
+                alert('Пожалуйста, введите адрес с указанием номера дома.');
+                return;
+              }
+
               const locationData = {
                 address: fullAddress,
                 fullAddress: fullAddress,
@@ -229,6 +239,16 @@ const AddressSelector = ({
 
   // Обработка выбора предложения
   const handleSuggestionSelect = (suggestion) => {
+    if (!suggestion.street || !suggestion.street.trim()) {
+      alert('Пожалуйста, выберите адрес с указанием улицы.');
+      return;
+    }
+
+    if (!suggestion.house || !suggestion.house.trim()) {
+      alert('Пожалуйста, выберите адрес с указанием номера дома.');
+      return;
+    }
+
     setAddress(suggestion.address);
     setSelectedLocation(suggestion);
     setShowSuggestions(false);
@@ -244,6 +264,16 @@ const AddressSelector = ({
 
   // Обработка выбора локации на карте
   const handleMapLocationSelect = (locationData) => {
+    if (!locationData.street || !locationData.street.trim()) {
+      alert('Пожалуйста, выберите адрес с указанием улицы.');
+      return;
+    }
+
+    if (!locationData.house || !locationData.house.trim()) {
+      alert('Пожалуйста, выберите адрес с указанием номера дома.');
+      return;
+    }
+
     setAddress(locationData.address || locationData.fullAddress);
     setSelectedLocation(locationData);
     setShowMapModal(false);

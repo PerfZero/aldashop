@@ -119,7 +119,11 @@ export default function ProductClient({ initialProduct, productId }) {
           data.photos = data.photos.map(photo => ({
             ...photo,
             photo: photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`
-          }));
+          })).sort((a, b) => {
+            if (a.main_photo && !b.main_photo) return -1;
+            if (!a.main_photo && b.main_photo) return 1;
+            return 0;
+          });
         }
         
         if (data.available_sizes && Array.isArray(data.available_sizes)) {
@@ -173,7 +177,11 @@ export default function ProductClient({ initialProduct, productId }) {
           data.photos = data.photos.map(photo => ({
             ...photo,
             photo: photo.photo.startsWith('http') ? photo.photo : `https://aldalinde.ru${photo.photo}`
-          }));
+          })).sort((a, b) => {
+            if (a.main_photo && !b.main_photo) return -1;
+            if (!a.main_photo && b.main_photo) return 1;
+            return 0;
+          });
         }
         
         if (data.available_sizes && Array.isArray(data.available_sizes)) {
@@ -299,6 +307,17 @@ export default function ProductClient({ initialProduct, productId }) {
 
   if (!product) return null;
 
+  const sortPhotos = (photos) => {
+    if (!photos || !Array.isArray(photos)) return [];
+    return [...photos].sort((a, b) => {
+      if (a.main_photo && !b.main_photo) return -1;
+      if (!a.main_photo && b.main_photo) return 1;
+      return 0;
+    });
+  };
+
+  const displayPhotos = product.photos ? sortPhotos(product.photos.filter(photo => photo.photo_sizes !== true)) : [];
+
   const hasDiscount = product.discounted_price && product.discounted_price !== null;
   const originalPrice = product.price?.toLocaleString('ru-RU');
   const discountedPrice = product.discounted_price?.toLocaleString('ru-RU');
@@ -375,7 +394,7 @@ export default function ProductClient({ initialProduct, productId }) {
                 modules={[FreeMode, Thumbs]}
                 className={styles.product__thumbs_swiper}
               >
-                {product.photos.filter(photo => photo.photo_sizes !== true).map((photo, index) => (
+                {displayPhotos.map((photo, index) => (
                   <SwiperSlide key={index}>
                     <div className={styles.product__thumbnail}>
                       <Image src={photo.photo} alt={`${product.title} - фото ${index + 1}`} width={80} height={80} unoptimized={true} />
@@ -396,7 +415,7 @@ export default function ProductClient({ initialProduct, productId }) {
                 modules={[Navigation, Thumbs]}
                 className={styles.product__main_swiper}
               >
-                {product.photos.filter(photo => photo.photo_sizes !== true).map((photo, index) => (
+                {displayPhotos.map((photo, index) => (
                   <SwiperSlide key={index}>
                     <div className={styles.product__main_image}>
                       <Image src={photo.photo} alt={`${product.title} - фото ${index + 1}`} width={600} height={600} unoptimized={true} priority />

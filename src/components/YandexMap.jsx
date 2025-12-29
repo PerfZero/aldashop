@@ -7,7 +7,8 @@ const YandexMap = ({
   height = '400px',
   onLocationSelect,
   selectedCoordinates,
-  selectedAddress
+  selectedAddress,
+  allowedRegionNames = []
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [mapReady, setMapReady] = useState(false);
@@ -83,35 +84,38 @@ const YandexMap = ({
     setTimeout(removeAllSearchControls, 600);
     setTimeout(removeAllSearchControls, 1000);
 
-    const allowedRegionCodes = ['RU-MOW', 'RU-MOS', 'RU-SAM'];
-    
-    window.ymaps.borders.load('RU', {
-      lang: 'ru_RU'
-    }).then((result) => {
-      const regions = result.features.filter(feature => {
-        const isoCode = feature.properties?.iso3166;
-        return isoCode && allowedRegionCodes.includes(isoCode);
-      });
-      
-      if (regions.length > 0 && mapRef.current) {
-        const geoObjects = new window.ymaps.GeoObjectCollection();
-        
-        regions.forEach(region => {
-          geoObjects.add(region);
+    if (allowedRegionNames && allowedRegionNames.length > 0) {
+      window.ymaps.borders.load('RU', {
+        lang: 'ru_RU'
+      }).then((result) => {
+        const regions = result.features.filter(feature => {
+          const regionName = feature.properties?.name;
+          return regionName && allowedRegionNames.includes(regionName);
         });
         
-        const bounds = geoObjects.getBounds();
-        if (bounds) {
-          mapRef.current.options.set('restrictMapArea', [
-            [bounds[0][0], bounds[0][1]],
-            [bounds[1][0], bounds[1][1]]
-          ]);
+        if (regions.length > 0 && mapRef.current) {
+          try {
+            const geoQuery = window.ymaps.geoQuery({
+              type: 'FeatureCollection',
+              features: regions
+            });
+            
+            const bounds = geoQuery.getBounds();
+            if (bounds) {
+              mapRef.current.options.set('restrictMapArea', [
+                [bounds[0][0], bounds[0][1]],
+                [bounds[1][0], bounds[1][1]]
+              ]);
+            }
+          } catch (error) {
+            console.error('Ошибка при обработке границ регионов:', error);
+          }
         }
-      }
-    }).catch(error => {
-      console.error('Ошибка загрузки границ регионов:', error);
-    });
-  }, [mapReady]);
+      }).catch(error => {
+        console.error('Ошибка загрузки границ регионов:', error);
+      });
+    }
+  }, [mapReady, allowedRegionNames]);
 
 
   const handleMapClick = (event) => {
@@ -176,13 +180,32 @@ const YandexMap = ({
             return;
           }
 
-          const allowedRegionNames = ['Московская область', 'Самарская область'];
-          const isAllowedRegion = allowedRegionNames.some(name => 
-            region.includes(name) || city.includes('Москва') || city.includes('Самара')
-          );
+          if (allowedRegionNames && allowedRegionNames.length > 0) {
+            const isAllowedRegion = allowedRegionNames.some(name => {
+              const normalizedName = name.toLowerCase();
+              const normalizedRegion = region.toLowerCase();
+              const normalizedCity = city.toLowerCase();
+              return normalizedRegion.includes(normalizedName) || 
+                     normalizedCity.includes(normalizedName) ||
+                     normalizedName.includes(normalizedRegion) ||
+                     normalizedName.includes(normalizedCity);
+            });
 
-          if (!isAllowedRegion) {
-            alert('Доставка возможна только по Москве, Московской области и Самарской области');
+            if (!isAllowedRegion) {
+              alert(`Доставка возможна только в следующие регионы: ${allowedRegionNames.join(', ')}`);
+              setSelectedLocation(null);
+              return;
+            }
+          }
+
+          if (!street || !street.trim()) {
+            alert('Пожалуйста, выберите адрес с указанием улицы. Необходимо выбрать точку на карте, где указана улица.');
+            setSelectedLocation(null);
+            return;
+          }
+
+          if (!house || !house.trim()) {
+            alert('Пожалуйста, выберите адрес с указанием номера дома. Необходимо выбрать точку на карте, где указан номер дома.');
             setSelectedLocation(null);
             return;
           }

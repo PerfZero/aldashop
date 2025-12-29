@@ -187,8 +187,12 @@ const Footer = () => {
         </div>
 
         <div className={styles.footerSection}>
-          <h3>Подпишитесь на нас</h3>
-          <p>Мы в социальных сетях</p>
+          {(footerInfo?.youtube_link || footerInfo?.instagram_link || footerInfo?.telegram_channel_link) && (
+            <>
+              <h3>Подпишитесь на нас</h3>
+              <p>Мы в социальных сетях</p>
+            </>
+          )}
           <div className={styles.socialLinks}>
             {footerInfo?.youtube_link && (
               <a href={footerInfo.youtube_link} target="_blank" rel="noopener noreferrer">
@@ -206,7 +210,7 @@ const Footer = () => {
               </a>
             )}
           </div>
-          <p>Платежные системы</p>
+          <h3>Платежные системы</h3>
           <div className={styles.paymentSystems}>
             <Image src="/mir.png" alt="МИР" width={40} height={24} style={{ width: 'auto', height: 'auto' }} />
           </div>
