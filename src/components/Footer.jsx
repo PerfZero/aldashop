@@ -5,11 +5,13 @@ import styles from './Footer.module.css';
 import Link from 'next/link';
 import Image from 'next/image';
 import LegalModal from './LegalModal';
+import { useCategories } from '../hooks/useCategories';
 
 const Footer = () => {
   const [footerInfo, setFooterInfo] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [modalData, setModalData] = useState({ isOpen: false, title: '', content: '', type: '', pdfUrl: null });
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchFooterInfo = async () => {
@@ -116,7 +118,7 @@ const Footer = () => {
     setModalData({ isOpen: false, title: '', content: '', type: '', pdfUrl: null });
   };
 
-  if (loading) {
+  if (loading || categoriesLoading) {
     return (
       <footer className={styles.footer}>
         <div className={styles.footerContent}>
@@ -137,12 +139,13 @@ const Footer = () => {
 
           </div>
           <nav className={styles.footerNav}>
-            <Link href="/trending">В тренде</Link>
-            <Link href="/sofas">Диваны</Link>
-            <Link href="/tables">Столы</Link>
-            <Link href="/chairs">Стулья</Link>
-            <Link href="/beds">Кровати</Link>
-            <Link href="/storage">Хранение</Link>
+           
+            {categories.map((category) => (
+              <Link key={category.id} href={`/categories/${category.slug}`}>
+                {category.title}
+              </Link>
+            ))}
+            <Link href="/categories">Все категории</Link>
           </nav>
         </div>
 
@@ -172,11 +175,6 @@ const Footer = () => {
                 {footerInfo?.telegram_link && (
                   <a href={footerInfo.telegram_link} target="_blank" rel="noopener noreferrer">
                     <Image src="/Images/footer/telegram.svg" alt="Telegram" width={24} height={24} />
-                  </a>
-                )}
-                {footerInfo?.viber_link && (
-                  <a href={footerInfo.viber_link} target="_blank" rel="noopener noreferrer">
-                    <Image src="/Images/footer/vk-messenger.svg" alt="Viber" width={24} height={24} />
                   </a>
                 )}
               </div>
