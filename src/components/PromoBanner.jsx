@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import styles from './PromoBanner.module.css';
+import { useState, useEffect } from "react";
+import styles from "./PromoBanner.module.css";
 
 export default function PromoBanner() {
   const [bannerData, setBannerData] = useState(null);
@@ -10,14 +10,16 @@ export default function PromoBanner() {
   useEffect(() => {
     const fetchBanner = async () => {
       try {
-        const response = await fetch('https://aldalinde.ru/api/products/get_banner/');
+        const response = await fetch(
+          "https://aldalinde.ru/api/products/get_banner/",
+        );
         const data = await response.json();
-        
+
         if (data.success && data.data) {
           setBannerData(data.data);
         }
       } catch (error) {
-        console.error('Ошибка загрузки баннера:', error);
+        console.error("Ошибка загрузки баннера:", error);
       }
     };
 
@@ -36,7 +38,7 @@ export default function PromoBanner() {
         const days = Math.floor(difference / (1000 * 60 * 60 * 24));
         const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
         const minutes = Math.floor((difference / 1000 / 60) % 60);
-        
+
         setTimeLeft({ days, hours, minutes });
       } else {
         setTimeLeft({ days: 0, hours: 0, minutes: 0 });
@@ -49,20 +51,26 @@ export default function PromoBanner() {
     return () => clearInterval(timer);
   }, [bannerData]);
 
+  const hasText = Boolean(bannerData?.text);
+  const hasTimer = Boolean(bannerData?.description);
+
+  if (!hasText && !hasTimer) {
+    return null;
+  }
+
   return (
     <div className={styles.promoBanner}>
       <div className={styles.promoBanner__container}>
-        {bannerData?.text && (
+        {hasText && (
           <span className={styles.promoBanner__text}>{bannerData.text}</span>
         )}
-        {bannerData?.description && (
+        {hasTimer && (
           <span className={styles.promoBanner__timer}>
-            {timeLeft.days}Д {String(timeLeft.hours).padStart(2, '0')}Ч {String(timeLeft.minutes).padStart(2, '0')}М
+            {timeLeft.days}Д {String(timeLeft.hours).padStart(2, "0")}Ч{" "}
+            {String(timeLeft.minutes).padStart(2, "0")}М
           </span>
         )}
       </div>
     </div>
   );
 }
-
-
