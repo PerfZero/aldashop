@@ -61,10 +61,14 @@ export const metadata = {
     index: true,
     follow: true,
   },
-  viewport: "width=device-width, initial-scale=1",
   verification: {
     yandex: "bb9d33b0513040a9",
   },
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 const montserrat = Montserrat({

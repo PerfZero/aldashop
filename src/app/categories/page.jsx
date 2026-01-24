@@ -1,32 +1,46 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from 'react';
-import { useParams, usePathname, useSearchParams } from 'next/navigation';
-import { useQueryParam, NumberParam, StringParam, withDefault } from 'use-query-params';
-import Image from 'next/image';
-import Skeleton from 'react-loading-skeleton';
-import 'react-loading-skeleton/dist/skeleton.css';
-import Breadcrumbs from '@/components/Breadcrumbs';
-import Filters from '@/components/Filters';
-import ProductCard from '@/components/ProductCard';
-import ProductSkeleton from '@/components/ProductSkeleton';
-import SortSelect from '@/components/SortSelect';
-import { useInfiniteProducts } from '@/hooks/useInfiniteProducts';
-import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
-import { useCategories } from '@/hooks/useCategories';
-import { useFilters } from '@/hooks/useFilters';
-import { useNoCategoryInfo } from '@/hooks/useNoCategoryInfo';
-import styles from './[...slug]/page.module.css';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  Suspense,
+  useRef,
+  useMemo,
+} from "react";
+import { useParams, usePathname, useSearchParams } from "next/navigation";
+import {
+  useQueryParam,
+  NumberParam,
+  StringParam,
+  withDefault,
+} from "use-query-params";
+import Image from "next/image";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import Filters from "@/components/Filters";
+import ProductCard from "@/components/ProductCard";
+import ProductSkeleton from "@/components/ProductSkeleton";
+import SortSelect from "@/components/SortSelect";
+import { useInfiniteProducts } from "@/hooks/useInfiniteProducts";
+import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { useCategories } from "@/hooks/useCategories";
+import { useFilters } from "@/hooks/useFilters";
+import { useNoCategoryInfo } from "@/hooks/useNoCategoryInfo";
+import styles from "./[...slug]/page.module.css";
 
 function CategoryPageContent() {
   const params = useParams();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const slugDep = Array.isArray(params?.slug) ? params.slug.join('/') : (params?.slug || '');
-  const [sortBy, setSortBy] = useState(3);
+  const slugDep = Array.isArray(params?.slug)
+    ? params.slug.join("/")
+    : params?.slug || "";
+  const [sortBy, setSortBy] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  
+
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
     setShowFilters(!isMobile);
@@ -38,16 +52,19 @@ function CategoryPageContent() {
   const [currentCategory, setCurrentCategory] = useState(null);
   const [currentSubcategory, setCurrentSubcategory] = useState(null);
 
-  const [sort, setSort] = useQueryParam('sort', NumberParam);
-  
+  const [sort, setSort] = useQueryParam("sort", NumberParam);
+
   const [dynamicFilters, setDynamicFilters] = useState({});
   const loadMoreRef = useRef(null);
   const scrollRestoredRef = useRef(false);
 
-  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
-  
-  const shouldFetchNoCategoryInfo = pathname === '/categories' && !categoryId && !subcategoryId;
-  const { data: noCategoryInfo, isLoading: noCategoryInfoLoading } = useNoCategoryInfo(shouldFetchNoCategoryInfo);
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useCategories();
+
+  const shouldFetchNoCategoryInfo =
+    pathname === "/categories" && !categoryId && !subcategoryId;
+  const { data: noCategoryInfo, isLoading: noCategoryInfoLoading } =
+    useNoCategoryInfo(shouldFetchNoCategoryInfo);
 
   useEffect(() => {
     setIsClient(true);
@@ -55,23 +72,35 @@ function CategoryPageContent() {
 
   useEffect(() => {
     if (isClient) {
-      sessionStorage.setItem('showFilters', showFilters.toString());
+      sessionStorage.setItem("showFilters", showFilters.toString());
     }
   }, [showFilters, isClient]);
 
   const parseDynamicFiltersFromUrl = useCallback(() => {
     try {
-      if (typeof window === 'undefined') return {};
-      
+      if (typeof window === "undefined") return {};
+
       const url = new URL(window.location.href);
       const dynamicFilters = {};
-    
+
       for (const [key, value] of url.searchParams.entries()) {
-        if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id'].includes(key)) {
-          if (key === 'flag_type') {
+        if (
+          ![
+            "price_min",
+            "price_max",
+            "in_stock",
+            "sort",
+            "material",
+            "colors",
+            "bestseller",
+            "category_id",
+            "subcategory_id",
+          ].includes(key)
+        ) {
+          if (key === "flag_type") {
             dynamicFilters[key] = value;
-          } else if (value && value.includes(',')) {
-            dynamicFilters[key] = value.split(',').map(v => {
+          } else if (value && value.includes(",")) {
+            dynamicFilters[key] = value.split(",").map((v) => {
               const num = parseInt(v);
               return isNaN(num) ? v : num;
             });
@@ -81,15 +110,15 @@ function CategoryPageContent() {
           }
         }
       }
-      
+
       return dynamicFilters;
     } catch (error) {
       return {};
     }
   }, []);
 
-  const searchParamsString = searchParams?.toString() || '';
-  
+  const searchParamsString = searchParams?.toString() || "";
+
   const urlDynamicFiltersMemo = useMemo(() => {
     return parseDynamicFiltersFromUrl();
   }, [searchParamsString, parseDynamicFiltersFromUrl]);
@@ -98,13 +127,14 @@ function CategoryPageContent() {
   const prevCategoryRef = useRef({ categoryId: null, subcategoryId: null });
 
   const categoryParams = useMemo(() => {
-    if (typeof window === 'undefined') return { categoryId: null, subcategoryId: null, flagType: null };
+    if (typeof window === "undefined")
+      return { categoryId: null, subcategoryId: null, flagType: null };
     try {
       const url = new URL(window.location.href);
       return {
-        categoryId: url.searchParams.get('category_id'),
-        subcategoryId: url.searchParams.get('subcategory_id'),
-        flagType: url.searchParams.get('flag_type')
+        categoryId: url.searchParams.get("category_id"),
+        subcategoryId: url.searchParams.get("subcategory_id"),
+        flagType: url.searchParams.get("flag_type"),
       };
     } catch {
       return { categoryId: null, subcategoryId: null, flagType: null };
@@ -113,32 +143,58 @@ function CategoryPageContent() {
 
   useEffect(() => {
     const urlDynamicFilters = urlDynamicFiltersMemo;
-    
+
     const filtersString = JSON.stringify(urlDynamicFilters);
     if (prevFiltersRef.current !== filtersString) {
       prevFiltersRef.current = filtersString;
       setDynamicFilters(urlDynamicFilters);
     }
-    
+
     if (categoryParams.categoryId) {
       const newCategoryId = parseInt(categoryParams.categoryId);
-      const newSubcategoryId = categoryParams.subcategoryId ? parseInt(categoryParams.subcategoryId) : null;
-      
-      if (prevCategoryRef.current.categoryId !== newCategoryId || prevCategoryRef.current.subcategoryId !== newSubcategoryId) {
-        prevCategoryRef.current = { categoryId: newCategoryId, subcategoryId: newSubcategoryId };
-        console.log('[categories/page] Смена категории из URL:', { categoryId: newCategoryId, subcategoryId: newSubcategoryId, pathname });
+      const newSubcategoryId = categoryParams.subcategoryId
+        ? parseInt(categoryParams.subcategoryId)
+        : null;
+
+      if (
+        prevCategoryRef.current.categoryId !== newCategoryId ||
+        prevCategoryRef.current.subcategoryId !== newSubcategoryId
+      ) {
+        prevCategoryRef.current = {
+          categoryId: newCategoryId,
+          subcategoryId: newSubcategoryId,
+        };
+        console.log("[categories/page] Смена категории из URL:", {
+          categoryId: newCategoryId,
+          subcategoryId: newSubcategoryId,
+          pathname,
+        });
         setCategoryId(newCategoryId);
         setSubcategoryId(newSubcategoryId);
-        
+
         if (categories.length > 0) {
-          const category = categories.find(c => c.id === newCategoryId);
+          const category = categories.find((c) => c.id === newCategoryId);
           if (category) {
-            setCurrentCategory({ id: category.id, slug: category.slug, title: category.title, description: category.description, photo_cover: category.photo_cover });
-            
+            setCurrentCategory({
+              id: category.id,
+              slug: category.slug,
+              title: category.title,
+              description: category.description,
+              photo_cover: category.photo_cover,
+            });
+
             if (newSubcategoryId) {
-              const subcategory = category.subcategories?.find(s => s.id === newSubcategoryId);
+              const subcategory = category.subcategories?.find(
+                (s) => s.id === newSubcategoryId,
+              );
               if (subcategory) {
-                setCurrentSubcategory({ id: subcategory.id, slug: subcategory.slug, title: subcategory.title, description: subcategory.description, photo_cover: subcategory.photo_cover });
+                setCurrentSubcategory({
+                  id: subcategory.id,
+                  slug: subcategory.slug,
+                  title: subcategory.title,
+                  description: subcategory.description,
+                  photo_cover: subcategory.photo_cover,
+                });
               } else {
                 setCurrentSubcategory(null);
               }
@@ -148,8 +204,12 @@ function CategoryPageContent() {
           }
         }
       }
-    } else if (pathname === '/categories') {
-      if (!categoryParams.flagType && (prevCategoryRef.current.categoryId !== null || prevCategoryRef.current.subcategoryId !== null)) {
+    } else if (pathname === "/categories") {
+      if (
+        !categoryParams.flagType &&
+        (prevCategoryRef.current.categoryId !== null ||
+          prevCategoryRef.current.subcategoryId !== null)
+      ) {
         prevCategoryRef.current = { categoryId: null, subcategoryId: null };
         setCategoryId(null);
         setSubcategoryId(null);
@@ -157,38 +217,56 @@ function CategoryPageContent() {
         setCurrentSubcategory(null);
       }
     }
-  }, [pathname, searchParamsString, categories, urlDynamicFiltersMemo, categoryParams]);
-  
+  }, [
+    pathname,
+    searchParamsString,
+    categories,
+    urlDynamicFiltersMemo,
+    categoryParams,
+  ]);
+
   useEffect(() => {
-    console.log('[categories/page] Изменение параметров:', { 
-      categoryId, 
-      subcategoryId, 
+    console.log("[categories/page] Изменение параметров:", {
+      categoryId,
+      subcategoryId,
       dynamicFilters,
-      mergedFilters: { ...appliedFilters, ...dynamicFilters }
+      mergedFilters: { ...appliedFilters, ...dynamicFilters },
     });
   }, [categoryId, subcategoryId, dynamicFilters, appliedFilters]);
-  
-  const { data: filters = [], isLoading: filtersLoading } = useFilters(categoryId, subcategoryId, dynamicFilters);
+
+  const { data: filters = [], isLoading: filtersLoading } = useFilters(
+    categoryId,
+    subcategoryId,
+    dynamicFilters,
+  );
 
   const mergedFilters = useMemo(() => {
-    const urlCategoryId = searchParams.get('category_id');
-    const urlSubcategoryId = searchParams.get('subcategory_id');
+    const urlCategoryId = searchParams.get("category_id");
+    const urlSubcategoryId = searchParams.get("subcategory_id");
     const filters = { ...appliedFilters, ...dynamicFilters };
-    
+
     if (urlCategoryId && !filters.category_id) {
       filters.category_id = parseInt(urlCategoryId);
     }
     if (urlSubcategoryId && !filters.subcategory_id) {
       filters.subcategory_id = parseInt(urlSubcategoryId);
     }
-    
+
     return filters;
   }, [appliedFilters, dynamicFilters, searchParams]);
 
   // Используем TanStack Query для загрузки товаров
-  
-  const effectiveCategoryId = categoryId || (searchParams.get('category_id') ? parseInt(searchParams.get('category_id')) : null);
-  const effectiveSubcategoryId = subcategoryId || (searchParams.get('subcategory_id') ? parseInt(searchParams.get('subcategory_id')) : null);
+
+  const effectiveCategoryId =
+    categoryId ||
+    (searchParams.get("category_id")
+      ? parseInt(searchParams.get("category_id"))
+      : null);
+  const effectiveSubcategoryId =
+    subcategoryId ||
+    (searchParams.get("subcategory_id")
+      ? parseInt(searchParams.get("subcategory_id"))
+      : null);
 
   const {
     data,
@@ -197,19 +275,24 @@ function CategoryPageContent() {
     isFetchingNextPage,
     isLoading: isProductsLoading,
     isError: isProductsError,
-    error: productsError
-  } = useInfiniteProducts(mergedFilters, effectiveCategoryId, effectiveSubcategoryId, sortBy);
-  
+    error: productsError,
+  } = useInfiniteProducts(
+    mergedFilters,
+    effectiveCategoryId,
+    effectiveSubcategoryId,
+    sortBy,
+  );
+
   // Объединяем все страницы товаров в один массив
   const products = useMemo(() => {
     if (!data?.pages) return [];
-    const allProducts = data.pages.flatMap(page => page.products);
+    const allProducts = data.pages.flatMap((page) => page.products);
     return allProducts;
   }, [data]);
-  
+
   const totalCount = data?.pages?.[0]?.totalCount || 0;
   const loading = categoriesLoading || filtersLoading || isProductsLoading;
-  
+
   // Intersection Observer для бесконечного скролла
   useIntersectionObserver({
     target: loadMoreRef,
@@ -219,99 +302,113 @@ function CategoryPageContent() {
       }
     },
     threshold: 0.1,
-    rootMargin: '100px',
-    enabled: hasNextPage && !isFetchingNextPage
+    rootMargin: "100px",
+    enabled: hasNextPage && !isFetchingNextPage,
   });
 
   useEffect(() => {
-    const savedPosition = sessionStorage.getItem('catalogScrollPosition');
-    if (savedPosition && !isProductsLoading && products.length > 0 && !scrollRestoredRef.current) {
+    const savedPosition = sessionStorage.getItem("catalogScrollPosition");
+    if (
+      savedPosition &&
+      !isProductsLoading &&
+      products.length > 0 &&
+      !scrollRestoredRef.current
+    ) {
       const scrollPosition = parseInt(savedPosition, 10);
       scrollRestoredRef.current = true;
-      
+
       const restoreScroll = () => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             window.scrollTo({
               top: scrollPosition,
-              behavior: 'instant'
+              behavior: "instant",
             });
-            sessionStorage.removeItem('catalogScrollPosition');
+            sessionStorage.removeItem("catalogScrollPosition");
           });
         });
       };
-      
+
       setTimeout(restoreScroll, 200);
     }
   }, [isProductsLoading, products.length]);
-  
-
-
-
-
 
   const updateUrlWithDynamicFilters = (filters, isReset = false) => {
     try {
-      if (typeof window === 'undefined') return;
-      
-      const url = new URL(window.location.href);
-    
-    // Удаляем все динамические параметры, кроме важных
-    Object.keys(url.searchParams).forEach(key => {
-      if (!['price_min', 'price_max', 'in_stock', 'sort', 'material', 'colors', 'bestseller', 'category_id', 'subcategory_id', 'flag_type'].includes(key)) {
-        url.searchParams.delete(key);
-      }
-    });
+      if (typeof window === "undefined") return;
 
-    // Если это не сброс, добавляем новые динамические фильтры
-    if (!isReset) {
-      Object.keys(filters).forEach(key => {
-        const value = filters[key];
-        if (Array.isArray(value) && value.length > 0) {
-          url.searchParams.set(key, value.join(','));
-        } else if (value !== undefined && value !== null && value !== '') {
-          url.searchParams.set(key, value.toString());
+      const url = new URL(window.location.href);
+
+      // Удаляем все динамические параметры, кроме важных
+      Object.keys(url.searchParams).forEach((key) => {
+        if (
+          ![
+            "price_min",
+            "price_max",
+            "in_stock",
+            "sort",
+            "material",
+            "colors",
+            "bestseller",
+            "category_id",
+            "subcategory_id",
+            "flag_type",
+          ].includes(key)
+        ) {
+          url.searchParams.delete(key);
         }
       });
-    }
 
-      window.history.replaceState({}, '', url.toString());
+      // Если это не сброс, добавляем новые динамические фильтры
+      if (!isReset) {
+        Object.keys(filters).forEach((key) => {
+          const value = filters[key];
+          if (Array.isArray(value) && value.length > 0) {
+            url.searchParams.set(key, value.join(","));
+          } else if (value !== undefined && value !== null && value !== "") {
+            url.searchParams.set(key, value.toString());
+          }
+        });
+      }
+
+      window.history.replaceState({}, "", url.toString());
     } catch (error) {
-      console.error('Error in updateUrlWithDynamicFilters:', error);
+      console.error("Error in updateUrlWithDynamicFilters:", error);
     }
   };
 
-
   const handleFiltersApply = (newFilters) => {
     setAppliedFilters(newFilters);
-    
-    if (typeof window !== 'undefined') {
+
+    if (typeof window !== "undefined") {
       const url = new URL(window.location.href);
-      
-      const isReset = Object.keys(newFilters).length === 0 || (Object.keys(newFilters).length === 1 && newFilters.in_stock === true);
-      
+
+      const isReset =
+        Object.keys(newFilters).length === 0 ||
+        (Object.keys(newFilters).length === 1 && newFilters.in_stock === true);
+
       if (isReset) {
         if (newFilters.in_stock === true) {
-          url.searchParams.set('in_stock', 'true');
+          url.searchParams.set("in_stock", "true");
         } else {
-          url.searchParams.delete('in_stock');
+          url.searchParams.delete("in_stock");
         }
-        url.searchParams.delete('bestseller');
-        url.searchParams.delete('price_min');
-        url.searchParams.delete('price_max');
-        url.searchParams.delete('colors');
-        url.searchParams.delete('material');
-        url.searchParams.delete('width_min');
-        url.searchParams.delete('width_max');
-        url.searchParams.delete('height_min');
-        url.searchParams.delete('height_max');
-        url.searchParams.delete('depth_min');
-        url.searchParams.delete('depth_max');
-        url.searchParams.delete('sort');
-        
-        const paramsToKeep = ['flag_type', 'category_id', 'subcategory_id'];
+        url.searchParams.delete("bestseller");
+        url.searchParams.delete("price_min");
+        url.searchParams.delete("price_max");
+        url.searchParams.delete("colors");
+        url.searchParams.delete("material");
+        url.searchParams.delete("width_min");
+        url.searchParams.delete("width_max");
+        url.searchParams.delete("height_min");
+        url.searchParams.delete("height_max");
+        url.searchParams.delete("depth_min");
+        url.searchParams.delete("depth_max");
+        url.searchParams.delete("sort");
+
+        const paramsToKeep = ["flag_type", "category_id", "subcategory_id"];
         if (newFilters.in_stock === true) {
-          paramsToKeep.push('in_stock');
+          paramsToKeep.push("in_stock");
         }
         const paramsToDelete = [];
         for (const [key] of url.searchParams.entries()) {
@@ -319,87 +416,131 @@ function CategoryPageContent() {
             paramsToDelete.push(key);
           }
         }
-        paramsToDelete.forEach(key => url.searchParams.delete(key));
-        
+        paramsToDelete.forEach((key) => url.searchParams.delete(key));
+
         setSortBy(null);
         setSort(undefined);
       } else {
         if (newFilters.in_stock === true) {
-          url.searchParams.set('in_stock', 'true');
+          url.searchParams.set("in_stock", "true");
         } else {
-          url.searchParams.delete('in_stock');
+          url.searchParams.delete("in_stock");
         }
-        
+
         if (newFilters.bestseller === true) {
-          url.searchParams.set('bestseller', 'true');
+          url.searchParams.set("bestseller", "true");
         } else {
-          url.searchParams.delete('bestseller');
+          url.searchParams.delete("bestseller");
         }
-        
+
         if (newFilters.price) {
-          if (newFilters.price.min) url.searchParams.set('price_min', newFilters.price.min.toString());
-          if (newFilters.price.max) url.searchParams.set('price_max', newFilters.price.max.toString());
+          if (newFilters.price.min)
+            url.searchParams.set("price_min", newFilters.price.min.toString());
+          if (newFilters.price.max)
+            url.searchParams.set("price_max", newFilters.price.max.toString());
         } else {
-          url.searchParams.delete('price_min');
-          url.searchParams.delete('price_max');
+          url.searchParams.delete("price_min");
+          url.searchParams.delete("price_max");
         }
-        
-        if (newFilters.colors && Array.isArray(newFilters.colors) && newFilters.colors.length > 0) {
-          url.searchParams.set('colors', newFilters.colors.join(','));
+
+        if (
+          newFilters.colors &&
+          Array.isArray(newFilters.colors) &&
+          newFilters.colors.length > 0
+        ) {
+          url.searchParams.set("colors", newFilters.colors.join(","));
         } else {
-          url.searchParams.delete('colors');
+          url.searchParams.delete("colors");
         }
-        
-        if (newFilters.material && Array.isArray(newFilters.material) && newFilters.material.length > 0) {
-          url.searchParams.set('material', newFilters.material.join(','));
+
+        if (
+          newFilters.material &&
+          Array.isArray(newFilters.material) &&
+          newFilters.material.length > 0
+        ) {
+          url.searchParams.set("material", newFilters.material.join(","));
         } else {
-          url.searchParams.delete('material');
+          url.searchParams.delete("material");
         }
-        
+
         if (newFilters.sizes) {
           if (newFilters.sizes.width) {
-            if (newFilters.sizes.width.min) url.searchParams.set('width_min', newFilters.sizes.width.min.toString());
-            if (newFilters.sizes.width.max) url.searchParams.set('width_max', newFilters.sizes.width.max.toString());
+            if (newFilters.sizes.width.min)
+              url.searchParams.set(
+                "width_min",
+                newFilters.sizes.width.min.toString(),
+              );
+            if (newFilters.sizes.width.max)
+              url.searchParams.set(
+                "width_max",
+                newFilters.sizes.width.max.toString(),
+              );
           }
           if (newFilters.sizes.height) {
-            if (newFilters.sizes.height.min) url.searchParams.set('height_min', newFilters.sizes.height.min.toString());
-            if (newFilters.sizes.height.max) url.searchParams.set('height_max', newFilters.sizes.height.max.toString());
+            if (newFilters.sizes.height.min)
+              url.searchParams.set(
+                "height_min",
+                newFilters.sizes.height.min.toString(),
+              );
+            if (newFilters.sizes.height.max)
+              url.searchParams.set(
+                "height_max",
+                newFilters.sizes.height.max.toString(),
+              );
           }
           if (newFilters.sizes.depth) {
-            if (newFilters.sizes.depth.min) url.searchParams.set('depth_min', newFilters.sizes.depth.min.toString());
-            if (newFilters.sizes.depth.max) url.searchParams.set('depth_max', newFilters.sizes.depth.max.toString());
+            if (newFilters.sizes.depth.min)
+              url.searchParams.set(
+                "depth_min",
+                newFilters.sizes.depth.min.toString(),
+              );
+            if (newFilters.sizes.depth.max)
+              url.searchParams.set(
+                "depth_max",
+                newFilters.sizes.depth.max.toString(),
+              );
           }
         } else {
-          url.searchParams.delete('width_min');
-          url.searchParams.delete('width_max');
-          url.searchParams.delete('height_min');
-          url.searchParams.delete('height_max');
-          url.searchParams.delete('depth_min');
-          url.searchParams.delete('depth_max');
+          url.searchParams.delete("width_min");
+          url.searchParams.delete("width_max");
+          url.searchParams.delete("height_min");
+          url.searchParams.delete("height_max");
+          url.searchParams.delete("depth_min");
+          url.searchParams.delete("depth_max");
         }
-        
-        Object.keys(newFilters).forEach(key => {
-          if (!['in_stock', 'bestseller', 'price', 'colors', 'material', 'sizes', 'sort'].includes(key)) {
+
+        Object.keys(newFilters).forEach((key) => {
+          if (
+            ![
+              "in_stock",
+              "bestseller",
+              "price",
+              "colors",
+              "material",
+              "sizes",
+              "sort",
+            ].includes(key)
+          ) {
             const value = newFilters[key];
             if (Array.isArray(value) && value.length > 0) {
-              url.searchParams.set(key, value.join(','));
+              url.searchParams.set(key, value.join(","));
             } else if (value) {
               url.searchParams.set(key, value.toString());
             }
           }
         });
 
-        const flagType = url.searchParams.get('flag_type');
-        const categoryIdParam = url.searchParams.get('category_id');
+        const flagType = url.searchParams.get("flag_type");
+        const categoryIdParam = url.searchParams.get("category_id");
         if (flagType) {
-          url.searchParams.set('flag_type', flagType);
+          url.searchParams.set("flag_type", flagType);
         }
         if (categoryIdParam) {
-          url.searchParams.set('category_id', categoryIdParam);
+          url.searchParams.set("category_id", categoryIdParam);
         }
       }
-      
-      window.history.replaceState({}, '', url.toString());
+
+      window.history.replaceState({}, "", url.toString());
     }
   };
 
@@ -409,58 +550,113 @@ function CategoryPageContent() {
 
   useEffect(() => {
     if (!categories.length) return;
-    
-    const sortedData = categories.sort((a, b) => {
-      const aDisplayId = a.display_id || 999;
-      const bDisplayId = b.display_id || 999;
-      return aDisplayId - bDisplayId;
-    }).map(category => ({
-      ...category,
-      subcategories: category.subcategories?.sort((a, b) => {
+
+    const sortedData = categories
+      .sort((a, b) => {
         const aDisplayId = a.display_id || 999;
         const bDisplayId = b.display_id || 999;
         return aDisplayId - bDisplayId;
-      }) || []
-    }));
-    
-    const slugArr = Array.isArray(params?.slug) ? params.slug : params?.slug ? [params.slug] : [];
+      })
+      .map((category) => ({
+        ...category,
+        subcategories:
+          category.subcategories?.sort((a, b) => {
+            const aDisplayId = a.display_id || 999;
+            const bDisplayId = b.display_id || 999;
+            return aDisplayId - bDisplayId;
+          }) || [],
+      }));
+
+    const slugArr = Array.isArray(params?.slug)
+      ? params.slug
+      : params?.slug
+        ? [params.slug]
+        : [];
     if (!slugArr || slugArr.length === 0) return;
 
     if (slugArr.length >= 2) {
       const [catSlug, subSlug] = slugArr;
-      const cat = sortedData.find(c => c.slug === catSlug);
+      const cat = sortedData.find((c) => c.slug === catSlug);
       if (cat) {
-        const sub = (cat.subcategories || []).find(s => s.slug === subSlug && subSlug !== 'all');
-        console.log('[categories/page] Смена категории (подкатегория):', { categoryId: cat.id, subcategoryId: sub?.id, slug: catSlug, subSlug });
+        const sub = (cat.subcategories || []).find(
+          (s) => s.slug === subSlug && subSlug !== "all",
+        );
+        console.log("[categories/page] Смена категории (подкатегория):", {
+          categoryId: cat.id,
+          subcategoryId: sub?.id,
+          slug: catSlug,
+          subSlug,
+        });
         setCategoryId(cat.id);
         setSubcategoryId(sub ? sub.id : null);
-        setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
-        setCurrentSubcategory(sub ? { id: sub.id, slug: sub.slug, title: sub.title, description: sub.description, photo_cover: sub.photo_cover } : null);
+        setCurrentCategory({
+          id: cat.id,
+          slug: cat.slug,
+          title: cat.title,
+          description: cat.description,
+          photo_cover: cat.photo_cover,
+        });
+        setCurrentSubcategory(
+          sub
+            ? {
+                id: sub.id,
+                slug: sub.slug,
+                title: sub.title,
+                description: sub.description,
+                photo_cover: sub.photo_cover,
+              }
+            : null,
+        );
         return;
       }
     }
 
     const currentSlug = slugArr[0];
-    
-    const cat = sortedData.find(c => c.slug === currentSlug);
+
+    const cat = sortedData.find((c) => c.slug === currentSlug);
     if (cat) {
-      console.log('[categories/page] Смена категории:', { categoryId: cat.id, subcategoryId: null, slug: currentSlug });
+      console.log("[categories/page] Смена категории:", {
+        categoryId: cat.id,
+        subcategoryId: null,
+        slug: currentSlug,
+      });
       setCategoryId(cat.id);
       setSubcategoryId(null);
-      setCurrentCategory({ id: cat.id, slug: cat.slug, title: cat.title, description: cat.description, photo_cover: cat.photo_cover });
+      setCurrentCategory({
+        id: cat.id,
+        slug: cat.slug,
+        title: cat.title,
+        description: cat.description,
+        photo_cover: cat.photo_cover,
+      });
       setCurrentSubcategory(null);
       return;
     } else {
     }
 
     for (const c of sortedData) {
-      const sub = (c.subcategories || []).find(s => s.slug === currentSlug);
+      const sub = (c.subcategories || []).find((s) => s.slug === currentSlug);
       if (sub) {
-        console.log('[categories/page] Смена категории (подкатегория найдена):', { categoryId: c.id, subcategoryId: sub.id, slug: currentSlug });
+        console.log(
+          "[categories/page] Смена категории (подкатегория найдена):",
+          { categoryId: c.id, subcategoryId: sub.id, slug: currentSlug },
+        );
         setCategoryId(c.id);
         setSubcategoryId(sub.id);
-        setCurrentCategory({ id: c.id, slug: c.slug, title: c.title, description: c.description, photo_cover: c.photo_cover });
-        setCurrentSubcategory({ id: sub.id, slug: sub.slug, title: sub.title, description: sub.description, photo_cover: sub.photo_cover });
+        setCurrentCategory({
+          id: c.id,
+          slug: c.slug,
+          title: c.title,
+          description: c.description,
+          photo_cover: c.photo_cover,
+        });
+        setCurrentSubcategory({
+          id: sub.id,
+          slug: sub.slug,
+          title: sub.title,
+          description: sub.description,
+          photo_cover: sub.photo_cover,
+        });
         return;
       }
     }
@@ -470,26 +666,42 @@ function CategoryPageContent() {
     const handleUrlChange = () => {
       const urlDynamicFilters = parseDynamicFiltersFromUrl();
       setDynamicFilters(urlDynamicFilters);
-      
+
       const url = new URL(window.location.href);
-      const categoryIdFromUrl = url.searchParams.get('category_id');
-      const subcategoryIdFromUrl = url.searchParams.get('subcategory_id');
-      
+      const categoryIdFromUrl = url.searchParams.get("category_id");
+      const subcategoryIdFromUrl = url.searchParams.get("subcategory_id");
+
       if (categoryIdFromUrl) {
         const newCategoryId = parseInt(categoryIdFromUrl);
-        const newSubcategoryId = subcategoryIdFromUrl ? parseInt(subcategoryIdFromUrl) : null;
+        const newSubcategoryId = subcategoryIdFromUrl
+          ? parseInt(subcategoryIdFromUrl)
+          : null;
         setCategoryId(newCategoryId);
         setSubcategoryId(newSubcategoryId);
-        
+
         if (categories.length > 0) {
-          const category = categories.find(c => c.id === newCategoryId);
+          const category = categories.find((c) => c.id === newCategoryId);
           if (category) {
-            setCurrentCategory({ id: category.id, slug: category.slug, title: category.title, description: category.description, photo_cover: category.photo_cover });
-            
+            setCurrentCategory({
+              id: category.id,
+              slug: category.slug,
+              title: category.title,
+              description: category.description,
+              photo_cover: category.photo_cover,
+            });
+
             if (newSubcategoryId) {
-              const subcategory = category.subcategories?.find(s => s.id === newSubcategoryId);
+              const subcategory = category.subcategories?.find(
+                (s) => s.id === newSubcategoryId,
+              );
               if (subcategory) {
-                setCurrentSubcategory({ id: subcategory.id, slug: subcategory.slug, title: subcategory.title, description: subcategory.description, photo_cover: subcategory.photo_cover });
+                setCurrentSubcategory({
+                  id: subcategory.id,
+                  slug: subcategory.slug,
+                  title: subcategory.title,
+                  description: subcategory.description,
+                  photo_cover: subcategory.photo_cover,
+                });
               } else {
                 setCurrentSubcategory(null);
               }
@@ -504,89 +716,123 @@ function CategoryPageContent() {
         setCurrentCategory(null);
         setCurrentSubcategory(null);
       }
-
     };
 
-    window.addEventListener('popstate', handleUrlChange);
-    return () => window.removeEventListener('popstate', handleUrlChange);
+    window.addEventListener("popstate", handleUrlChange);
+    return () => window.removeEventListener("popstate", handleUrlChange);
   }, [categories]);
 
-
   const breadcrumbs = [
-    { text: 'Главная', href: '/' },
-    ...(currentCategory ? [{ text: currentCategory.title, href: `/categories/${currentCategory.slug}` }] : []),
+    { text: "Главная", href: "/" },
+    ...(currentCategory
+      ? [
+          {
+            text: currentCategory.title,
+            href: `/categories/${currentCategory.slug}`,
+          },
+        ]
+      : []),
     ...(currentSubcategory
-      ? [{ text: currentSubcategory.title, href: `/categories/${currentCategory?.slug}/${currentSubcategory.slug}` }]
-      : currentCategory ? [{ text: 'Все товары', href: `/categories/${currentCategory.slug}/all` }] : []),
+      ? [
+          {
+            text: currentSubcategory.title,
+            href: `/categories/${currentCategory?.slug}/${currentSubcategory.slug}`,
+          },
+        ]
+      : currentCategory
+        ? [
+            {
+              text: "Все товары",
+              href: `/categories/${currentCategory.slug}/all`,
+            },
+          ]
+        : []),
   ];
 
   const transformProduct = (product) => {
     return product;
   };
 
-  const heroTitle = currentSubcategory?.title || currentCategory?.title || noCategoryInfo?.title;
-  const heroDescription = currentSubcategory?.description || currentCategory?.description || noCategoryInfo?.description;
-  const heroPhoto = (currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null) 
-    ? (currentSubcategory.photo_cover.startsWith('http') ? currentSubcategory.photo_cover : `https://aldalinde.ru${currentSubcategory.photo_cover}`)
-    : (currentCategory?.photo_cover && currentCategory.photo_cover !== null)
-      ? (currentCategory.photo_cover.startsWith('http') ? currentCategory.photo_cover : `https://aldalinde.ru${currentCategory.photo_cover}`)
-      : (noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null)
-        ? (noCategoryInfo.photo_cover.startsWith('http') ? noCategoryInfo.photo_cover : `https://aldalinde.ru${noCategoryInfo.photo_cover}`)
-        : null;
+  const heroTitle =
+    currentSubcategory?.title ||
+    currentCategory?.title ||
+    noCategoryInfo?.title;
+  const heroDescription =
+    currentSubcategory?.description ||
+    currentCategory?.description ||
+    noCategoryInfo?.description;
+  const heroPhoto =
+    currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null
+      ? currentSubcategory.photo_cover.startsWith("http")
+        ? currentSubcategory.photo_cover
+        : `https://aldalinde.ru${currentSubcategory.photo_cover}`
+      : currentCategory?.photo_cover && currentCategory.photo_cover !== null
+        ? currentCategory.photo_cover.startsWith("http")
+          ? currentCategory.photo_cover
+          : `https://aldalinde.ru${currentCategory.photo_cover}`
+        : noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null
+          ? noCategoryInfo.photo_cover.startsWith("http")
+            ? noCategoryInfo.photo_cover
+            : `https://aldalinde.ru${noCategoryInfo.photo_cover}`
+          : null;
   const showHero = heroTitle || heroDescription || heroPhoto;
-  const isLoadingHero = (noCategoryInfoLoading && shouldFetchNoCategoryInfo) || (categoriesLoading && pathname === '/categories' && !categoryId && !subcategoryId && !noCategoryInfo);
+  const isLoadingHero =
+    (noCategoryInfoLoading && shouldFetchNoCategoryInfo) ||
+    (categoriesLoading &&
+      pathname === "/categories" &&
+      !categoryId &&
+      !subcategoryId &&
+      !noCategoryInfo);
 
   return (
     <main className={styles.page}>
       <Breadcrumbs items={breadcrumbs} />
-      
+
       {showHero || isLoadingHero ? (
         <div className={styles.hero}>
-          <div className={`${styles.hero__content} ${isLoadingHero ? styles.skeleton : ''}`}>
+          <div
+            className={`${styles.hero__content} ${isLoadingHero ? styles.skeleton : ""}`}
+          >
             {isLoadingHero ? (
               <>
                 <div className={styles.hero__skeleton_bg} />
-                <div 
+                <div
                   className={styles.hero__skeleton_text}
-                  style={{ 
-                    height: '32px', 
-                    width: '300px', 
-                    marginBottom: '20px', 
-                    zIndex: 3, 
-                    position: 'relative'
-                  }} 
+                  style={{
+                    height: "32px",
+                    width: "300px",
+                    marginBottom: "20px",
+                    zIndex: 3,
+                    position: "relative",
+                  }}
                 />
-                <div 
+                <div
                   className={styles.hero__skeleton_text}
-                  style={{ 
-                    height: '20px', 
-                    width: '600px', 
-                    maxWidth: '824px', 
-                    zIndex: 3, 
-                    position: 'relative', 
-                    margin: '0 auto'
-                  }} 
+                  style={{
+                    height: "20px",
+                    width: "600px",
+                    maxWidth: "824px",
+                    zIndex: 3,
+                    position: "relative",
+                    margin: "0 auto",
+                  }}
                 />
               </>
             ) : (
               <>
                 {heroTitle && (
-                  <h1 className={styles.hero__title}>
-                    {heroTitle}
-                  </h1>
+                  <h1 className={styles.hero__title}>{heroTitle}</h1>
                 )}
                 {heroDescription && (
-                  <p className={styles.hero__description}>
-                    {heroDescription}
-                  </p>
+                  <p className={styles.hero__description}>{heroDescription}</p>
                 )}
                 {heroPhoto && (
-                  <img 
-                    className={`${styles.hero__img} ${styles.photo_cover}`} 
-                    src={heroPhoto} 
-                    alt={heroTitle || 'Категория'} 
+                  <img
+                    className={`${styles.hero__img} ${styles.photo_cover}`}
+                    src={heroPhoto}
+                    alt={heroTitle || "Категория"}
                     onError={(e) => {
-                      e.target.style.display = 'none';
+                      e.target.style.display = "none";
                     }}
                   />
                 )}
@@ -597,41 +843,45 @@ function CategoryPageContent() {
       ) : null}
 
       <div className={styles.controls}>
-        <button 
+        <button
           className={styles.filters__button}
           onClick={() => {
             const next = !showFilters;
             setShowFilters(next);
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem('showFilters', next.toString());
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem("showFilters", next.toString());
             }
           }}
         >
-          {(isClient && showFilters) ? 'Скрыть фильтры' : 'Показать фильтры'}
+          {isClient && showFilters ? "Скрыть фильтры" : "Показать фильтры"}
         </button>
-        
-        <SortSelect 
-          value={sortBy} 
-          onChange={setSortBy} 
-          options={(filters.find(f => f.slug === 'sort')?.options?.map(option => ({
-            value: option.id,
-            label: option.title
-          }))) || [
-            { value: 1, label: 'Популярные' },
-            { value: 2, label: 'Высокий рейтинг' },
-            { value: 3, label: 'По возрастанию цены' },
-            { value: 4, label: 'По убыванию цены' }
-          ]} 
+
+        <SortSelect
+          value={sortBy}
+          onChange={setSortBy}
+          options={
+            filters
+              .find((f) => f.slug === "sort")
+              ?.options?.map((option) => ({
+                value: option.id,
+                label: option.title,
+              })) || [
+              { value: 1, label: "Популярные" },
+              { value: 2, label: "Высокий рейтинг" },
+              { value: 3, label: "По возрастанию цены" },
+              { value: 4, label: "По убыванию цены" },
+            ]
+          }
         />
       </div>
 
       <div className={styles.content}>
-        <Filters 
-          isVisible={isClient ? showFilters : false} 
+        <Filters
+          isVisible={isClient ? showFilters : false}
           onClose={() => {
             setShowFilters(false);
-            if (typeof window !== 'undefined') {
-              sessionStorage.setItem('showFilters', 'false');
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem("showFilters", "false");
             }
           }}
           filters={filters}
@@ -641,7 +891,9 @@ function CategoryPageContent() {
           appliedFilters={appliedFilters}
           categories={categories}
         />
-        <div className={`${styles.products} ${showFilters ? styles.filtersOpen : ''}`}>
+        <div
+          className={`${styles.products} ${showFilters ? styles.filtersOpen : ""}`}
+        >
           {isProductsLoading && products.length === 0 ? (
             <ProductSkeleton count={8} />
           ) : isProductsError ? (
@@ -652,24 +904,20 @@ function CategoryPageContent() {
             <>
               {products.map((product, index) => {
                 return (
-                  <ProductCard 
-                    key={`${product.id}-${index}`} 
-                    product={transformProduct(product)} 
+                  <ProductCard
+                    key={`${product.id}-${index}`}
+                    product={transformProduct(product)}
                     filtersOpen={showFilters}
                   />
                 );
               })}
-              {isFetchingNextPage && (
-                <ProductSkeleton count={4} />
-              )}
+              {isFetchingNextPage && <ProductSkeleton count={4} />}
               {hasNextPage && (
                 <div ref={loadMoreRef} className={styles.loadMore}></div>
               )}
             </>
           ) : (
-            <div className={styles.noProducts}>
-              Товары не найдены
-            </div>
+            <div className={styles.noProducts}>Товары не найдены</div>
           )}
         </div>
       </div>
