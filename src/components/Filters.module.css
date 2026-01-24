@@ -476,7 +476,7 @@
         min-height: 100vh;
         background: #fff;
         padding-bottom: env(safe-area-inset-bottom);
-        z-index: 1000;
+        z-index: 100000000000;
         display: none;
         flex-direction: column;
     }
@@ -517,7 +517,9 @@
     .filters__content {
         flex: 1;
         overflow-y: auto;
-        padding-bottom: calc(72px + env(safe-area-inset-bottom) + 24px);
+        padding-bottom: 140px;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
     }
 
     .filters__footer {
@@ -530,7 +532,7 @@
         right: 0;
         bottom: 0;
         background: #fff;
-        z-index: 1;
+        z-index: 22139121;
         box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.06);
     }
 
