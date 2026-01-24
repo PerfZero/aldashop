@@ -517,7 +517,7 @@
     .filters__content {
         flex: 1;
         overflow-y: auto;
-        padding-bottom: 140px;
+        padding-bottom: 180px;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
     }
