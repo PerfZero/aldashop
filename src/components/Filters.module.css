@@ -517,7 +517,7 @@
     .filters__content {
         flex: 1;
         overflow-y: auto;
-        padding-bottom: 96px;
+        padding-bottom: calc(72px + env(safe-area-inset-bottom) + 24px);
     }
 
     .filters__footer {
@@ -525,7 +525,9 @@
         padding-bottom: calc(16px + env(safe-area-inset-bottom) + 24px);
         display: flex;
         gap: 12px;
-        position: sticky;
+        position: fixed;
+        left: 0;
+        right: 0;
         bottom: 0;
         background: #fff;
         z-index: 1;
