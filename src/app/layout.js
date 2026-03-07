@@ -1,5 +1,6 @@
 import { Montserrat, Tenor_Sans } from "next/font/google";
 import Script from "next/script";
+import { Suspense } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import PromoBanner from "../components/PromoBanner";
@@ -117,7 +118,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${montserrat.variable} ${tenorSans.variable}`}>
-        <RouteLoadingBar />
+        <Suspense fallback={null}>
+          <RouteLoadingBar />
+        </Suspense>
         <noscript>
           <div>
             <img

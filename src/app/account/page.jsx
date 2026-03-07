@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from './page.module.css';
@@ -46,7 +46,7 @@ const menuItems = [
 
 
 
-export default function AccountPage() {
+function AccountPageContent() {
   const { getUserProfile, updateUserProfile, user, getAuthHeaders, logout } = useAuth();
   const { favourites, isLoading: favouritesLoading } = useFavourites();
   const router = useRouter();
@@ -818,6 +818,14 @@ export default function AccountPage() {
         isSuccess={paymentStatus}
       />
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div className={styles.loading}>Загрузка аккаунта...</div>}>
+      <AccountPageContent />
+    </Suspense>
   );
 }
 
