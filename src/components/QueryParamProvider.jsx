@@ -14,11 +14,10 @@ function QueryParamProviderContent({ children }) {
 
 export default function QueryParamProviderWrapper({ children }) {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={null}>
       <QueryParamProviderContent>
         {children}
       </QueryParamProviderContent>
     </Suspense>
   );
 }
-
