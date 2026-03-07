@@ -11,6 +11,7 @@ import QueryClientProviderWrapper from "../components/QueryClientProvider";
 import QueryParamProviderWrapper from "../components/QueryParamProvider";
 import ScrollRestoration from "../components/ScrollRestoration";
 import CookieConsent from "../components/CookieConsent";
+import RouteLoadingBar from "../components/RouteLoadingBar";
 import "./globals.css";
 
 const organizationJsonLd = {
@@ -116,6 +117,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body className={`${montserrat.variable} ${tenorSans.variable}`}>
+        <RouteLoadingBar />
         <noscript>
           <div>
             <img
