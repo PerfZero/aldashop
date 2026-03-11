@@ -13,6 +13,7 @@ import QueryParamProviderWrapper from "../components/QueryParamProvider";
 import ScrollRestoration from "../components/ScrollRestoration";
 import CookieConsent from "../components/CookieConsent";
 import RouteLoadingBar from "../components/RouteLoadingBar";
+import BitrixLeadPopup from "../components/BitrixLeadPopup";
 import "./globals.css";
 
 const organizationJsonLd = {
@@ -135,6 +136,7 @@ export default function RootLayout({ children }) {
             <AuthProvider>
               <CartProvider>
                 <FavouritesProvider>
+                  <BitrixLeadPopup />
                   <ScrollRestoration />
                   <PromoBanner />
                   <Header />

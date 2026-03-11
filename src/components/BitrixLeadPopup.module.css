@@ -1,0 +1,197 @@
+.overlay {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 10000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    pointer-events: none;
+}
+
+.modal {
+    min-height: 280px;
+    width: 680px;
+
+    border-radius: 10px;
+    display: flex;
+    gap: 3px;
+    flex-direction: row;
+    text-align: center;
+    overflow: hidden;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+    pointer-events: auto;
+}
+
+.image {
+    background-image: url("/pops.jpg");
+    background-position: center;
+    background-size: cover;
+    display: block;
+    flex-shrink: 0;
+    width: 320px;
+}
+
+.content {
+    position: relative;
+    display: flex;
+    background-color: #fff;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px 18px 14px;
+}
+
+.close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    font-size: 40px;
+    line-height: 1;
+    color: #3c101e;
+}
+
+.title {
+    color: #3c101e;
+    font-size: 18px;
+    font-weight: 300;
+    line-height: 1.05;
+}
+
+.text {
+    color: #616161;
+    font-size: 14px;
+    line-height: 1.24;
+}
+
+.input {
+    height: 44px;
+    width: 100%;
+    border: 1px solid #5f1932;
+    border-radius: 5px;
+    padding: 0 14px;
+    background: #fff;
+    margin-bottom: 10px;
+    color: #323433;
+    font-size: 14px;
+}
+
+.input::placeholder {
+    color: #b8b8b8;
+}
+
+.inputError {
+    border-color: #d03a3a;
+}
+
+.button {
+    height: 42px;
+    border-radius: 5px;
+    background: #d25c1b;
+
+    color: #fff;
+    font-size: 14px;
+    width: 100%;
+}
+
+.button:hover {
+    background: #d15c18;
+}
+
+.button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.error {
+    margin-bottom: 12px;
+    color: #c23636;
+    font-size: 10px;
+}
+
+.note {
+    color: #616161;
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+@media (max-width: 1024px) {
+    .overlay {
+        right: 12px;
+        left: 12px;
+        bottom: 12px;
+    }
+
+    .modal {
+        width: min(680px, calc(100vw - 24px));
+        min-height: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .overlay {
+        left: 0;
+        right: 0;
+        bottom: 0;
+    }
+
+    .modal {
+        width: 100%;
+        border-radius: 5px 5px 0 0;
+    }
+
+    .image {
+        display: none;
+    }
+
+    .content {
+        gap: 12px;
+        padding: 18px 20px 14px;
+    }
+
+    .close {
+        top: 10px;
+        right: 10px;
+        font-size: 34px;
+        width: 26px;
+        height: 26px;
+    }
+
+    .title {
+        font-size: 18px;
+        line-height: 1.08;
+    }
+
+    .text {
+        font-size: 14px;
+        line-height: 1.28;
+    }
+
+    .input {
+        height: 50px;
+        border-radius: 9px;
+        font-size: 14px;
+        margin-bottom: 10px;
+
+        padding: 0 16px;
+    }
+
+    .error {
+        margin-top: -2px;
+        font-size: 14px;
+    }
+
+    .button {
+        height: 39px;
+        border-radius: 9px;
+        font-size: 14px;
+    }
+
+    .note {
+        font-size: 10px;
+        line-height: 1.2;
+    }
+}
