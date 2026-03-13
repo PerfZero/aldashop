@@ -6,7 +6,8 @@ export async function POST(request) {
     
     const apiRequestBody = {
       model_id: body.model_id,
-      color_id: body.color_id,
+      ...(body.material_photo_id && { material_photo_id: body.material_photo_id }),
+      ...(body.color_id && { color_id: body.color_id }),
     };
     
     const headers = {

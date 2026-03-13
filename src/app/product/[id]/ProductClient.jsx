@@ -216,6 +216,7 @@ export default function ProductClient({ initialProduct, productId }) {
       model_id: modelId,
       size_id: selectedSize?.id,
       color_id: selectedColor?.id,
+      material_photo_id: material?.id,
     };
     
     try {
@@ -514,7 +515,10 @@ export default function ProductClient({ initialProduct, productId }) {
           {product.available_materials && product.available_materials.length > 0 && (
             <div className={styles.product__materials}>
               <h3 className={styles.product__section_title}>
-                Материалы: <span className={styles.product__material_name}>{selectedMaterial?.title}</span>
+                Материалы:{' '}
+                <span className={styles.product__material_name}>
+                  {selectedMaterial?.title || selectedMaterial?.title_material}
+                </span>
               </h3>
               <div className={styles.product__materials_list}>
                 {product.available_materials.map((material) => (
@@ -524,7 +528,7 @@ export default function ProductClient({ initialProduct, productId }) {
                     onClick={() => handleMaterialChange(material)}
                     disabled={loading || isChangingOptions}
                   >
-                    {material.title}
+                    {material.title || material.title_material}
                   </button>
                 ))}
               </div>
