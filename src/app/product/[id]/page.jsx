@@ -1,5 +1,4 @@
 import { notFound } from 'next/navigation';
-import Breadcrumbs from '@/components/Breadcrumbs';
 import ProductClient from './ProductClient';
 import styles from './page.module.css';
 
@@ -144,8 +143,7 @@ export default async function ProductPage({ params }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
-      <Breadcrumbs items={breadcrumbs} />
-      <ProductClient initialProduct={product} productId={id} />
+      <ProductClient initialProduct={product} productId={id} breadcrumbs={breadcrumbs} />
     </div>
   );
 }
