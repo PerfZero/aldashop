@@ -1,4 +1,4 @@
-import { Montserrat, Tenor_Sans } from "next/font/google";
+import { Playfair_Display } from "next/font/google";
 import Script from "next/script";
 import { Suspense } from "react";
 import Header from "../components/Header";
@@ -74,14 +74,10 @@ export const viewport = {
   initialScale: 1,
 };
 
-const montserrat = Montserrat({
+const playfairDisplay = Playfair_Display({
   subsets: ["latin", "cyrillic"],
-  variable: "--font-montserrat",
-});
-const tenorSans = Tenor_Sans({
-  subsets: ["latin", "cyrillic"],
-  weight: "400",
-  variable: "--font-tenor-sans",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-playfair-display",
 });
 
 export default function RootLayout({ children }) {
@@ -118,7 +114,7 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
         />
       </head>
-      <body className={`${montserrat.variable} ${tenorSans.variable}`}>
+      <body className={playfairDisplay.variable}>
         <Suspense fallback={null}>
           <RouteLoadingBar />
         </Suspense>

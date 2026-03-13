@@ -13,7 +13,7 @@
   border-radius: 8px;
   background: #fff;
   cursor: pointer;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 14px;
   color: #323433;
   transition: all 0.2s ease;
@@ -67,7 +67,7 @@
   text-align: left;
   background: none;
   border: none;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 14px;
   color: #323433;
   cursor: pointer;

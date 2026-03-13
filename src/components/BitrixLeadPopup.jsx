@@ -2,17 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Playfair_Display } from "next/font/google";
 import { useAuth } from "../contexts/AuthContext";
 import styles from "./BitrixLeadPopup.module.css";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION_HANDLED_KEY = "bitrixLeadPopupHandled";
 const EMAIL_STORAGE_KEY = "bitrixLeadPopupEmail";
-const playfairDisplay = Playfair_Display({
-  subsets: ["latin", "cyrillic"],
-  weight: ["400", "500", "600", "700"],
-});
 
 export default function BitrixLeadPopup() {
   const { user } = useAuth();
@@ -92,7 +87,7 @@ export default function BitrixLeadPopup() {
   return createPortal(
     <div className={styles.overlay}>
       <div
-        className={`${styles.modal} ${playfairDisplay.className}`}
+        className={styles.modal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="bitrix-lead-title"

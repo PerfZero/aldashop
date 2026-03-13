@@ -13,7 +13,7 @@
 }
 
 .account__menu_item {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 16px;
     line-height: 150%;
@@ -25,7 +25,7 @@
 
 
 .account__menu_item_active {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 500;
     font-size: 16px;
     line-height: 150%;
@@ -44,7 +44,7 @@
 }
 
 .account__title{
-    font-family: "Tenor Sans", sans-serif;
+    font-family: var(--font-playfair-display), serif;
 font-weight: 400;
 font-size: 32px;
 
@@ -59,7 +59,7 @@ margin-bottom: 30px;
 }
 
 .account__menu_label {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 500;
   font-size: 16px;
 }
@@ -94,7 +94,7 @@ margin-bottom: 30px;
 }
 
 .account__label {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 16px;
     line-height: 150%;
@@ -102,7 +102,7 @@ margin-bottom: 30px;
 }
 
 .account__value {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 16px;
     line-height: 150%;
@@ -119,7 +119,7 @@ margin-bottom: 30px;
     border: 1px solid #c1a286;
     padding: 0px 15px;
     height: 50px;
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 font-size: 16px;
 line-height: 150%;
@@ -133,7 +133,7 @@ justify-content: center;
     border: 1px solid #c1a286;
     padding: 0px 15px;
     height: 50px;
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 font-size: 16px;
 line-height: 150%;
@@ -149,7 +149,7 @@ cursor: pointer;
     border: 1px solid #c1a286;
     padding: 0px 15px;
     height: 50px;
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 font-size: 16px;
 line-height: 150%;
@@ -171,7 +171,7 @@ transition: all 0.3s ease;
 }
 
 .favorites__text {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 18px;
     line-height: 150%;
@@ -187,7 +187,7 @@ transition: all 0.3s ease;
         border: 1px solid #c1a286;
         padding: 10px 15px;
         width: 295px;
-        font-family: "Montserrat", sans-serif;
+        font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 font-size: 16px;
 display: flex;
@@ -204,7 +204,7 @@ color: #c1a286;
 
 
 .orders__title {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 32px;
   margin-bottom: 30px;
@@ -226,7 +226,7 @@ color: #c1a286;
 }
 
 .order__number {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 20px;
   color: #323433;
@@ -234,7 +234,7 @@ color: #c1a286;
 }
 
 .order__date {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;
@@ -247,7 +247,7 @@ color: #c1a286;
 }
 
 .order__delivery_text {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 150%;
@@ -256,7 +256,7 @@ color: #c1a286;
 }
 
 .order__delivery_date {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;
@@ -295,7 +295,7 @@ color: #c1a286;
 }
 
 .order__details_button{
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 font-size: 16px;
 line-height: 150%;
@@ -412,7 +412,7 @@ color: #323433;
 }
 
 .orders__completed_title{
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 font-size: 18px;
 line-height: 150%;
@@ -433,7 +433,7 @@ margin-bottom: 30px;
 .order__total_cost,
 .order__quantity,
 .order__pay_action {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;
@@ -458,7 +458,7 @@ margin-bottom: 30px;
 .order__pay_button{
   padding: 15px 30px; 
   background: #a45b38;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 align-items: center;
 height: 50px;
@@ -471,7 +471,7 @@ gap: 38px;
 }
 
 .order__delivery_method span{
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 500;
 font-size: 16px;
 line-height: 150%;
@@ -480,7 +480,7 @@ color: #323433;
 
 
 .order__payment_status{
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 500;
 font-size: 16px;
 line-height: 150%;
@@ -507,7 +507,7 @@ color: #a45b38;
 .order__progress_status span{
   font-weight: 700;
   font-size: 20px;
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 
 color: #a45b38;
 }
@@ -519,7 +519,7 @@ color: #a45b38;
 
 
 .order__delivery_address span{
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 500;
 font-size: 16px;
 line-height: 150%;
@@ -527,7 +527,7 @@ color: #323433;
 }
 
 .order__collected{
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 400;
 font-size: 20px;
 
@@ -558,7 +558,7 @@ color: #a45b38;
 }
 
 .favorites__title{
-    font-family: "Tenor Sans", sans-serif;
+    font-family: var(--font-playfair-display), serif;
 font-weight: 400;
 font-size: 32px;
 text-align: left;
@@ -571,7 +571,7 @@ margin-bottom: 30px;
 }
 
 .favorites__count {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;
@@ -688,7 +688,7 @@ margin-bottom: 30px;
 .order__total_cost,
 .order__quantity,
 .order__pay_action {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 12px;
   line-height: 150%;
@@ -837,7 +837,7 @@ margin-bottom: 30px;
 }
 
 .order__expanded_item_title {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 18px;
   line-height: 135%;
@@ -848,7 +848,7 @@ margin-bottom: 30px;
 
 
 .order__expanded_item_price {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 20px;
   color: #a45b38;
@@ -924,7 +924,7 @@ margin-bottom: 30px;
 }
 
 .order__back_button_top {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 600;
   font-size: 18px;
   line-height: 150%;
@@ -962,7 +962,7 @@ padding: 30px;
 
 
 .order__expanded_details_info .order__payment_card{
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 500;
 font-size: 16px;
 line-height: 150%;
@@ -980,7 +980,7 @@ color: #a45b38;
 
 .order__payment_method, 
 .order__payment_card {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;
@@ -1004,14 +1004,14 @@ border-bottom: 1px solid rgba(193, 175, 134, 0.5);
 }
 
 .orders__expanded_order_number {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 20px;
   color: #323433;
 }
 
 .orders__expanded_order_total {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 20px;
   text-align: center;
@@ -1021,7 +1021,7 @@ border-bottom: 1px solid rgba(193, 175, 134, 0.5);
 .order__expanded_item_details{
   display: flex;
   flex-direction: row;
-  gap: 10px;font-family: "Montserrat", sans-serif;
+  gap: 10px;font-family: var(--font-playfair-display), serif;
   font-weight: 500;
   font-size: 14px;
   line-height: 140%;
@@ -1043,7 +1043,7 @@ border-bottom: 1px solid rgba(193, 175, 134, 0.5);
 }
 
 .order__payment_status span:first-child {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 150%;
@@ -1051,7 +1051,7 @@ border-bottom: 1px solid rgba(193, 175, 134, 0.5);
 }
 
 .orders__items_title {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 600;
   font-size: 20px;
   color: #323433;
@@ -1070,7 +1070,7 @@ border-bottom: 1px solid rgba(193, 175, 134, 0.5);
 }
 
 .order__back_button {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 600;
   font-size: 16px;
   line-height: 150%;
@@ -1092,7 +1092,7 @@ border-bottom: 1px solid rgba(193, 175, 134, 0.5);
 }
 
 .order__expanded_item_article {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 14px;
   line-height: 140%;
@@ -1127,7 +1127,7 @@ border-bottom: 1px solid rgba(193, 175, 134, 0.5);
 }
 
 .orders__pagination_button {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;
@@ -1151,7 +1151,7 @@ border-bottom: 1px solid rgba(193, 175, 134, 0.5);
 }
 
 .orders__pagination_info {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;

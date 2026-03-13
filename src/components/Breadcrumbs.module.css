@@ -20,7 +20,7 @@
 }
 
 .breadcrumbs__link {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;
@@ -38,7 +38,7 @@
 }
 
 .breadcrumbs__current {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;

@@ -5,7 +5,7 @@
   }
   
   .title {
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 32px;
     margin-bottom: 30px;
     margin-top: 60px;
@@ -132,7 +132,7 @@ flex: 1;
   }
 
   .productName {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 500;
     font-size: 18px;
     line-height: 135%;
@@ -155,7 +155,7 @@ flex: 1;
   }
   
 .colorMaterial span{
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
 font-weight: 500;
 font-size: 14px;
 line-height: 140%;
@@ -207,7 +207,7 @@ color: #a45b38;
   }
   
   .quantity {
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 20px;
     color: rgba(50, 52, 51, 0.8);
   }
@@ -219,7 +219,7 @@ color: #a45b38;
   }
   
   .price {
-    font-family: "Tenor Sans", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 20px;
     text-align: center;
@@ -227,7 +227,7 @@ color: #a45b38;
   }
   
   .currency {
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 20px;
     color: #A45B38;
   }
@@ -250,7 +250,7 @@ color: #a45b38;
   }
   
   .sectionTitle {
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 20px;
     margin-bottom: 30px;
     color: #323433;
@@ -336,7 +336,7 @@ color: #a45b38;
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
     height: 55px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 16px;
   }
 
@@ -358,7 +358,7 @@ color: #a45b38;
 
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 16px;
   }
   
@@ -414,7 +414,7 @@ color: #a45b38;
   }
   
   .radioTitle {
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 500;
     font-size: 16px;
     color: #323433;
@@ -442,7 +442,7 @@ color: #a45b38;
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
     border-radius: 4px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 16px;
   }
   
@@ -492,7 +492,7 @@ color: #a45b38;
   }
   
   .summaryTitle {
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 32px;
     color: #323433;
     margin-bottom: 60px;
@@ -512,7 +512,7 @@ color: #a45b38;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 20px;
     text-align: center;
@@ -523,7 +523,7 @@ color: #a45b38;
     display: flex;
     align-items: center;
     gap: 2px;
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 20px;
     color: rgba(50, 52, 51, 0.8);
   }
@@ -532,7 +532,7 @@ color: #a45b38;
     display: flex;
     align-items: center;
     gap: 2px;
-    font-family: 'Tenor Sans', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 20px;
     color: #A45B38;
   }
@@ -551,7 +551,7 @@ color: #a45b38;
   .promoCode span{
     display: flex
     ;
-        font-family: Montserrat, sans-serif;
+        font-family: var(--font-playfair-display), serif;
         font-weight: 600;
         font-size: 12px;
         line-height: 140%;
@@ -581,7 +581,7 @@ color: #a45b38;
     padding: 11px 15px;
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 14px;
     height: 40px !important;
   }
@@ -598,7 +598,7 @@ color: #a45b38;
     color: rgba(193, 175, 134, 0.5);
     transition: all 0.2s ease;
     pointer-events: none;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 14px;
     background-color: transparent;
   }
@@ -622,7 +622,7 @@ color: #a45b38;
     flex: 1;
     height: 40px;
     border: none;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 500;
     font-size: 14px;
     cursor: pointer;
@@ -638,7 +638,7 @@ color: #a45b38;
     background-color: #A45B38;
     color: white;
     border: none;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 600;
     font-size: 20px;
     cursor: pointer;
@@ -811,7 +811,7 @@ color: #a45b38;
     border: none;
     border-radius: 4px;
     padding: 8px 20px;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 500;
     font-size: 14px;
     cursor: pointer;
@@ -861,7 +861,7 @@ flex: 1;
     padding: 11px 20px;
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 16px;
   }
   
@@ -870,7 +870,7 @@ flex: 1;
     padding: 11px 20px;
     background-color: #F9F8F4;
     border: 1px solid #C8C8C8;
-    font-family: 'Montserrat', sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-size: 16px;
   }
   
@@ -918,7 +918,7 @@ flex: 1;
   background-color: #F9F8F4;
   border: 1px solid #C8C8C8;
   height: 55px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 16px;
 }
 
@@ -946,7 +946,7 @@ flex: 1;
   pointer-events: none;
   padding: 0 5px;
   background-color: transparent;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 16px;
 }
 
@@ -970,7 +970,7 @@ flex: 1;
   background-color: #F9F8F4;
   border: 1px solid #C8C8C8;
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 16px;
 }
 
@@ -1122,14 +1122,14 @@ flex: 1;
   font-size: 12px;
   margin-top: 5px;
   width: 100%;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
 }
 
 .promoCodeSuccess {
   color: #333;
   font-size: 12px;
   margin-top: 5px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 500;
 }
 
@@ -1165,7 +1165,7 @@ flex: 1;
 
 .modal h3 {
   margin: 0 0 15px 0;
-  font-family: 'Tenor Sans', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 20px;
   color: #323433;
 }
@@ -1242,7 +1242,7 @@ flex: 1;
 
 .modal h3 {
   margin: 0 0 15px 0;
-  font-family: 'Tenor Sans', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 20px;
   color: #323433;
 }

@@ -7,7 +7,7 @@
 }
 
 .sortSelect__label {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 150%;
@@ -30,7 +30,7 @@
 
   align-items: center;
   gap: 8px;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   justify-content: center;
@@ -81,7 +81,7 @@
   text-align: left;
   background: none;
   border: none;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 16px;
   line-height: 150%;

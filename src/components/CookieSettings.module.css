@@ -32,7 +32,7 @@
 }
 
 .title {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 28px;
   color: #323433;
@@ -61,7 +61,7 @@
 }
 
 .description {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 14px;
   line-height: 1.5;
@@ -88,7 +88,7 @@
 }
 
 .categoryTitle {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 18px;
   color: #323433;
@@ -96,7 +96,7 @@
 }
 
 .categoryDescription {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 13px;
   line-height: 1.5;
@@ -171,7 +171,7 @@ input:disabled + .slider {
 
 .cancelButton,
 .saveButton {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 14px;
   padding: 10px 20px;

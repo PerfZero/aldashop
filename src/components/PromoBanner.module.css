@@ -20,14 +20,14 @@
   color: #FFFFFF;
   font-size: 16px;
   font-weight: 500;
-  font-family: Tenor Sans, sans-serif;
+  font-family: var(--font-playfair-display), serif;
 }
 
 .promoBanner__timer {
   color: #FFFFFF;
   font-size: 16px;
   font-weight: bold;
-  font-family: Tenor Sans, sans-serif;
+  font-family: var(--font-playfair-display), serif;
   text-shadow: 
     -0.001px -0.001px 0 #fff,
     0.001px -0.001px 0 #fff,

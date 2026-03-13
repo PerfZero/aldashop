@@ -10,7 +10,7 @@
   align-items: center;
   gap: 10px;
   padding: 11px 0;
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 16px;
   line-height: 1.5;
   color: rgba(50, 52, 51, 0.5);
@@ -37,7 +37,7 @@
 }
 
 .loading {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 18px;
   color: rgba(50, 52, 51, 0.7);
 }
@@ -47,7 +47,7 @@
 }
 
 .favoritesCount {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 16px;
   color: rgba(50, 52, 51, 0.7);
   text-align: center;
@@ -80,7 +80,7 @@
 }
 
 .title {
-  font-family: 'Tenor Sans', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 32px;
   line-height: 1.17;
   color: #323433;
@@ -96,7 +96,7 @@
 }
 
 .description p {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-size: 18px;
   line-height: 1.5;
   color: rgba(50, 52, 51, 0.5);
@@ -135,7 +135,7 @@ color: #c1a286;
 }
 
 .catalogButton span {
-  font-family: 'Montserrat', sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 600;
   font-size: 16px;
   line-height: 1.5;

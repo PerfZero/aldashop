@@ -21,7 +21,7 @@
 }
 
 .text {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 14px;
   line-height: 1.5;
@@ -55,7 +55,7 @@
 .acceptButton,
 .rejectButton,
 .settingsButton {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 14px;
   padding: 10px 20px;

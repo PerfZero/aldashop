@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  font-family: var(--font-montserrat);
+  font-family: var(--font-playfair-display);
 }
 
 .adminHeader {
@@ -180,7 +180,7 @@
   padding: 10px 12px;
   border: 1px solid #E0E0E0;
   border-radius: 4px;
-  font-family: var(--font-montserrat);
+  font-family: var(--font-playfair-display);
   font-size: 14px;
 }
 
@@ -280,7 +280,7 @@
   padding: 8px 12px;
   border: 1px solid #E0E0E0;
   border-radius: 4px;
-  font-family: var(--font-montserrat);
+  font-family: var(--font-playfair-display);
   font-size: 14px;
 }
 

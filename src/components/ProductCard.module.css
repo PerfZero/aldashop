@@ -10,7 +10,7 @@
 
 
 .card__bestseller {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 600;
   font-size: 14px;
   line-height: 150%;
@@ -24,7 +24,7 @@
 }
 
 .card__sale {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 600;
   font-size: 14px;
   line-height: 150%;
@@ -198,7 +198,7 @@
 }
 
 .card__price_original {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 20px;
   margin: 15px 0;
@@ -207,7 +207,7 @@
 }
 
 .card__price_discounted {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   text-decoration: line-through;
   font-size: 16px;
@@ -224,7 +224,7 @@
 }
 
 .card__title_link {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 500;
   font-size: 18px;
   line-height: 135%;
@@ -240,7 +240,7 @@
 }
 
 .card__description {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 14px;
   flex: 1;
@@ -251,7 +251,7 @@
 }
 
 .card__price {
-  font-family: "Tenor Sans", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 20px;
   color: #323433;
@@ -295,7 +295,7 @@
 }
 
 .card__color_more {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 14px;
   line-height: 150%;
@@ -311,7 +311,7 @@
 .card__button {
   border: 1px solid #c1a286;
   padding: 10px 15px;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 600;
   font-size: 16px;
   line-height: 150%;

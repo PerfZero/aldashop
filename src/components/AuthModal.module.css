@@ -32,7 +32,7 @@
 }
 
 .title {
-    font-family: "Tenor Sans", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 32px;
     text-align: center;
@@ -41,7 +41,7 @@
 }
 
 .subtitle {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 16px;
     line-height: 150%;
@@ -63,7 +63,7 @@
 }
 
 .socialAuth h3{
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 font-size: 16px;
 line-height: 150%;
@@ -78,7 +78,7 @@ color: #323433;
 
 
 .socialButton {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 500;
     font-size: 14px;
     line-height: 140%;
@@ -95,7 +95,7 @@ background: #fff;
 }
 
 .emailAuth h3{
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
 font-weight: 500;
 font-size: 16px;
 line-height: 150%;
@@ -131,7 +131,7 @@ margin-bottom: 15px;
 }
 
 .errorText {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 12px;
     line-height: 140%;
@@ -166,7 +166,7 @@ margin-bottom: 15px;
     border: 1px solid #c8c8c8;
     padding: 11px 50px 11px 20px;
     background: #f9f8f4;
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
 font-weight: 500;
 width: 100%;
 font-size: 16px;
@@ -181,7 +181,7 @@ box-sizing: border-box;
 }
 
 .forgotPassword {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 14px;
     line-height: 140%;
@@ -198,7 +198,7 @@ box-sizing: border-box;
 }
 
 .checkbox {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 12px;
     line-height: 140%;
@@ -244,7 +244,7 @@ color: #a45b38;
 .submitButton {
 padding: 15px 30px;
 background: #a45b38;
-font-family: "Montserrat", sans-serif;
+font-family: var(--font-playfair-display), serif;
 font-weight: 600;
 font-size: 16px;
 line-height: 150%;
@@ -254,7 +254,7 @@ color: #fff;
 
 
 .switchMode {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 14px;
     line-height: 140%;
@@ -264,7 +264,7 @@ color: #fff;
 }
 
 .switchMode button {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 500;
     font-size: 14px;
     line-height: 140%;
@@ -286,7 +286,7 @@ color: #fff;
 
 
 .input::placeholder{
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 140%;
@@ -296,7 +296,7 @@ color: #fff;
 
 
 .divider span {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
     font-weight: 400;
 }
 @media (max-width: 768px) {
@@ -334,7 +334,7 @@ color: #fff;
   }
 
   .checkbox {
-    font-family: "Montserrat", sans-serif;
+    font-family: var(--font-playfair-display), serif;
     font-weight: 400;
     font-size: 12px;
     line-height: 140%;
@@ -414,7 +414,7 @@ color: #fff;
 }
 
 .spamNote {
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 400;
   font-size: 14px;
   line-height: 150%;
@@ -435,7 +435,7 @@ color: #fff;
 .resendButton {
   padding: 15px 30px;
   background: #a45b38;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 600;
   font-size: 16px;
   line-height: 150%;
@@ -459,7 +459,7 @@ color: #fff;
 .closeConfirmButton {
   padding: 15px 30px;
   background: #f3f4f6;
-  font-family: "Montserrat", sans-serif;
+  font-family: var(--font-playfair-display), serif;
   font-weight: 500;
   font-size: 16px;
   line-height: 150%;
