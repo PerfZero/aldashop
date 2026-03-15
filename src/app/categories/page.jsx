@@ -23,8 +23,7 @@ import Filters from "@/components/Filters";
 import ProductCard from "@/components/ProductCard";
 import ProductSkeleton from "@/components/ProductSkeleton";
 import SortSelect from "@/components/SortSelect";
-import { useInfiniteProducts } from "@/hooks/useInfiniteProducts";
-import { useIntersectionObserver } from "@/hooks/useIntersectionObserver";
+import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useFilters } from "@/hooks/useFilters";
 import { useNoCategoryInfo } from "@/hooks/useNoCategoryInfo";
@@ -55,8 +54,10 @@ function CategoryPageContent() {
   const [sort, setSort] = useQueryParam("sort", NumberParam);
 
   const [dynamicFilters, setDynamicFilters] = useState({});
-  const loadMoreRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const scrollRestoredRef = useRef(false);
+  const productsSectionRef = useRef(null);
+  const previousPageRef = useRef(1);
 
   const { data: categories = [], isLoading: categoriesLoading } =
     useCategories();
@@ -270,41 +271,36 @@ function CategoryPageContent() {
 
   const {
     data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
     isLoading: isProductsLoading,
     isError: isProductsError,
     error: productsError,
-  } = useInfiniteProducts(
+  } = useProducts(
     mergedFilters,
     effectiveCategoryId,
     effectiveSubcategoryId,
     sortBy,
+    currentPage,
   );
 
-  // Объединяем все страницы товаров в один массив
-  const products = useMemo(() => {
-    if (!data?.pages) return [];
-    const allProducts = data.pages.flatMap((page) => page.products);
-    return allProducts;
-  }, [data]);
-
-  const totalCount = data?.pages?.[0]?.totalCount || 0;
+  const products = data?.products || [];
+  const totalPages = data?.totalPages || 1;
   const loading = categoriesLoading || filtersLoading || isProductsLoading;
 
-  // Intersection Observer для бесконечного скролла
-  useIntersectionObserver({
-    target: loadMoreRef,
-    onIntersect: () => {
-      if (hasNextPage && !isFetchingNextPage) {
-        fetchNextPage();
-      }
-    },
-    threshold: 0.1,
-    rootMargin: "100px",
-    enabled: hasNextPage && !isFetchingNextPage,
-  });
+  const paginationPages = useMemo(() => {
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+
+    if (end - start < maxVisible - 1) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }, [currentPage, totalPages]);
 
   useEffect(() => {
     const savedPosition = sessionStorage.getItem("catalogScrollPosition");
@@ -547,6 +543,25 @@ function CategoryPageContent() {
   useEffect(() => {
     scrollRestoredRef.current = false;
   }, [slugDep]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [mergedFilters, effectiveCategoryId, effectiveSubcategoryId, sortBy]);
+
+  useEffect(() => {
+    if (previousPageRef.current !== currentPage) {
+      previousPageRef.current = currentPage;
+      const top =
+        (productsSectionRef.current?.getBoundingClientRect().top || 0) +
+        window.scrollY -
+        110;
+
+      window.scrollTo({
+        top: Math.max(0, top),
+        behavior: "smooth",
+      });
+    }
+  }, [currentPage]);
 
   useEffect(() => {
     if (!categories.length) return;
@@ -875,7 +890,7 @@ function CategoryPageContent() {
         />
       </div>
 
-      <div className={styles.content}>
+      <div className={styles.content} ref={productsSectionRef}>
         <Filters
           isVisible={isClient ? showFilters : false}
           onClose={() => {
@@ -891,33 +906,65 @@ function CategoryPageContent() {
           appliedFilters={appliedFilters}
           categories={categories}
         />
-        <div
-          className={`${styles.products} ${showFilters ? styles.filtersOpen : ""}`}
-        >
-          {isProductsLoading && products.length === 0 ? (
-            <ProductSkeleton count={8} />
-          ) : isProductsError ? (
-            <div className={styles.noProducts}>
-              Ошибка загрузки товаров: {productsError?.message}
+        <div className={styles.productsArea}>
+          <div
+            className={`${styles.products} ${showFilters ? styles.filtersOpen : ""}`}
+          >
+            {isProductsLoading && products.length === 0 ? (
+              <ProductSkeleton count={8} />
+            ) : isProductsError ? (
+              <div className={styles.noProducts}>
+                Ошибка загрузки товаров: {productsError?.message}
+              </div>
+            ) : products.length > 0 ? (
+              <>
+                {products.map((product, index) => {
+                  return (
+                    <ProductCard
+                      key={`${product.id}-${index}`}
+                      product={transformProduct(product)}
+                      filtersOpen={showFilters}
+                    />
+                  );
+                })}
+              </>
+            ) : (
+              <div className={styles.noProducts}>Товары не найдены</div>
+            )}
+          </div>
+          {products.length > 0 && totalPages > 1 && (
+            <div className={styles.pagination}>
+              <button
+                className={styles.pagination__button}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                type="button"
+              >
+                Назад
+              </button>
+              {paginationPages.map((page) => (
+                <button
+                  key={page}
+                  className={`${styles.pagination__button} ${
+                    page === currentPage ? styles.pagination__button_active : ""
+                  }`}
+                  onClick={() => setCurrentPage(page)}
+                  type="button"
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                className={styles.pagination__button}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages}
+                type="button"
+              >
+                Вперёд
+              </button>
             </div>
-          ) : products.length > 0 ? (
-            <>
-              {products.map((product, index) => {
-                return (
-                  <ProductCard
-                    key={`${product.id}-${index}`}
-                    product={transformProduct(product)}
-                    filtersOpen={showFilters}
-                  />
-                );
-              })}
-              {isFetchingNextPage && <ProductSkeleton count={4} />}
-              {hasNextPage && (
-                <div ref={loadMoreRef} className={styles.loadMore}></div>
-              )}
-            </>
-          ) : (
-            <div className={styles.noProducts}>Товары не найдены</div>
           )}
         </div>
       </div>

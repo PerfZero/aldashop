@@ -103,6 +103,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    height: 100%;
     padding: 18px 12px 14px;
     text-align: left;
 }
@@ -117,49 +118,52 @@
 }
 
 .card__title {
-    margin: 0;
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 500;
     font-size: 18px;
-    line-height: 1.12;
-    font-weight: 400;
+    line-height: 130%;
+    color: #3c101e;
 }
 
 .card__description {
-    margin: 0;
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 400;
     font-size: 14px;
-    line-height: 1.2;
-    color: #7f7a79;
+    line-height: 130%;
+    color: #3c101e;
 }
 
 .card__meta {
-    margin: 0;
-    font-family: var(--font-playfair-display), serif;
-    font-size: 14px;
-    line-height: 1.2;
-    color: #7f7a79;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 130%;
+    color: #616161;
 }
 
 .card__materials {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
 .card__material_caption {
-  margin: 0;
-  font-family: var(--font-playfair-display), serif;
-  font-size: 14px;
-  line-height: 1.2;
-  color: #7f7a79;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 130%;
+    color: #3c101e;
 }
 
 .card__material {
     position: relative;
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border: 1px solid #c9b7ad;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background: #f4f2f1;
     cursor: pointer;
     transition: border-color 0.2s ease;
@@ -173,6 +177,11 @@
 
 .card__material_selected {
     border-color: #45182a;
+}
+
+.card__material_selected img {
+    width: 24px !important;
+    height: 24px !important;
 }
 
 .card__material_loading {
@@ -195,15 +204,16 @@
     display: flex;
     align-items: baseline;
     gap: 12px;
-    margin-top: 2px;
+    margin-top: auto;
 }
 
 .card__price {
-    margin: 0;
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
     font-size: 20px;
-    line-height: 1.15;
-    color: #8d4025;
+    text-align: center;
+    color: #844025;
+    margin-top: auto;
 }
 
 .card__price_old {
@@ -293,15 +303,15 @@
         line-height: 1.14;
     }
 
-  .card__description,
-  .card__meta {
-    font-size: 12px;
-    line-height: 1.2;
-  }
+    .card__description,
+    .card__meta {
+        font-size: 12px;
+        line-height: 1.2;
+    }
 
-  .card__material_caption {
-    font-size: 12px;
-  }
+    .card__material_caption {
+        font-size: 12px;
+    }
 
     .card__price {
         font-size: 16px;

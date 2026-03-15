@@ -1,4 +1,4 @@
-import { Playfair_Display } from "next/font/google";
+import { Playfair_Display, Tenor_Sans } from "next/font/google";
 import Script from "next/script";
 import { Suspense } from "react";
 import Header from "../components/Header";
@@ -80,6 +80,12 @@ const playfairDisplay = Playfair_Display({
   variable: "--font-playfair-display",
 });
 
+const tenorSans = Tenor_Sans({
+  subsets: ["latin", "cyrillic"],
+  weight: ["400"],
+  variable: "--font-tenor-sans",
+});
+
 export default function RootLayout({ children }) {
   return (
     <html lang="ru">
@@ -114,7 +120,7 @@ export default function RootLayout({ children }) {
           strategy="afterInteractive"
         />
       </head>
-      <body className={playfairDisplay.variable}>
+      <body className={`${playfairDisplay.variable} ${tenorSans.variable}`}>
         <Suspense fallback={null}>
           <RouteLoadingBar />
         </Suspense>

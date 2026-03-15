@@ -570,7 +570,11 @@ export default function Header() {
             </svg>
 
             {cartItemsCount > 0 && (
-              <span className={styles.header__cartCount}>{cartItemsCount}</span>
+              <div className={styles.header__cartCount}>
+                <span className={styles.header__cartCountDot}>
+                  {cartItemsCount}
+                </span>
+              </div>
             )}
           </Link>
         </div>

@@ -843,9 +843,7 @@
     top: -5px;
     right: -5px;
     background-color: #a45b38;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
+
     border-radius: 50%;
     min-width: 14px;
     height: 14px;
@@ -853,6 +851,14 @@
     align-items: center;
     justify-content: center;
     padding: 0 4px;
+}
+
+.header__cartCountDot {
+    color: #fff;
+    font-size: 10px;
+    font-weight: bold;
+    position: absolute;
+    top: -2px;
 }
 
 .header__favouritesCount {
