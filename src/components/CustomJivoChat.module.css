@@ -41,6 +41,7 @@
     line-height: 150%;
     text-align: center;
     color: #3c101e;
+    gap: 12px;
     justify-self: start;
 }
 
@@ -169,10 +170,10 @@
 }
 
 .msgAvatar {
-    width: 32px;
-    height: 32px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
-    background: #4d1e2f;
+    background: #844025;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -181,8 +182,8 @@
 }
 
 .msgAvatar svg {
-    width: 18px;
-    height: 18px;
+    width: 12px;
+    height: 12px;
 }
 
 .msgAvatar svg path {
@@ -190,9 +191,12 @@
 }
 
 .msgSenderName {
-    font-size: 13px;
-    font-weight: 600;
-    color: #1a0a10;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 150%;
+    text-align: center;
+    color: #844025;
 }
 
 .msgIn {
@@ -206,14 +210,18 @@
 .msgOut {
     max-width: 82%;
     border-radius: 20px;
-    padding: 14px 22px;
+    padding: 10px 15px;
     background: #6b3a2a;
     color: #fff;
 }
 
 .msgText {
-    font-size: 16px;
-    line-height: 1.45;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    text-align: center;
+    color: #fff;
     white-space: pre-wrap;
     word-break: break-word;
 }
@@ -224,8 +232,12 @@
 }
 
 .msgTime {
-    font-size: 11px;
-    color: #9e8a7e;
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 150%;
+    text-align: right;
+    color: rgba(60, 16, 30, 0.5);
 }
 
 /* ── Typing indicator ── */
@@ -268,16 +280,15 @@
 .form {
     padding: 12px 14px 16px;
     background: #fff;
-    border-top: 1px solid #efe5dc;
 }
 
 .inputWrap {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #f5ede7;
-    border-radius: 999px;
-    padding: 8px;
+    border: 1px solid rgba(132, 64, 37, 0.2);
+    border-radius: 40px;
+    padding: 6px;
 }
 
 .plusBtn {
@@ -285,7 +296,7 @@
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: #f0e0d4;
+    background: #f6f3e7;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -308,15 +319,18 @@
 }
 
 .input::placeholder {
-    color: #b09080;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    color: rgba(60, 16, 30, 0.3);
 }
 
 .send {
     flex-shrink: 0;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    background: #844025;
+
     display: flex;
     align-items: center;
     justify-content: center;
