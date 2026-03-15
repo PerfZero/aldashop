@@ -4,6 +4,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import styles from "./CustomJivoChat.module.css";
 
+const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"]);
+
+const parseFileMessage = (text) => {
+  const match = String(text || "").match(/^\[Файл:\s*(.+?)(?:\s*—\s*(https?:\/\/\S+))?\]$/s);
+  if (!match) return null;
+  const name = match[1].trim();
+  const url = match[2]?.trim() || null;
+  const ext = name.split(".").pop()?.toLowerCase() || "";
+  return { name, url, isImage: IMAGE_EXTS.has(ext) };
+};
+
 const QUICK_ACTIONS = [
   "Покажите мне текущие предложения",
   "Помогите мне выбрать правильный диван",
@@ -45,6 +56,7 @@ export default function CustomJivoChat() {
   const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState("");
   const [attachedFile, setAttachedFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
   const [panelHeight, setPanelHeight] = useState(null);
   const fileInputRef = useRef(null);
   const feedRef = useRef(null);
@@ -151,6 +163,7 @@ export default function CustomJivoChat() {
       setError("");
       setText("");
       setAttachedFile(null);
+      setImagePreviewUrl(null);
       setIsWaiting(true);
 
       let messageText = nextText;
@@ -223,7 +236,16 @@ export default function CustomJivoChat() {
 
   const handleFileChange = (e) => {
     const f = e.target.files?.[0];
-    if (f) setAttachedFile(f);
+    if (f) {
+      setAttachedFile(f);
+      const ext = f.name.split(".").pop()?.toLowerCase() || "";
+      if (IMAGE_EXTS.has(ext)) {
+        const url = URL.createObjectURL(f);
+        setImagePreviewUrl(url);
+      } else {
+        setImagePreviewUrl(null);
+      }
+    }
     e.target.value = "";
   };
 
@@ -346,7 +368,28 @@ export default function CustomJivoChat() {
                     </div>
                   )}
                   <div className={isOut ? styles.msgOut : styles.msgIn}>
-                    <div className={styles.msgText}>{message.text}</div>
+                    {(() => {
+                      const file = parseFileMessage(message.text);
+                      if (file?.isImage && file.url) {
+                        return (
+                          <a href={file.url} target="_blank" rel="noopener noreferrer">
+                            <img src={file.url} alt={file.name} className={styles.msgImage} />
+                          </a>
+                        );
+                      }
+                      if (file?.url) {
+                        return (
+                          <a href={file.url} target="_blank" rel="noopener noreferrer" className={styles.msgFileLink}>
+                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                              <path d="M8 1v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                            </svg>
+                            {file.name}
+                          </a>
+                        );
+                      }
+                      return <div className={styles.msgText}>{message.text}</div>;
+                    })()}
                   </div>
                   {isOut && isLastInGroup && (
                     <div className={styles.msgTime}>
@@ -374,35 +417,21 @@ export default function CustomJivoChat() {
           <form className={styles.form} onSubmit={handleSubmit}>
             {attachedFile && (
               <div className={styles.filePreview}>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 14 14"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z"
-                    stroke="#844025"
-                    strokeWidth="1.2"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 1v4h4"
-                    stroke="#844025"
-                    strokeWidth="1.2"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                {imagePreviewUrl ? (
+                  <img src={imagePreviewUrl} alt={attachedFile.name} className={styles.filePreviewImg} />
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z" stroke="#844025" strokeWidth="1.2" strokeLinejoin="round"/>
+                    <path d="M8 1v4h4" stroke="#844025" strokeWidth="1.2" strokeLinejoin="round"/>
+                  </svg>
+                )}
                 <span className={styles.fileName}>{attachedFile.name}</span>
                 <button
                   type="button"
                   className={styles.fileRemove}
-                  onClick={() => setAttachedFile(null)}
+                  onClick={() => { setAttachedFile(null); setImagePreviewUrl(null); }}
                   aria-label="Убрать файл"
-                >
-                  ×
-                </button>
+                >×</button>
               </div>
             )}
             <input

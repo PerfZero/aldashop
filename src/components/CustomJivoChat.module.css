@@ -263,7 +263,6 @@
     font-weight: 400;
     font-size: 14px;
     line-height: 150%;
-    text-align: center;
     color: #fff;
     white-space: pre-wrap;
     word-break: break-word;
@@ -322,6 +321,33 @@
     display: none;
 }
 
+.msgImage {
+    display: block;
+    max-width: 100%;
+    max-height: 220px;
+    border-radius: 8px;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+.msgFileLink {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Playfair Display", sans-serif;
+    font-size: 13px;
+    text-decoration: underline;
+    word-break: break-all;
+}
+
+.msgOut .msgFileLink {
+    color: #fff;
+}
+
+.msgIn .msgFileLink {
+    color: #3c101e;
+}
+
 .filePreview {
     display: flex;
     align-items: center;
@@ -332,6 +358,14 @@
     padding: 6px 10px;
     font-size: 13px;
     color: #3c101e;
+}
+
+.filePreviewImg {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
 }
 
 .fileName {
