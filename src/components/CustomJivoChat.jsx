@@ -185,17 +185,25 @@ export default function CustomJivoChat() {
                 </div>
               </div>
             )}
-            {visibleMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`${styles.msg} ${
-                  message.direction === "outgoing" ? styles.msgOut : styles.msgIn
-                }`}
-              >
-                <div className={styles.msgText}>{message.text}</div>
-                <div className={styles.msgMeta}>{formatTime(message.createdAt)}</div>
-              </div>
-            ))}
+            {visibleMessages.map((message) => {
+              const isOut = message.direction === "outgoing";
+              return (
+                <div key={message.id} className={isOut ? styles.msgOutWrap : styles.msgInWrap}>
+                  {!isOut && (
+                    <div className={styles.msgSender}>
+                      <span className={styles.msgAvatar}><AldaIcon /></span>
+                      <span className={styles.msgSenderName}>ALDA</span>
+                    </div>
+                  )}
+                  <div className={isOut ? styles.msgOut : styles.msgIn}>
+                    <div className={styles.msgText}>{message.text}</div>
+                  </div>
+                  {isOut && (
+                    <div className={styles.msgTime}>{formatTime(message.createdAt)}</div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <form className={styles.form} onSubmit={handleSubmit}>
