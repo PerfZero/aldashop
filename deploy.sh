@@ -20,10 +20,7 @@ npm ci
 echo -e "${YELLOW}🛑 Останавливаем приложение...${NC}"
 pm2 stop aldalinde || true
 
-echo -e "${YELLOW}🔨 Собираем проект...${NC}"
-npm run build
-
-echo -e "${YELLOW}▶️ Запускаем приложение...${NC}"
+echo -e "${YELLOW}▶️ Запускаем приложение (DEV MODE)...${NC}"
 pm2 start npm --name "aldalinde" -- run start
 
 echo -e "${YELLOW}💾 Сохраняем конфигурацию PM2...${NC}"

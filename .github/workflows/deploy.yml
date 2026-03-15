@@ -24,8 +24,8 @@ jobs:
     - name: Run linting
       run: npm run lint || echo "Linting completed with warnings"
       
-    - name: Build project
-      run: npm run build
+    - name: Skip build in dev deploy mode
+      run: echo "Build skipped (dev deploy mode)"
 
   deploy:
     needs: test
@@ -46,7 +46,7 @@ jobs:
           pm2 delete aldalinde 2>/dev/null || echo "Процесс не существует"
           sleep 3
 
-    - name: Update code and build
+    - name: Update code (dev mode)
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.SERVER_HOST }}
@@ -64,12 +64,7 @@ jobs:
           
           echo "📦 Устанавливаем зависимости..."
           npm ci --silent --maxsockets 1
-          
-          echo "🔨 Собираем проект..."
-          npm run build
-          
-          echo "✅ Проверяем сборку..."
-          ls -la .next/static/chunks/app/ | head -10 || echo "Папка не найдена"
+          echo "✅ Build step skipped (running next dev on server)"
 
     - name: Start application
       uses: appleboy/ssh-action@v1.0.3
@@ -80,7 +75,7 @@ jobs:
         timeout: 60s
         script: |
           cd /var/www/aldalinde
-          echo "▶️ Запускаем приложение..."
+          echo "▶️ Запускаем приложение (DEV MODE)..."
           pm2 start npm --name "aldalinde" -- run start
           pm2 save
           
@@ -106,6 +101,4 @@ jobs:
           echo "Процессы Node:"
           ps aux | grep node | head -5
           echo "Размер .next:"
-          du -sh .next/
-          echo "Файлы в static/chunks:"
-          ls -la .next/static/chunks/ | head -10
+          du -sh .next/ || echo "Папка .next еще не сформирована"

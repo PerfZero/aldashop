@@ -1,0 +1,161 @@
+.wrap {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 10001;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.panel {
+  width: min(380px, calc(100vw - 20px));
+  height: min(560px, calc(100vh - 110px));
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid #e3d6ca;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  overflow: hidden;
+}
+
+.header {
+  padding: 14px 14px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #efe5dc;
+}
+
+.title {
+  margin: 0;
+  color: #3c101e;
+  font-size: 18px;
+  font-family: var(--font-playfair-display), serif;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin: 4px 0 0;
+  color: #86695a;
+  font-size: 12px;
+}
+
+.close {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: #3c101e;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.feed {
+  padding: 14px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fdfaf7;
+}
+
+.empty {
+  margin: auto 0;
+  color: #8c7568;
+  text-align: center;
+  font-size: 14px;
+}
+
+.msg {
+  max-width: 82%;
+  border-radius: 12px;
+  padding: 8px 10px 6px;
+}
+
+.msgIn {
+  align-self: flex-start;
+  background: #fff;
+  border: 1px solid #ecdccd;
+}
+
+.msgOut {
+  align-self: flex-end;
+  background: #4d1e2f;
+  color: #fff;
+}
+
+.msgText {
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.msgMeta {
+  margin-top: 4px;
+  font-size: 11px;
+  opacity: 0.75;
+  text-align: right;
+}
+
+.form {
+  padding: 12px;
+  border-top: 1px solid #efe5dc;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  background: #fff;
+}
+
+.input {
+  width: 100%;
+  resize: none;
+  border: 1px solid #d8c2b2;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.send {
+  padding: 0 14px;
+  border-radius: 8px;
+  background: #8d4025;
+  color: #fff;
+  font-size: 14px;
+}
+
+.send:disabled {
+  opacity: 0.65;
+}
+
+.error {
+  padding: 0 12px 10px;
+  color: #c23636;
+  font-size: 12px;
+  background: #fff;
+}
+
+.trigger {
+  min-width: 92px;
+  height: 42px;
+  border-radius: 999px;
+  background: #4d1e2f;
+  color: #fff;
+  padding: 0 16px;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .wrap {
+    right: 10px;
+    bottom: 10px;
+  }
+
+  .panel {
+    width: calc(100vw - 20px);
+    height: min(70vh, 560px);
+  }
+}

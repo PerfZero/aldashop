@@ -14,6 +14,7 @@ import ScrollRestoration from "../components/ScrollRestoration";
 import CookieConsent from "../components/CookieConsent";
 import RouteLoadingBar from "../components/RouteLoadingBar";
 import BitrixLeadPopup from "../components/BitrixLeadPopup";
+import CustomJivoChat from "../components/CustomJivoChat";
 import "./globals.css";
 
 const organizationJsonLd = {
@@ -115,10 +116,6 @@ export default function RootLayout({ children }) {
             ym(106270540, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", referrer: document.referrer, url: location.href, accurateTrackBounce:true, trackLinks:true});
           `}
         </Script>
-        <Script
-          src="//code.jivo.ru/widget/sFBefPB63K"
-          strategy="afterInteractive"
-        />
       </head>
       <body className={`${playfairDisplay.variable} ${tenorSans.variable}`}>
         <Suspense fallback={null}>
@@ -145,6 +142,7 @@ export default function RootLayout({ children }) {
                   <main>{children}</main>
                   <Footer />
                   <CookieConsent />
+                  <CustomJivoChat />
                 </FavouritesProvider>
               </CartProvider>
             </AuthProvider>
