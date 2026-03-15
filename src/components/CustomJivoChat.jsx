@@ -328,8 +328,10 @@ export default function CustomJivoChat() {
               const isOut = message.direction === "outgoing";
               const prev = visibleMessages[index - 1];
               const next = visibleMessages[index + 1];
-              const isFirstInGroup = !prev || prev.direction !== message.direction;
-              const isLastInGroup = !next || next.direction !== message.direction;
+              const isFirstInGroup =
+                !prev || prev.direction !== message.direction;
+              const isLastInGroup =
+                !next || next.direction !== message.direction;
               return (
                 <div
                   key={message.id}
@@ -337,7 +339,9 @@ export default function CustomJivoChat() {
                 >
                   {!isOut && isFirstInGroup && (
                     <div className={styles.msgSender}>
-                      <span className={styles.msgAvatar}><AldaIcon /></span>
+                      <span className={styles.msgAvatar}>
+                        <AldaIcon />
+                      </span>
                       <span className={styles.msgSenderName}>ALDA</span>
                     </div>
                   )}
@@ -355,7 +359,9 @@ export default function CustomJivoChat() {
             {isWaiting && (
               <div className={styles.msgInWrap}>
                 <div className={styles.msgSender}>
-                  <span className={styles.msgAvatar}><AldaIcon /></span>
+                  <span className={styles.msgAvatar}>
+                    <AldaIcon />
+                  </span>
                   <span className={styles.msgSenderName}>ALDA</span>
                 </div>
                 <div className={`${styles.msgIn} ${styles.msgThinking}`}>
@@ -368,9 +374,25 @@ export default function CustomJivoChat() {
           <form className={styles.form} onSubmit={handleSubmit}>
             {attachedFile && (
               <div className={styles.filePreview}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z" stroke="#844025" strokeWidth="1.2" strokeLinejoin="round"/>
-                  <path d="M8 1v4h4" stroke="#844025" strokeWidth="1.2" strokeLinejoin="round"/>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 14 14"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z"
+                    stroke="#844025"
+                    strokeWidth="1.2"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M8 1v4h4"
+                    stroke="#844025"
+                    strokeWidth="1.2"
+                    strokeLinejoin="round"
+                  />
                 </svg>
                 <span className={styles.fileName}>{attachedFile.name}</span>
                 <button
@@ -378,7 +400,9 @@ export default function CustomJivoChat() {
                   className={styles.fileRemove}
                   onClick={() => setAttachedFile(null)}
                   aria-label="Убрать файл"
-                >×</button>
+                >
+                  ×
+                </button>
               </div>
             )}
             <input
@@ -415,7 +439,9 @@ export default function CustomJivoChat() {
                 type="text"
                 value={text}
                 onChange={(event) => setText(event.target.value)}
-                placeholder={attachedFile ? "Добавить комментарий..." : "Спросить ALDA"}
+                placeholder={
+                  attachedFile ? "Добавить комментарий..." : "Спросить ALDA"
+                }
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -464,7 +490,7 @@ export default function CustomJivoChat() {
           >
             <path
               d="M4 4L16 16M16 4L4 16"
-              stroke="white"
+              stroke="#6c3b2b"
               strokeWidth="2"
               strokeLinecap="round"
             />
