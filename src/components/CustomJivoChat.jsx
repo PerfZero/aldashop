@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import styles from "./CustomJivoChat.module.css";
 
@@ -44,6 +44,35 @@ export default function CustomJivoChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState("");
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [panelHeight, setPanelHeight] = useState(null);
+  const fileInputRef = useRef(null);
+  const feedRef = useRef(null);
+  const dragRef = useRef(null);
+
+  const handleResizeStart = useCallback((e) => {
+    e.preventDefault();
+    const startY = e.touches ? e.touches[0].clientY : e.clientY;
+    const startHeight = dragRef.current?.offsetHeight ?? 700;
+    const minH = 300;
+    const maxH = window.innerHeight - 100;
+
+    const onMove = (ev) => {
+      const y = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      const newH = Math.min(maxH, Math.max(minH, startHeight - (y - startY)));
+      setPanelHeight(newH);
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      window.removeEventListener("touchmove", onMove);
+      window.removeEventListener("touchend", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("touchend", onUp);
+  }, []);
 
   const profile = useMemo(
     () => ({
@@ -105,22 +134,61 @@ export default function CustomJivoChat() {
     return () => window.clearInterval(timer);
   }, [isOpen, fetchMessages]);
 
+  // Auto-scroll feed to bottom when messages change
+  useEffect(() => {
+    if (feedRef.current) {
+      feedRef.current.scrollTop = feedRef.current.scrollHeight;
+    }
+  }, [visibleMessages, isWaiting]);
+
   const sendMessage = useCallback(
-    async (rawText) => {
+    async (rawText, file) => {
       const nextText = String(rawText || "").trim();
-      if (!nextText || isLoading) return;
+      if (!nextText && !file) return;
+      if (isLoading) return;
 
       setIsLoading(true);
       setError("");
       setText("");
+      setAttachedFile(null);
       setIsWaiting(true);
+
+      let messageText = nextText;
+
+      if (file) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploadRes = await fetch("/api/jivo/chat/upload", {
+          method: "POST",
+          credentials: "include",
+          body: formData,
+        }).catch(() => null);
+
+        if (uploadRes?.ok) {
+          const uploadData = await uploadRes.json().catch(() => ({}));
+          const fileUrl = uploadData?.url || "";
+          messageText = messageText
+            ? `${messageText}\n[Файл: ${file.name}${fileUrl ? ` — ${fileUrl}` : ""}]`
+            : `[Файл: ${file.name}${fileUrl ? ` — ${fileUrl}` : ""}]`;
+        } else {
+          messageText = messageText
+            ? `${messageText}\n[Файл: ${file.name}]`
+            : `[Файл: ${file.name}]`;
+        }
+      }
+
+      if (!messageText) {
+        setIsWaiting(false);
+        setIsLoading(false);
+        return;
+      }
 
       const response = await fetch("/api/jivo/chat/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          text: nextText,
+          text: messageText,
           name: profile.name,
           email: profile.email,
           phone: profile.phone,
@@ -131,7 +199,7 @@ export default function CustomJivoChat() {
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         setError(data?.error || "Не удалось отправить сообщение.");
-        setText(nextText);
+        setText(rawText || "");
         setIsWaiting(false);
         setIsLoading(false);
         return;
@@ -145,13 +213,18 @@ export default function CustomJivoChat() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const nextText = text.trim();
-    if (!nextText) return;
-    await sendMessage(nextText);
+    if (!text.trim() && !attachedFile) return;
+    await sendMessage(text, attachedFile);
   };
 
   const handleQuickActionClick = async (value) => {
-    await sendMessage(value);
+    await sendMessage(value, null);
+  };
+
+  const handleFileChange = (e) => {
+    const f = e.target.files?.[0];
+    if (f) setAttachedFile(f);
+    e.target.value = "";
   };
 
   const showWelcome = visibleMessages.length === 0;
@@ -159,7 +232,18 @@ export default function CustomJivoChat() {
   return (
     <div className={styles.wrap}>
       {isOpen && (
-        <section className={styles.panel} aria-label="Чат поддержки">
+        <section
+          className={styles.panel}
+          aria-label="Чат поддержки"
+          ref={dragRef}
+          style={panelHeight ? { height: panelHeight } : undefined}
+        >
+          <div
+            className={styles.resizeHandle}
+            onMouseDown={handleResizeStart}
+            onTouchStart={handleResizeStart}
+            aria-hidden="true"
+          />
           <header className={styles.header}>
             <button
               type="button"
@@ -208,7 +292,7 @@ export default function CustomJivoChat() {
             </button>
           </header>
 
-          <div className={styles.feed}>
+          <div className={styles.feed} ref={feedRef}>
             {showWelcome && (
               <div className={styles.welcome}>
                 <div className={styles.welcomeHeading}>
@@ -240,25 +324,27 @@ export default function CustomJivoChat() {
                 </div>
               </div>
             )}
-            {visibleMessages.map((message) => {
+            {visibleMessages.map((message, index) => {
               const isOut = message.direction === "outgoing";
+              const prev = visibleMessages[index - 1];
+              const next = visibleMessages[index + 1];
+              const isFirstInGroup = !prev || prev.direction !== message.direction;
+              const isLastInGroup = !next || next.direction !== message.direction;
               return (
                 <div
                   key={message.id}
                   className={isOut ? styles.msgOutWrap : styles.msgInWrap}
                 >
-                  {!isOut && (
+                  {!isOut && isFirstInGroup && (
                     <div className={styles.msgSender}>
-                      <span className={styles.msgAvatar}>
-                        <AldaIcon />
-                      </span>
+                      <span className={styles.msgAvatar}><AldaIcon /></span>
                       <span className={styles.msgSenderName}>ALDA</span>
                     </div>
                   )}
                   <div className={isOut ? styles.msgOut : styles.msgIn}>
                     <div className={styles.msgText}>{message.text}</div>
                   </div>
-                  {isOut && (
+                  {isOut && isLastInGroup && (
                     <div className={styles.msgTime}>
                       {formatTime(message.createdAt)}
                     </div>
@@ -269,28 +355,45 @@ export default function CustomJivoChat() {
             {isWaiting && (
               <div className={styles.msgInWrap}>
                 <div className={styles.msgSender}>
-                  <span className={styles.msgAvatar}>
-                    <AldaIcon />
-                  </span>
+                  <span className={styles.msgAvatar}><AldaIcon /></span>
                   <span className={styles.msgSenderName}>ALDA</span>
                 </div>
-                <div className={styles.msgIn}>
-                  <div className={styles.typingDots}>
-                    <span />
-                    <span />
-                    <span />
-                  </div>
+                <div className={`${styles.msgIn} ${styles.msgThinking}`}>
+                  <span>Думает...</span>
                 </div>
               </div>
             )}
           </div>
 
           <form className={styles.form} onSubmit={handleSubmit}>
+            {attachedFile && (
+              <div className={styles.filePreview}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z" stroke="#844025" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <path d="M8 1v4h4" stroke="#844025" strokeWidth="1.2" strokeLinejoin="round"/>
+                </svg>
+                <span className={styles.fileName}>{attachedFile.name}</span>
+                <button
+                  type="button"
+                  className={styles.fileRemove}
+                  onClick={() => setAttachedFile(null)}
+                  aria-label="Убрать файл"
+                >×</button>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              className={styles.fileInput}
+              onChange={handleFileChange}
+              aria-label="Прикрепить файл"
+            />
             <div className={styles.inputWrap}>
               <button
                 type="button"
                 className={styles.plusBtn}
                 aria-label="Прикрепить"
+                onClick={() => fileInputRef.current?.click()}
               >
                 <svg
                   width="14"
@@ -312,7 +415,7 @@ export default function CustomJivoChat() {
                 type="text"
                 value={text}
                 onChange={(event) => setText(event.target.value)}
-                placeholder="Спросить ALDA"
+                placeholder={attachedFile ? "Добавить комментарий..." : "Спросить ALDA"}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -323,7 +426,7 @@ export default function CustomJivoChat() {
               <button
                 type="submit"
                 className={styles.send}
-                disabled={isLoading || !text.trim()}
+                disabled={isLoading || (!text.trim() && !attachedFile)}
                 aria-label="Отправить"
               >
                 <svg
