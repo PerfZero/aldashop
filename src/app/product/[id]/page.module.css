@@ -37,6 +37,7 @@
 
 .product__breadcrumbs {
     padding-left: 0;
+    padding-bottom: 0;
 }
 
 .product__gallery_desktop {
@@ -54,6 +55,7 @@
 .product__stack_item {
     width: 100%;
     background: #f6f4f2;
+    cursor: zoom-in;
 }
 
 .product__stack_image {
@@ -130,6 +132,10 @@
     overflow: hidden;
 }
 
+.product__main_image_clickable {
+    cursor: zoom-in;
+}
+
 .product__main_image img {
     width: 100%;
     height: 100%;
@@ -148,6 +154,78 @@
 .product__main_swiper .swiper-pagination-bullet-active {
     opacity: 1;
     background: #a45b38;
+}
+
+.product__lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(12, 9, 8, 0.88);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px 62px;
+}
+
+.product__lightbox_close {
+    position: absolute;
+    top: 16px;
+    right: 18px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 34px;
+    line-height: 1;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    z-index: 2;
+}
+
+.product__lightbox_content {
+    width: min(1320px, 100%);
+    height: min(88vh, 980px);
+}
+
+.product__lightbox_swiper {
+    width: 100%;
+    height: 100%;
+}
+
+.product__lightbox_swiper :global(.swiper-button-next),
+.product__lightbox_swiper :global(.swiper-button-prev) {
+    color: #fff;
+}
+
+.product__lightbox_swiper :global(.swiper-button-next)::after,
+.product__lightbox_swiper :global(.swiper-button-prev)::after {
+    font-size: 22px;
+}
+
+.product__lightbox_image_wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product__lightbox_image {
+    width: auto;
+    height: auto;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.product__lightbox_counter {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    color: #fff;
+    font-family: "Tenor Sans", sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.04em;
 }
 
 .product__title {
@@ -392,7 +470,9 @@
     opacity: 0;
     pointer-events: none;
     transform: translateY(10px);
-    transition: opacity 0.18s ease, transform 0.18s ease;
+    transition:
+        opacity 0.18s ease,
+        transform 0.18s ease;
     z-index: 8;
 }
 
@@ -512,6 +592,64 @@
     flex-direction: column;
     gap: 8px;
     margin-top: 2px;
+}
+
+.product__notices {
+    margin-top: 8px;
+}
+
+.product__notice_card {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid #e3d6ca;
+    background: #faf6f1;
+}
+
+.product__notice_icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 auto;
+    fill: #8d4025;
+}
+
+.product__notice_text {
+    margin: 0;
+    font-family: "Tenor Sans", sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #3c101e;
+    animation: noticeFadeIn 0.2s ease;
+}
+
+.product__notice_dots {
+    margin-top: 10px;
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.product__notice_dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    padding: 0;
+    background: #c7b4a6;
+}
+
+.product__notice_dot_active {
+    background: #8d4025;
+}
+
+@keyframes noticeFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .product__detail {
@@ -812,6 +950,14 @@
         gap: 15px;
     }
 
+    .product__notice_card {
+        padding: 10px 12px;
+    }
+
+    .product__notice_text {
+        font-size: 13px;
+    }
+
     .product__cart_button {
         width: 100%;
         height: 50px;
@@ -906,6 +1052,24 @@
 
     .product__main_swiper .swiper-pagination {
         bottom: 10px;
+    }
+
+    .product__lightbox {
+        padding: 54px 10px 54px;
+    }
+
+    .product__lightbox_close {
+        top: 10px;
+        right: 10px;
+    }
+
+    .product__lightbox_content {
+        height: min(82vh, 760px);
+    }
+
+    .product__lightbox_swiper :global(.swiper-button-next)::after,
+    .product__lightbox_swiper :global(.swiper-button-prev)::after {
+        font-size: 18px;
     }
 }
 

@@ -9,7 +9,7 @@ import Reviews from "@/components/Reviews";
 import { useCart } from "../../components/CartContext";
 import { useFavourites } from "../../../contexts/FavouritesContext";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination } from "swiper/modules";
+import { Navigation, Pagination } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -20,6 +20,10 @@ const toAbsoluteMedia = (url) => {
   if (!url) return null;
   return url.startsWith("http") ? url : `https://aldalinde.ru${url}`;
 };
+const PROMO_NOTICES = [
+  "Межсезонная распродажа: получите скидку 5% на выбранные товары.",
+  "Также получите дополнительную скидку 10 800 ₽ при заказе от 350 000 ₽ по промокоду PRM8502. Предложение действует до 8 марта.",
+];
 
 const getMaterialLabel = (material) => {
   if (!material) return "Не указан";
@@ -83,6 +87,9 @@ export default function ProductClient({
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [hoveredMaterial, setHoveredMaterial] = useState(null);
+  const [activeNotice, setActiveNotice] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const [modelId, setModelId] = useState(null);
   const [isAdded, setIsAdded] = useState(false);
   const [showMaterialInfo, setShowMaterialInfo] = useState(true);
@@ -139,6 +146,33 @@ export default function ProductClient({
   useEffect(() => {
     setActiveDesktopImage(0);
   }, [product?.id, selectedColor?.id, selectedSize?.id, selectedMaterial?.id]);
+
+  useEffect(() => {
+    if (PROMO_NOTICES.length <= 1) return undefined;
+    const timer = window.setInterval(() => {
+      setActiveNotice((prev) => (prev + 1) % PROMO_NOTICES.length);
+    }, 5500);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!isLightboxOpen) return undefined;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsLightboxOpen(false);
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [isLightboxOpen]);
 
   useEffect(() => {
     if (isMobile) return;
@@ -429,6 +463,10 @@ export default function ProductClient({
     ? sortPhotos(product.photos.filter((photo) => photo.photo_sizes !== true))
     : [];
   const hasDisplayPhotos = displayPhotos.length > 0;
+  const openLightbox = (index) => {
+    setLightboxIndex(index);
+    setIsLightboxOpen(true);
+  };
 
   const scrollToDesktopImage = (index) => {
     setActiveDesktopImage(index);
@@ -459,7 +497,19 @@ export default function ProductClient({
             >
               {displayPhotos.map((photo, index) => (
                 <SwiperSlide key={index}>
-                  <div className={styles.product__main_image}>
+                  <div
+                    className={`${styles.product__main_image} ${styles.product__main_image_clickable}`}
+                    onClick={() => openLightbox(index)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openLightbox(index);
+                      }
+                    }}
+                    aria-label={`Открыть фото ${index + 1}`}
+                  >
                     <Image
                       src={photo.photo}
                       alt={`${product.title} - фото ${index + 1}`}
@@ -511,6 +561,7 @@ export default function ProductClient({
                     }}
                     data-image-index={index}
                     className={styles.product__stack_item}
+                    onClick={() => openLightbox(index)}
                   >
                     <Image
                       src={photo.photo}
@@ -766,6 +817,33 @@ export default function ProductClient({
             )}*/}
           </div>
 
+          <div className={styles.product__notices}>
+            <div className={styles.product__notice_card}>
+              <svg
+                focusable="false"
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className={styles.product__notice_icon}
+              >
+                <path d="M13.5558 20.7C13.3724 20.9 13.1391 21 12.8558 21C12.5724 21 12.3308 20.9 12.1308 20.7L3.33077 11.9C3.23077 11.8 3.15177 11.6873 3.09377 11.562C3.0351 11.4373 3.00577 11.3 3.00577 11.15V4C3.00577 3.73333 3.10577 3.5 3.30577 3.3C3.50577 3.1 3.7391 3 4.00577 3H11.1558C11.2891 3 11.4184 3.025 11.5438 3.075C11.6684 3.125 11.7808 3.2 11.8808 3.3L20.6808 12.1C20.8808 12.3 20.9851 12.5457 20.9938 12.837C21.0018 13.129 20.9058 13.3667 20.7058 13.55L13.5558 20.7ZM6.50577 7.5C6.7891 7.5 7.02677 7.40433 7.21877 7.213C7.4101 7.021 7.50577 6.78333 7.50577 6.5C7.50577 6.21667 7.4101 5.979 7.21877 5.787C7.02677 5.59567 6.7891 5.5 6.50577 5.5C6.22243 5.5 5.98477 5.59567 5.79277 5.787C5.60143 5.979 5.50577 6.21667 5.50577 6.5C5.50577 6.78333 5.60143 7.021 5.79277 7.213C5.98477 7.40433 6.22243 7.5 6.50577 7.5Z" />
+              </svg>
+              <p key={`notice-${activeNotice}`} className={styles.product__notice_text}>
+                {PROMO_NOTICES[activeNotice]}
+              </p>
+            </div>
+            <div className={styles.product__notice_dots}>
+              {PROMO_NOTICES.map((_, idx) => (
+                <button
+                  key={`notice-dot-${idx}`}
+                  type="button"
+                  aria-label={`Показать уведомление ${idx + 1}`}
+                  className={`${styles.product__notice_dot} ${activeNotice === idx ? styles.product__notice_dot_active : ""}`}
+                  onClick={() => setActiveNotice(idx)}
+                />
+              ))}
+            </div>
+          </div>
+
           <div className={styles.product__actions}>
             <button
               className={`${styles.product__cart_button} ${isAdded || product?.in_cart ? styles.added : ""}`}
@@ -1013,6 +1091,57 @@ export default function ProductClient({
           )}
         </div>
       </div>
+
+      {isLightboxOpen && hasDisplayPhotos && (
+        <div
+          className={styles.product__lightbox}
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          <button
+            type="button"
+            className={styles.product__lightbox_close}
+            onClick={(event) => {
+              event.stopPropagation();
+              setIsLightboxOpen(false);
+            }}
+            aria-label="Закрыть галерею"
+          >
+            ×
+          </button>
+
+          <div
+            className={styles.product__lightbox_content}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <Swiper
+              initialSlide={lightboxIndex}
+              onSlideChange={(swiper) => setLightboxIndex(swiper.activeIndex)}
+              modules={[Navigation]}
+              navigation
+              className={styles.product__lightbox_swiper}
+            >
+              {displayPhotos.map((photo, index) => (
+                <SwiperSlide key={`lightbox-${photo.id || index}`}>
+                  <div className={styles.product__lightbox_image_wrap}>
+                    <Image
+                      src={photo.photo}
+                      alt={`${product.title} - фото ${index + 1}`}
+                      width={1800}
+                      height={1800}
+                      unoptimized
+                      className={styles.product__lightbox_image}
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+
+            <div className={styles.product__lightbox_counter}>
+              {lightboxIndex + 1} / {displayPhotos.length}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div id="reviews">
         <Reviews

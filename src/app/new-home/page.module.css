@@ -341,7 +341,7 @@
     position: relative;
     width: 100%;
     overflow: hidden;
-    background: #e9e5e0;
+    mix-blend-mode: darken;
 }
 
 .thirdBlockStageImage {
@@ -588,6 +588,10 @@
     width: 100%;
     aspect-ratio: 1 / 0.82;
     margin-bottom: 30px;
+}
+
+.fourthBlockImageWrap img {
+    mix-blend-mode: darken;
 }
 
 .fourthBlockImage {
