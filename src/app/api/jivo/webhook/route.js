@@ -3,11 +3,25 @@ import { addSessionMessage } from "@/lib/jivoChatStore";
 
 export const runtime = "nodejs";
 
+const IGNORED_TYPES = new Set(["typein", "typing", "system"]);
+const IGNORED_EVENTS = new Set(["typein", "typing"]);
+
+const shouldIgnorePayload = (payload) => {
+  const messageType = String(payload?.message?.type || "").toLowerCase();
+  const eventType = String(payload?.event || "").toLowerCase();
+
+  if (IGNORED_TYPES.has(messageType)) return true;
+  if (IGNORED_EVENTS.has(eventType)) return true;
+  if (!payload?.message?.text && !payload?.text && (messageType || eventType)) {
+    return true;
+  }
+
+  return false;
+};
+
 const pickText = (payload) => {
   if (payload?.message?.text) return String(payload.message.text);
   if (payload?.text) return String(payload.text);
-  if (payload?.message?.type) return `[${payload.message.type}]`;
-  if (payload?.event) return `[${payload.event}]`;
   return "";
 };
 
@@ -16,6 +30,10 @@ export async function POST(request) {
 
   if (!payload || typeof payload !== "object") {
     return NextResponse.json({ ok: false, error: "Invalid payload" }, { status: 400 });
+  }
+
+  if (shouldIgnorePayload(payload)) {
+    return NextResponse.json({ ok: true, ignored: true });
   }
 
   const recipientId =

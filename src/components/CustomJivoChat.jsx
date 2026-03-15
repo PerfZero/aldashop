@@ -38,6 +38,15 @@ export default function CustomJivoChat() {
     [user],
   );
 
+  const visibleMessages = useMemo(
+    () =>
+      messages.filter((message) => {
+        const textValue = String(message?.text || "").trim().toLowerCase();
+        return textValue !== "[typein]" && textValue !== "[typing]" && textValue !== "[system]";
+      }),
+    [messages],
+  );
+
   const fetchMessages = useCallback(async () => {
     const response = await fetch("/api/jivo/chat/messages", {
       credentials: "include",
@@ -107,7 +116,7 @@ export default function CustomJivoChat() {
     await sendMessage(value);
   };
 
-  const showWelcome = messages.length === 0;
+  const showWelcome = visibleMessages.length === 0;
 
   return (
     <div className={styles.wrap}>
@@ -155,7 +164,7 @@ export default function CustomJivoChat() {
                 </div>
               </div>
             )}
-            {messages.map((message) => (
+            {visibleMessages.map((message) => (
               <div
                 key={message.id}
                 className={`${styles.msg} ${
