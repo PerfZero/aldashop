@@ -21,6 +21,54 @@ const toAbsoluteMedia = (url) => {
   return url.startsWith("http") ? url : `https://aldalinde.ru${url}`;
 };
 
+const getMaterialLabel = (material) => {
+  if (!material) return "Не указан";
+  const name = material.title_material || material.title || "Материал";
+  return material.title_color ? `${name}, ${material.title_color}` : name;
+};
+
+const normalizeDetailPayload = (data) => {
+  if (!data || typeof data !== "object") return data;
+
+  const normalized = { ...data };
+
+  if (Array.isArray(normalized.photos)) {
+    normalized.photos = normalized.photos
+      .map((photo) => ({
+        ...photo,
+        photo: toAbsoluteMedia(photo.photo),
+      }))
+      .sort((a, b) => {
+        if (a.main_photo && !b.main_photo) return -1;
+        if (!a.main_photo && b.main_photo) return 1;
+        return 0;
+      });
+  }
+
+  if (Array.isArray(normalized.available_sizes)) {
+    normalized.available_sizes = normalized.available_sizes.map((size) => ({
+      ...size,
+      title:
+        size.value ||
+        size.title ||
+        size.name ||
+        size.dimensions ||
+        `${size.width}x${size.height}x${size.depth}` ||
+        "Размер",
+    }));
+  }
+
+  if (normalized.video) {
+    normalized.video = {
+      ...normalized.video,
+      video: toAbsoluteMedia(normalized.video.video),
+      video_thumbnail: toAbsoluteMedia(normalized.video.video_thumbnail),
+    };
+  }
+
+  return normalized;
+};
+
 export default function ProductClient({
   initialProduct,
   productId,
@@ -34,6 +82,7 @@ export default function ProductClient({
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
+  const [hoveredMaterial, setHoveredMaterial] = useState(null);
   const [modelId, setModelId] = useState(null);
   const [isAdded, setIsAdded] = useState(false);
   const [showMaterialInfo, setShowMaterialInfo] = useState(true);
@@ -77,10 +126,10 @@ export default function ProductClient({
         setSelectedSize(initialProduct.available_sizes[0]);
       }
 
-      if (initialProduct.material) {
-        setSelectedMaterial(initialProduct.material);
-      } else if (initialProduct.material_photo) {
+      if (initialProduct.material_photo) {
         setSelectedMaterial(initialProduct.material_photo);
+      } else if (initialProduct.material) {
+        setSelectedMaterial(initialProduct.material);
       } else if (initialProduct.available_materials?.length > 0) {
         setSelectedMaterial(initialProduct.available_materials[0]);
       }
@@ -174,53 +223,28 @@ export default function ProductClient({
     };
 
     try {
-      const response = await fetch(
-        "https://aldalinde.ru/api/products/product-detail/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify(requestData),
+      const response = await fetch("/api/products/product-detail/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
         },
-      );
+        credentials: "include",
+        body: JSON.stringify(requestData),
+      });
 
       if (response.ok) {
-        const data = await response.json();
-
-        if (data.photos && Array.isArray(data.photos)) {
-          data.photos = data.photos
-            .map((photo) => ({
-              ...photo,
-              photo: photo.photo.startsWith("http")
-                ? photo.photo
-                : `https://aldalinde.ru${photo.photo}`,
-            }))
-            .sort((a, b) => {
-              if (a.main_photo && !b.main_photo) return -1;
-              if (!a.main_photo && b.main_photo) return 1;
-              return 0;
-            });
-        }
-
-        if (data.available_sizes && Array.isArray(data.available_sizes)) {
-          data.available_sizes = data.available_sizes.map((size) => ({
-            ...size,
-            title:
-              size.value ||
-              size.title ||
-              size.name ||
-              size.dimensions ||
-              `${size.width}x${size.height}x${size.depth}` ||
-              "Размер",
-          }));
-        }
+        const data = normalizeDetailPayload(await response.json());
 
         setProduct((prevProduct) => ({
           ...prevProduct,
           ...data,
         }));
+        if (data.material_photo) {
+          setSelectedMaterial(data.material_photo);
+        } else if (data.available_materials?.length > 0) {
+          setSelectedMaterial(data.available_materials[0]);
+        }
 
         if (data.id && data.id !== productId) {
           const newUrl = `/product/${data.id}`;
@@ -245,53 +269,28 @@ export default function ProductClient({
     };
 
     try {
-      const response = await fetch(
-        "https://aldalinde.ru/api/products/product-detail/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify(requestData),
+      const response = await fetch("/api/products/product-detail/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
         },
-      );
+        credentials: "include",
+        body: JSON.stringify(requestData),
+      });
 
       if (response.ok) {
-        const data = await response.json();
-
-        if (data.photos && Array.isArray(data.photos)) {
-          data.photos = data.photos
-            .map((photo) => ({
-              ...photo,
-              photo: photo.photo.startsWith("http")
-                ? photo.photo
-                : `https://aldalinde.ru${photo.photo}`,
-            }))
-            .sort((a, b) => {
-              if (a.main_photo && !b.main_photo) return -1;
-              if (!a.main_photo && b.main_photo) return 1;
-              return 0;
-            });
-        }
-
-        if (data.available_sizes && Array.isArray(data.available_sizes)) {
-          data.available_sizes = data.available_sizes.map((size) => ({
-            ...size,
-            title:
-              size.value ||
-              size.title ||
-              size.name ||
-              size.dimensions ||
-              `${size.width}x${size.height}x${size.depth}` ||
-              "Размер",
-          }));
-        }
+        const data = normalizeDetailPayload(await response.json());
 
         setProduct((prevProduct) => ({
           ...prevProduct,
           ...data,
         }));
+        if (data.material_photo) {
+          setSelectedMaterial(data.material_photo);
+        } else if (data.available_materials?.length > 0) {
+          setSelectedMaterial(data.available_materials[0]);
+        }
 
         if (data.id && data.id !== productId) {
           const newUrl = `/product/${data.id}`;
@@ -317,27 +316,31 @@ export default function ProductClient({
     };
 
     try {
-      const response = await fetch(
-        "https://aldalinde.ru/api/products/product-detail/",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            accept: "application/json",
-          },
-          body: JSON.stringify(requestData),
+      const response = await fetch("/api/products/product-detail/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          accept: "application/json",
         },
-      );
+        credentials: "include",
+        body: JSON.stringify(requestData),
+      });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = normalizeDetailPayload(await response.json());
         if (data.material_photo) {
           setSelectedMaterial(data.material_photo);
+        } else if (data.available_materials?.length > 0) {
+          setSelectedMaterial(data.available_materials[0]);
         }
         setProduct((prevProduct) => ({
           ...prevProduct,
           ...data,
         }));
+        if (data.id && data.id !== productId) {
+          const newUrl = `/product/${data.id}`;
+          window.history.replaceState(null, "", newUrl);
+        }
         setIsChangingOptions(false);
       }
     } catch (error) {
@@ -359,7 +362,7 @@ export default function ProductClient({
       price: price,
       image: mainPhoto?.photo || "/sofa.png",
       color: selectedColor?.title || "Стандартный",
-      material: selectedMaterial?.title || "Не указан",
+      material: getMaterialLabel(selectedMaterial),
       dimensions: selectedSize?.title || "Стандарт",
       rating: 4,
       reviews: 0,
@@ -394,7 +397,7 @@ export default function ProductClient({
       price: price,
       image: mainPhoto?.photo || "/sofa.png",
       color: selectedColor?.title || "Стандартный",
-      material: selectedMaterial?.title || "Не указан",
+      material: getMaterialLabel(selectedMaterial),
       dimensions: selectedSize?.title || "Стандарт",
       inStock: product.in_stock,
       isBestseller: product.bestseller,
@@ -675,7 +678,10 @@ export default function ProductClient({
 
           {product.available_materials &&
             product.available_materials.length > 0 && (
-              <div className={styles.product__materials}>
+              <div
+                className={styles.product__materials}
+                onMouseLeave={() => setHoveredMaterial(null)}
+              >
                 <h3 className={styles.product__section_title}>
                   Материалы:{" "}
                   <span className={styles.product__material_name}>
@@ -686,12 +692,40 @@ export default function ProductClient({
                       : ""}
                   </span>
                 </h3>
+                <div
+                  className={`${styles.product__materials_preview} ${hoveredMaterial ? styles.product__materials_preview_visible : ""}`}
+                  aria-hidden={!hoveredMaterial}
+                >
+                  {hoveredMaterial && toAbsoluteMedia(hoveredMaterial.photo_material) ? (
+                    <>
+                      <div className={styles.product__materials_preview_image}>
+                        <Image
+                          src={toAbsoluteMedia(hoveredMaterial.photo_material)}
+                          alt={`${hoveredMaterial.title_material || "Материал"}${hoveredMaterial.title_color ? `, ${hoveredMaterial.title_color}` : ""}`}
+                          fill
+                          unoptimized
+                          className={styles.product__materials_preview_photo}
+                          sizes="(max-width: 1400px) 36vw, 520px"
+                        />
+                      </div>
+                      <div className={styles.product__materials_preview_caption}>
+                        {hoveredMaterial.title_material || "Материал"}
+                        {hoveredMaterial.title_color
+                          ? `, ${hoveredMaterial.title_color}`
+                          : ""}
+                      </div>
+                    </>
+                  ) : null}
+                </div>
                 <div className={styles.product__materials_list}>
                   {product.available_materials.map((material) => (
                     <button
                       key={material.id}
                       className={`${styles.product__material} ${selectedMaterial?.id === material.id ? styles.product__material_active : ""}`}
                       onClick={() => handleMaterialChange(material)}
+                      onMouseEnter={() => setHoveredMaterial(material)}
+                      onFocus={() => setHoveredMaterial(material)}
+                      onBlur={() => setHoveredMaterial(null)}
                       disabled={loading || isChangingOptions}
                       title={`${material.title_material || "Материал"}${material.title_color ? `, ${material.title_color}` : ""}`}
                     >

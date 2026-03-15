@@ -740,8 +740,8 @@ function HomeContent({
                         <path
                           d="M0.5 0.5L8.5 8.5L0.5 16.5"
                           stroke="#3C101E"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         />
                       </svg>
                     </Link>
