@@ -7,7 +7,15 @@ import styles from "./CustomJivoChat.module.css";
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"]);
 
 const parseFileMessage = (text) => {
-  const match = String(text || "").match(/^\[Файл:\s*(.+?)(?:\s*—\s*(https?:\/\/\S+))?\]$/s);
+  const str = String(text || "").trim();
+  // Новый формат: просто URL
+  if (/^https?:\/\/\S+$/i.test(str)) {
+    const name = str.split("/").pop() || str;
+    const ext = name.split(".").pop()?.toLowerCase() || "";
+    return { name, url: str, isImage: IMAGE_EXTS.has(ext) };
+  }
+  // Старый формат: [Файл: name — url]
+  const match = str.match(/^\[Файл:\s*(.+?)(?:\s*—\s*(https?:\/\/[^\s\]]+))?\]$/s);
   if (!match) return null;
   const name = match[1].trim();
   const url = match[2]?.trim() || null;
@@ -180,13 +188,12 @@ export default function CustomJivoChat() {
         if (uploadRes?.ok) {
           const uploadData = await uploadRes.json().catch(() => ({}));
           const fileUrl = uploadData?.url || "";
+          // Отправляем чистую ссылку — Jivo покажет превью автоматически
           messageText = messageText
-            ? `${messageText}\n[Файл: ${file.name}${fileUrl ? ` — ${fileUrl}` : ""}]`
-            : `[Файл: ${file.name}${fileUrl ? ` — ${fileUrl}` : ""}]`;
+            ? `${messageText}\n${fileUrl || file.name}`
+            : (fileUrl || file.name);
         } else {
-          messageText = messageText
-            ? `${messageText}\n[Файл: ${file.name}]`
-            : `[Файл: ${file.name}]`;
+          messageText = messageText ? `${messageText}\n${file.name}` : file.name;
         }
       }
 
