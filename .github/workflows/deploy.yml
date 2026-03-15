@@ -64,6 +64,7 @@ jobs:
           
           echo "📦 Устанавливаем зависимости..."
           npm ci --silent --maxsockets 1
+          npm i @next/env@16.0.7 --no-save --silent
           echo "✅ Build step skipped (running next dev on server)"
 
     - name: Start application

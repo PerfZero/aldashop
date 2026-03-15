@@ -16,6 +16,8 @@ git pull origin main
 
 echo -e "${YELLOW}📦 Устанавливаем зависимости...${NC}"
 npm ci
+# Hotfix for server npm environment where Next.js may miss @next/env after ci
+npm i @next/env@16.0.7 --no-save
 
 echo -e "${YELLOW}🛑 Останавливаем приложение...${NC}"
 pm2 stop aldalinde || true
