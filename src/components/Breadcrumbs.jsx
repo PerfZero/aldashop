@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import styles from './Breadcrumbs.module.css';
 
-export default function Breadcrumbs({ items }) {
+export default function Breadcrumbs({ items, className = '' }) {
   const baseUrl = 'https://aldalinde.ru';
   
   const jsonLd = {
@@ -21,7 +21,7 @@ export default function Breadcrumbs({ items }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <nav className={styles.breadcrumbs} aria-label="Хлебные крошки">
+      <nav className={`${styles.breadcrumbs} ${className}`.trim()} aria-label="Хлебные крошки">
         <ol className={styles.breadcrumbs__list} itemScope itemType="https://schema.org/BreadcrumbList">
           {items.map((item, index) => (
             <li 

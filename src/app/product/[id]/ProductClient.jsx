@@ -41,6 +41,7 @@ export default function ProductClient({
   const [showActualSizes, setShowActualSizes] = useState(true);
   const [isChangingOptions, setIsChangingOptions] = useState(false);
   const imageRefs = useRef([]);
+  const thumbRefs = useRef([]);
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
 
@@ -89,6 +90,79 @@ export default function ProductClient({
   useEffect(() => {
     setActiveDesktopImage(0);
   }, [product?.id, selectedColor?.id, selectedSize?.id, selectedMaterial?.id]);
+
+  useEffect(() => {
+    if (isMobile) return;
+    const nodes = imageRefs.current.filter(Boolean);
+    if (!nodes.length) return;
+    let rafId = 0;
+
+    const updateActiveThumbByScroll = () => {
+      const anchorY = window.innerHeight * 0.32;
+      let nextActive = 0;
+
+      for (let i = 0; i < nodes.length; i += 1) {
+        const rect = nodes[i].getBoundingClientRect();
+        if (rect.top <= anchorY && rect.bottom >= anchorY) {
+          nextActive = i;
+          break;
+        }
+        if (rect.top > anchorY) {
+          nextActive = Math.max(0, i - 1);
+          break;
+        }
+        nextActive = i;
+      }
+
+      setActiveDesktopImage((prev) =>
+        prev === nextActive ? prev : nextActive,
+      );
+    };
+
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        updateActiveThumbByScroll();
+        rafId = 0;
+      });
+    };
+
+    updateActiveThumbByScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) window.cancelAnimationFrame(rafId);
+    };
+  }, [
+    isMobile,
+    product?.id,
+    selectedColor?.id,
+    selectedSize?.id,
+    selectedMaterial?.id,
+  ]);
+
+  useEffect(() => {
+    if (isMobile) return;
+    const activeThumb = thumbRefs.current[activeDesktopImage];
+    if (!activeThumb) return;
+    const rail = activeThumb.parentElement;
+    if (!rail) return;
+
+    const thumbTop = activeThumb.offsetTop;
+    const thumbBottom = thumbTop + activeThumb.offsetHeight;
+    const viewTop = rail.scrollTop;
+    const viewBottom = viewTop + rail.clientHeight;
+
+    if (thumbTop < viewTop) {
+      rail.scrollTo({ top: Math.max(thumbTop - 8, 0), behavior: "smooth" });
+    } else if (thumbBottom > viewBottom) {
+      rail.scrollTo({
+        top: thumbBottom - rail.clientHeight + 8,
+        behavior: "smooth",
+      });
+    }
+  }, [activeDesktopImage, isMobile]);
 
   const handleSizeChange = async (size) => {
     setIsChangingOptions(true);
@@ -405,6 +479,9 @@ export default function ProductClient({
                 {displayPhotos.map((photo, index) => (
                   <button
                     key={`thumb-${photo.id || index}`}
+                    ref={(node) => {
+                      thumbRefs.current[index] = node;
+                    }}
                     className={`${styles.product__thumb_rail_item} ${activeDesktopImage === index ? styles.product__thumb_rail_item_active : ""}`}
                     onMouseEnter={() => scrollToDesktopImage(index)}
                     onClick={() => scrollToDesktopImage(index)}
@@ -429,6 +506,7 @@ export default function ProductClient({
                     ref={(node) => {
                       imageRefs.current[index] = node;
                     }}
+                    data-image-index={index}
                     className={styles.product__stack_item}
                   >
                     <Image
@@ -450,7 +528,10 @@ export default function ProductClient({
         <div className={styles.product__info}>
           {!!breadcrumbs.length && (
             <div className={styles.product__breadcrumbs_wrap}>
-              <Breadcrumbs items={breadcrumbs} />
+              <Breadcrumbs
+                items={breadcrumbs}
+                className={styles.product__breadcrumbs}
+              />
             </div>
           )}
 
@@ -672,11 +753,24 @@ export default function ProductClient({
                 </svg>
               ) : (
                 <>
-                  <span>
-                    {loading
-                      ? "Загрузка..."
-                      : `В корзину - ${(product.discounted_price || product.price || 0).toLocaleString("ru-RU")}`}
-                  </span>
+                  {loading ? (
+                    <span className={styles.product__cart_button_loading}>
+                      Загрузка...
+                    </span>
+                  ) : (
+                    <>
+                      <span className={styles.product__cart_button_text}>
+                        В корзину -
+                      </span>
+                      <span className={styles.product__cart_button_price}>
+                        {(
+                          product.discounted_price ||
+                          product.price ||
+                          0
+                        ).toLocaleString("ru-RU")}
+                      </span>
+                    </>
+                  )}
                 </>
               )}
             </button>

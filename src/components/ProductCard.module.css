@@ -86,7 +86,7 @@
 }
 
 .card__swiper_slide {
-    width: 100%;
+    width: 100% !important;
     height: 100%;
 }
 
@@ -291,6 +291,15 @@
         min-height: 24px;
         padding: 0 10px;
         font-size: 10px;
+    }
+
+    .card__image_main {
+        width: 100% !important;
+        height: 100%;
+    }
+
+    .card__swiper {
+        width: 100% !important;
     }
 
     .card__content {

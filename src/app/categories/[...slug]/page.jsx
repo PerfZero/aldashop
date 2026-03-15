@@ -873,43 +873,63 @@ function CategoryPageContent() {
           </div>
           {products.length > 0 && totalPages > 1 && (
             <div className={styles.pagination}>
-              <svg
-                width="14"
-                height="8"
-                viewBox="0 0 14 8"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+              <button
+                className={`${styles.pagination__button} ${styles.pagination__button_nav}`}
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                type="button"
+                aria-label="Предыдущая страница"
               >
-                <path
-                  d="M0.146446 4.03568C-0.0488157 3.84042 -0.0488157 3.52384 0.146446 3.32858L3.32843 0.146595C3.52369 -0.0486672 3.84027 -0.0486672 4.03553 0.146595C4.2308 0.341857 4.2308 0.65844 4.03553 0.853702L1.20711 3.68213L4.03553 6.51056C4.2308 6.70582 4.2308 7.0224 4.03553 7.21766C3.84027 7.41293 3.52369 7.41293 3.32843 7.21766L0.146446 4.03568ZM13.5 3.68213V4.18213H0.5V3.68213V3.18213H13.5V3.68213Z"
-                  fill="#844025"
-                />
-              </svg>
+                <svg
+                  className={styles.pagination__icon}
+                  width="14"
+                  height="8"
+                  viewBox="0 0 14 8"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M0.146446 4.03568C-0.0488157 3.84042 -0.0488157 3.52384 0.146446 3.32858L3.32843 0.146595C3.52369 -0.0486672 3.84027 -0.0486672 4.03553 0.146595C4.2308 0.341857 4.2308 0.65844 4.03553 0.853702L1.20711 3.68213L4.03553 6.51056C4.2308 6.70582 4.2308 7.0224 4.03553 7.21766C3.84027 7.41293 3.52369 7.41293 3.32843 7.21766L0.146446 4.03568ZM13.5 3.68213V4.18213H0.5V3.68213V3.18213H13.5V3.68213Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
 
               {paginationPages.map((page) => (
                 <button
                   key={page}
-                  className={`${styles.pagination__button} ${
+                  className={`${styles.pagination__button} ${styles.pagination__button_page} ${
                     page === currentPage ? styles.pagination__button_active : ""
                   }`}
                   onClick={() => setCurrentPage(page)}
                   type="button"
                 >
-                  {page}
+                  <span className={styles.pagination__label}>{page}</span>
                 </button>
               ))}
-              <svg
-                width="14"
-                height="8"
-                viewBox="0 0 14 8"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+              <button
+                className={`${styles.pagination__button} ${styles.pagination__button_nav}`}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={currentPage === totalPages}
+                type="button"
+                aria-label="Следующая страница"
               >
-                <path
-                  d="M13.3536 4.03568C13.5488 3.84042 13.5488 3.52384 13.3536 3.32858L10.1716 0.146595C9.97631 -0.0486672 9.65973 -0.0486672 9.46447 0.146595C9.2692 0.341857 9.2692 0.65844 9.46447 0.853702L12.2929 3.68213L9.46447 6.51056C9.2692 6.70582 9.2692 7.0224 9.46447 7.21766C9.65973 7.41293 9.97631 7.41293 10.1716 7.21766L13.3536 4.03568ZM0 3.68213V4.18213H13V3.68213V3.18213H0V3.68213Z"
-                  fill="#844025"
-                />
-              </svg>
+                <svg
+                  className={styles.pagination__icon}
+                  width="14"
+                  height="8"
+                  viewBox="0 0 14 8"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M13.3536 4.03568C13.5488 3.84042 13.5488 3.52384 13.3536 3.32858L10.1716 0.146595C9.97631 -0.0486672 9.65973 -0.0486672 9.46447 0.146595C9.2692 0.341857 9.2692 0.65844 9.46447 0.853702L12.2929 3.68213L9.46447 6.51056C9.2692 6.70582 9.2692 7.0224 9.46447 7.21766C9.65973 7.41293 9.97631 7.41293 10.1716 7.21766L13.3536 4.03568ZM0 3.68213V4.18213H13V3.68213V3.18213H0V3.68213Z"
+                    fill="currentColor"
+                  />
+                </svg>
+              </button>
             </div>
           )}
         </div>

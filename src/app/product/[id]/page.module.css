@@ -1,7 +1,8 @@
 .page {
     max-width: 1728px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 20px 0 0;
+    background: #fff;
 }
 
 /* Глобальные стили для стрелок Swiper */
@@ -34,15 +35,20 @@
     margin: -4px 0 6px;
 }
 
+.product__breadcrumbs {
+    padding-left: 0;
+}
+
 .product__gallery_desktop {
     position: relative;
     width: 100%;
+    display: grid;
 }
 
 .product__gallery_stack {
+    grid-area: 1 / 1;
     display: flex;
     flex-direction: column;
-    gap: 14px;
 }
 
 .product__stack_item {
@@ -58,19 +64,27 @@
 }
 
 .product__thumbs_rail {
-    position: absolute;
+    grid-area: 1 / 1;
+    position: sticky;
     top: 26px;
-    left: 0;
+    left: 50px;
+    justify-self: start;
+    align-self: start;
     z-index: 3;
     width: 84px;
+
     margin-left: 14px;
-    padding: 8px 0;
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: 10px;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.22s ease;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    margin-top: 20vh;
+    margin-bottom: 50px;
 }
 
 .product__thumbs_rail_visible {
@@ -220,16 +234,17 @@
 }
 
 .product__reviews {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
     font-weight: 400;
     font-size: 14px;
     line-height: 140%;
-    color: #d25c1b;
     text-decoration: underline;
+    text-decoration-skip-ink: none;
+    color: #d25c1b;
 }
 
 .product__article {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
     font-weight: 400;
     font-size: 14px;
     line-height: 140%;
@@ -238,7 +253,7 @@
 }
 
 .product__price {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
     font-weight: 400;
     font-size: 32px;
     color: #3c101e;
@@ -253,9 +268,9 @@
 }
 
 .product__price_old {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
     font-weight: 400;
-    font-size: 40px;
+    font-size: 20px;
     color: #999a99;
     text-decoration: line-through;
 }
@@ -519,7 +534,7 @@
 }
 
 .product__section_title .product__size_name {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
     font-weight: 400;
     font-size: 16px;
     line-height: 150%;
@@ -534,23 +549,36 @@
 }
 
 .product__cart_button {
-    font-family: var(--font-playfair-display), serif;
-    font-weight: 600;
-    font-size: 16px;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 500;
+    font-size: 14px;
     line-height: 150%;
     text-align: center;
-    color: #c1a286;
-    border: 1px solid #c1a286;
+    color: #fbfaf6;
+    background: #d25c1b;
     padding: 0px 15px;
     width: 100%;
     height: 56px;
+    gap: 5px;
     display: flex;
     align-items: center;
     transition: all 0.3s ease;
     justify-content: center;
-    background: none;
     cursor: pointer;
     border-radius: 10px;
+}
+
+.product__cart_button_text {
+    position: relative;
+    top: -2px;
+}
+
+.product__cart_button_price {
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    text-align: center;
+    color: #fff;
 }
 
 .product__cart_button.added {

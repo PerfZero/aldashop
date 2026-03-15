@@ -188,7 +188,10 @@ const buildFourthBlockProducts = (data) => {
           product.photo?.photo || product.photo || item?.image || item?.photo,
         ),
         bestseller:
-          product.bestseller ?? item?.bestseller ?? item?.is_bestseller ?? false,
+          product.bestseller ??
+          item?.bestseller ??
+          item?.is_bestseller ??
+          false,
       };
     })
     .filter(Boolean);
@@ -970,7 +973,7 @@ function HomeContent({
                   className={`${styles.skeleton} ${styles.skeleton_about}`}
                 ></div>
               ) : null}
-              <div className={styles.about__content}>
+              {/* <div className={styles.about__content}>
                 <p className={styles.about__text}>
                   {mainPageData?.about_us_description2 ||
                     "Мы сотрудничаем с проверенными фабриками, которые гарантируют высокое качество материалов и мастерство исполнения. Благодаря этому сотрудничеству, мы можем предложить нашим клиентам широкий ассортимент продукции, соответствующую мировым стандартам."}
@@ -1002,7 +1005,7 @@ function HomeContent({
                     </span>
                   </div>
                 </div>
-              </div>
+              </div>*/}
             </div>
           </div>
         </section>

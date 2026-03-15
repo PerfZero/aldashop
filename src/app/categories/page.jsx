@@ -935,7 +935,7 @@ function CategoryPageContent() {
           {products.length > 0 && totalPages > 1 && (
             <div className={styles.pagination}>
               <button
-                className={styles.pagination__button}
+                className={`${styles.pagination__button} ${styles.pagination__button_nav}`}
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 type="button"
@@ -945,17 +945,17 @@ function CategoryPageContent() {
               {paginationPages.map((page) => (
                 <button
                   key={page}
-                  className={`${styles.pagination__button} ${
+                  className={`${styles.pagination__button} ${styles.pagination__button_page} ${
                     page === currentPage ? styles.pagination__button_active : ""
                   }`}
                   onClick={() => setCurrentPage(page)}
                   type="button"
                 >
-                  {page}
+                  <span className={styles.pagination__label}>{page}</span>
                 </button>
               ))}
               <button
-                className={styles.pagination__button}
+                className={`${styles.pagination__button} ${styles.pagination__button_nav}`}
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
