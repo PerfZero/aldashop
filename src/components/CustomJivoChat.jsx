@@ -32,6 +32,7 @@ export default function CustomJivoChat() {
   const [messages, setMessages] = useState([]);
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isWaiting, setIsWaiting] = useState(false);
   const [error, setError] = useState("");
 
   const profile = useMemo(
@@ -64,6 +65,13 @@ export default function CustomJivoChat() {
     const data = await response.json();
     if (Array.isArray(data?.messages)) {
       setMessages(data.messages);
+      const lastMsg = data.messages.filter((m) => {
+        const t = String(m?.text || "").trim().toLowerCase();
+        return t !== "[typein]" && t !== "[typing]" && t !== "[system]";
+      }).at(-1);
+      if (lastMsg?.direction === "incoming") {
+        setIsWaiting(false);
+      }
     }
   }, []);
 
@@ -85,6 +93,7 @@ export default function CustomJivoChat() {
       setIsLoading(true);
       setError("");
       setText("");
+      setIsWaiting(true);
 
       const response = await fetch("/api/jivo/chat/send", {
         method: "POST",
@@ -103,6 +112,7 @@ export default function CustomJivoChat() {
         const data = await response.json().catch(() => ({}));
         setError(data?.error || "Не удалось отправить сообщение.");
         setText(nextText);
+        setIsWaiting(false);
         setIsLoading(false);
         return;
       }
@@ -204,6 +214,19 @@ export default function CustomJivoChat() {
                 </div>
               );
             })}
+            {isWaiting && (
+              <div className={styles.msgInWrap}>
+                <div className={styles.msgSender}>
+                  <span className={styles.msgAvatar}><AldaIcon /></span>
+                  <span className={styles.msgSenderName}>ALDA</span>
+                </div>
+                <div className={styles.msgIn}>
+                  <div className={styles.typingDots}>
+                    <span /><span /><span />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <form className={styles.form} onSubmit={handleSubmit}>
