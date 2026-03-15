@@ -412,14 +412,6 @@
     transition: background-color 0.2s;
 }
 
-.send:hover:not(:disabled) {
-    background: #6d3320;
-}
-
-.send:disabled {
-    opacity: 0.5;
-}
-
 .error {
     padding: 0 14px 10px;
     color: #c23636;
