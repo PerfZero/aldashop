@@ -4,6 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import styles from "./CustomJivoChat.module.css";
 
+const QUICK_ACTIONS = [
+  "Покажите мне текущие предложения",
+  "Помогите мне выбрать правильный диван",
+  "Покажите мне бестселлеры",
+];
+
 const formatTime = (value) => {
   const date = new Date(value || Date.now());
   return date.toLocaleTimeString("ru-RU", {
@@ -54,39 +60,54 @@ export default function CustomJivoChat() {
     return () => window.clearInterval(timer);
   }, [isOpen, fetchMessages]);
 
+  const sendMessage = useCallback(
+    async (rawText) => {
+      const nextText = String(rawText || "").trim();
+      if (!nextText || isLoading) return;
+
+      setIsLoading(true);
+      setError("");
+      setText("");
+
+      const response = await fetch("/api/jivo/chat/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          text: nextText,
+          name: profile.name,
+          email: profile.email,
+          phone: profile.phone,
+          pageUrl: window.location.href,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        setError(data?.error || "Не удалось отправить сообщение.");
+        setText(nextText);
+        setIsLoading(false);
+        return;
+      }
+
+      await fetchMessages();
+      setIsLoading(false);
+    },
+    [fetchMessages, isLoading, profile.email, profile.name, profile.phone],
+  );
+
   const handleSubmit = async (event) => {
     event.preventDefault();
     const nextText = text.trim();
-    if (!nextText || isLoading) return;
-
-    setIsLoading(true);
-    setError("");
-    setText("");
-
-    const response = await fetch("/api/jivo/chat/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        text: nextText,
-        name: profile.name,
-        email: profile.email,
-        phone: profile.phone,
-        pageUrl: window.location.href,
-      }),
-    });
-
-    if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      setError(data?.error || "Не удалось отправить сообщение.");
-      setText(nextText);
-      setIsLoading(false);
-      return;
-    }
-
-    await fetchMessages();
-    setIsLoading(false);
+    if (!nextText) return;
+    await sendMessage(nextText);
   };
+
+  const handleQuickActionClick = async (value) => {
+    await sendMessage(value);
+  };
+
+  const showWelcome = messages.length === 0;
 
   return (
     <div className={styles.wrap}>
@@ -108,21 +129,43 @@ export default function CustomJivoChat() {
           </header>
 
           <div className={styles.feed}>
-            {messages.length === 0 ? (
-              <p className={styles.empty}>Напишите нам, и оператор подключится в Jivo.</p>
-            ) : (
-              messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`${styles.msg} ${
-                    message.direction === "outgoing" ? styles.msgOut : styles.msgIn
-                  }`}
-                >
-                  <div className={styles.msgText}>{message.text}</div>
-                  <div className={styles.msgMeta}>{formatTime(message.createdAt)}</div>
+            {showWelcome && (
+              <div className={styles.welcome}>
+                <p className={styles.welcomeTitle}>Рады Вас приветствовать!</p>
+                <p className={styles.welcomeText}>
+                  Я, ALDA, твой ассистент магазина, я могу помочь найти товар, отследить
+                  посылку и многое другое.
+                </p>
+                <p className={styles.welcomeNote}>
+                  Краткое напоминание: Я - искусственный интеллект, поэтому, пожалуйста,
+                  перепроверяйте ваш заданный вопрос.
+                </p>
+                <div className={styles.quickActions}>
+                  {QUICK_ACTIONS.map((action) => (
+                    <button
+                      key={action}
+                      type="button"
+                      className={styles.quickAction}
+                      onClick={() => handleQuickActionClick(action)}
+                      disabled={isLoading}
+                    >
+                      {action}
+                    </button>
+                  ))}
                 </div>
-              ))
+              </div>
             )}
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`${styles.msg} ${
+                  message.direction === "outgoing" ? styles.msgOut : styles.msgIn
+                }`}
+              >
+                <div className={styles.msgText}>{message.text}</div>
+                <div className={styles.msgMeta}>{formatTime(message.createdAt)}</div>
+              </div>
+            ))}
           </div>
 
           <form className={styles.form} onSubmit={handleSubmit}>
