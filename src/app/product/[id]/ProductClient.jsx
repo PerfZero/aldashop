@@ -798,7 +798,7 @@ export default function ProductClient({
           {product.available_sizes && product.available_sizes.length > 0 && (
             <div className={styles.product__sizes}>
               <h3 className={styles.product__section_title}>
-                Размер (ШхВхГ)
+                Размер :
                 {/* {" "}
                 <span className={styles.product__size_name}>
                   {selectedSize?.title}
