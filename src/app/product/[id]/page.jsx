@@ -33,6 +33,20 @@ async function getProduct(id) {
       }));
     }
 
+    if (data.video) {
+      data.video = {
+        ...data.video,
+        video: data.video.video?.startsWith('http')
+          ? data.video.video
+          : `https://aldalinde.ru${data.video.video}`,
+        video_thumbnail: data.video.video_thumbnail?.startsWith('http')
+          ? data.video.video_thumbnail
+          : data.video.video_thumbnail
+            ? `https://aldalinde.ru${data.video.video_thumbnail}`
+            : null,
+      };
+    }
+
     try {
       const reviewsResponse = await fetch(`https://aldalinde.ru/api/products/reviews/${parseInt(id)}/?limit=1&page=1`);
       if (reviewsResponse.ok) {

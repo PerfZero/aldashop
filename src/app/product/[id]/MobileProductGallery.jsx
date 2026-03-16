@@ -8,7 +8,7 @@ import "swiper/css/scrollbar";
 import styles from "./MobileProductGallery.module.css";
 
 export default function MobileProductGallery({
-  displayPhotos,
+  mediaItems,
   productTitle,
   galleryKeySeed,
   onOpenLightbox,
@@ -40,35 +40,65 @@ export default function MobileProductGallery({
           setActiveIndex(swiper.activeIndex);
         }}
       >
-        {displayPhotos.map((photo, index) => (
+        {mediaItems.map((item, index) => (
           <SwiperSlide key={index}>
             <div
-              className={`${styles.product__main_image} ${styles.product__main_image_clickable}`}
-              onClick={() => onOpenLightbox(index)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") {
-                  event.preventDefault();
-                  onOpenLightbox(index);
+              className={`${styles.product__main_image} ${
+                item.type === "image"
+                  ? styles.product__main_image_clickable
+                  : ""
+              }`}
+              onClick={() => {
+                if (item.type === "image") {
+                  onOpenLightbox(item.lightboxIndex);
                 }
               }}
-              aria-label={`Открыть фото ${index + 1}`}
+              role={item.type === "image" ? "button" : undefined}
+              tabIndex={item.type === "image" ? 0 : undefined}
+              onKeyDown={(event) => {
+                if (
+                  item.type === "image" &&
+                  (event.key === "Enter" || event.key === " ")
+                ) {
+                  event.preventDefault();
+                  onOpenLightbox(item.lightboxIndex);
+                }
+              }}
+              aria-label={
+                item.type === "video"
+                  ? "Видео товара"
+                  : `Открыть фото ${item.lightboxIndex + 1}`
+              }
             >
-              <Image
-                src={photo.photo}
-                alt={`${productTitle} - фото ${index + 1}`}
-                width={900}
-                height={900}
-                unoptimized
-                priority={index === 0}
-              />
+              {item.type === "video" ? (
+                <video
+                  className={styles.product__main_video}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  poster={item.thumbnail || undefined}
+                  aria-hidden="true"
+                >
+                  <source src={item.src} />
+                </video>
+              ) : (
+                <Image
+                  src={item.src}
+                  alt={`${productTitle} - фото ${item.lightboxIndex + 1}`}
+                  width={900}
+                  height={900}
+                  unoptimized
+                  priority={index === 0}
+                />
+              )}
             </div>
           </SwiperSlide>
         ))}
       </Swiper>
 
-      {displayPhotos.length > 1 && (
+      {mediaItems.length > 1 && (
         <Swiper
           key={`mobile-thumbs-${galleryKeySeed}`}
           modules={[FreeMode, Scrollbar]}
@@ -82,9 +112,9 @@ export default function MobileProductGallery({
             thumbsSwiperRef.current = swiper;
           }}
         >
-          {displayPhotos.map((photo, index) => (
+          {mediaItems.map((item, index) => (
             <SwiperSlide
-              key={`mobile-thumb-${photo.id || index}`}
+              key={`mobile-thumb-${item.id || index}`}
               className={styles.product__mobile_thumb_slide}
             >
               <button
@@ -97,15 +127,30 @@ export default function MobileProductGallery({
                   setActiveIndex(index);
                   mainSwiperRef.current?.slideTo(index);
                 }}
-                aria-label={`Миниатюра ${index + 1}`}
+                aria-label={
+                  item.type === "video"
+                    ? "Миниатюра видео"
+                    : `Миниатюра ${item.lightboxIndex + 1}`
+                }
               >
-                <Image
-                  src={photo.photo}
-                  alt={`${productTitle} миниатюра ${index + 1}`}
-                  width={70}
-                  height={70}
-                  unoptimized
-                />
+                {item.thumbnail || item.src ? (
+                  <Image
+                    src={item.thumbnail || item.src}
+                    alt={
+                      item.type === "video"
+                        ? `${productTitle} миниатюра видео`
+                        : `${productTitle} миниатюра ${item.lightboxIndex + 1}`
+                    }
+                    width={70}
+                    height={70}
+                    unoptimized
+                  />
+                ) : null}
+                {item.type === "video" ? (
+                  <span className={styles.product__mobile_thumb_badge}>
+                    Video
+                  </span>
+                ) : null}
               </button>
             </SwiperSlide>
           ))}

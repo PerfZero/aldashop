@@ -460,6 +460,31 @@ export default function ProductClient({
   const displayPhotos = product.photos
     ? sortPhotos(product.photos.filter((photo) => photo.photo_sizes !== true))
     : [];
+  const mainDisplayPhoto = displayPhotos[0];
+  const galleryMedia = [
+    ...(product.video?.video
+      ? [
+          {
+            id: `video-${product.id}`,
+            type: "video",
+            src: product.video.video,
+            thumbnail:
+              product.video.video_thumbnail ||
+              mainDisplayPhoto?.photo ||
+              null,
+            alt: `${product.title} - видео`,
+          },
+        ]
+      : []),
+    ...displayPhotos.map((photo, index) => ({
+      id: photo.id || `photo-${index}`,
+      type: "image",
+      src: photo.photo,
+      alt: `${product.title} - фото ${index + 1}`,
+      lightboxIndex: index,
+    })),
+  ];
+  const hasGalleryMedia = galleryMedia.length > 0;
   const hasDisplayPhotos = displayPhotos.length > 0;
   const openLightbox = (index) => {
     setLightboxIndex(index);
@@ -486,63 +511,101 @@ export default function ProductClient({
           onMouseEnter={() => setIsGalleryHovered(true)}
           onMouseLeave={() => setIsGalleryHovered(false)}
         >
-          {hasDisplayPhotos && isMobile && (
+          {hasGalleryMedia && isMobile && (
             <MobileProductGallery
-              displayPhotos={displayPhotos}
+              mediaItems={galleryMedia}
               productTitle={product.title}
               galleryKeySeed={`${product.id}-${selectedColor?.id || "default"}`}
               onOpenLightbox={openLightbox}
             />
           )}
 
-          {hasDisplayPhotos && !isMobile && (
+          {hasGalleryMedia && !isMobile && (
             <div className={styles.product__gallery_desktop}>
               <div
                 className={`${styles.product__thumbs_rail} ${isGalleryHovered ? styles.product__thumbs_rail_visible : ""}`}
               >
-                {displayPhotos.map((photo, index) => (
+                {galleryMedia.map((item, index) => (
                   <button
-                    key={`thumb-${photo.id || index}`}
+                    key={`thumb-${item.id || index}`}
                     ref={(node) => {
                       thumbRefs.current[index] = node;
                     }}
                     className={`${styles.product__thumb_rail_item} ${activeDesktopImage === index ? styles.product__thumb_rail_item_active : ""}`}
                     onMouseEnter={() => scrollToDesktopImage(index)}
                     onClick={() => scrollToDesktopImage(index)}
-                    aria-label={`Фото ${index + 1}`}
+                    aria-label={
+                      item.type === "video"
+                        ? "Видео товара"
+                        : `Фото ${item.lightboxIndex + 1}`
+                    }
                     type="button"
                   >
-                    <Image
-                      src={photo.photo}
-                      alt={`${product.title} превью ${index + 1}`}
-                      width={72}
-                      height={72}
-                      unoptimized
-                    />
+                    {item.thumbnail || item.src ? (
+                      <Image
+                        src={item.thumbnail || item.src}
+                        alt={
+                          item.type === "video"
+                            ? `${product.title} превью видео`
+                            : `${product.title} превью ${item.lightboxIndex + 1}`
+                        }
+                        width={72}
+                        height={72}
+                        unoptimized
+                      />
+                    ) : null}
+                    {item.type === "video" ? (
+                      <span className={styles.product__thumb_video_badge}>
+                        Video
+                      </span>
+                    ) : null}
                   </button>
                 ))}
               </div>
 
               <div className={styles.product__gallery_stack}>
-                {displayPhotos.map((photo, index) => (
+                {galleryMedia.map((item, index) => (
                   <div
-                    key={`stack-${photo.id || index}`}
+                    key={`stack-${item.id || index}`}
                     ref={(node) => {
                       imageRefs.current[index] = node;
                     }}
                     data-image-index={index}
-                    className={styles.product__stack_item}
-                    onClick={() => openLightbox(index)}
+                    className={`${styles.product__stack_item} ${
+                      item.type === "video"
+                        ? styles.product__stack_item_video
+                        : ""
+                    }`}
+                    onClick={() => {
+                      if (item.type === "image") {
+                        openLightbox(item.lightboxIndex);
+                      }
+                    }}
                   >
-                    <Image
-                      src={photo.photo}
-                      alt={`${product.title} - фото ${index + 1}`}
-                      width={1200}
-                      height={1200}
-                      unoptimized
-                      priority={index === 0}
-                      className={styles.product__stack_image}
-                    />
+                    {item.type === "video" ? (
+                      <video
+                        className={styles.product__stack_video}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="metadata"
+                        poster={item.thumbnail || undefined}
+                        aria-hidden="true"
+                      >
+                        <source src={item.src} />
+                      </video>
+                    ) : (
+                      <Image
+                        src={item.src}
+                        alt={item.alt}
+                        width={1200}
+                        height={1200}
+                        unoptimized
+                        priority={index === 0}
+                        className={styles.product__stack_image}
+                      />
+                    )}
                   </div>
                 ))}
               </div>

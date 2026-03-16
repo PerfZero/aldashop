@@ -23,6 +23,14 @@
     overflow: hidden;
 }
 
+.product__main_video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+    aspect-ratio: 1;
+}
+
 .product__main_image_clickable {
     cursor: zoom-in;
 }
@@ -63,6 +71,7 @@
     height: 70px;
     flex: 0 0 70px;
     border: 1px solid transparent;
+    position: relative;
     padding: 0;
     background: #f6f4f2;
     overflow: hidden;
@@ -82,6 +91,24 @@
 .product__mobile_thumb_active {
     border-color: #a45b38;
     opacity: 1;
+}
+
+.product__mobile_thumb_badge {
+    position: absolute;
+    right: 4px;
+    bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 16px;
+    padding: 0 5px;
+    background: rgba(12, 9, 8, 0.78);
+    color: #fff;
+    font-size: 9px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
 }
 
 @media (max-width: 768px) {

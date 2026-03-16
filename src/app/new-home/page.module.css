@@ -17,6 +17,23 @@
     background-size: cover;
 }
 
+.promoVideo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.promoOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.24);
+    z-index: 0;
+}
+
 .loadingBar {
     position: fixed;
     top: 0;
@@ -82,6 +99,7 @@
 
 .promo {
     position: relative;
+    overflow: hidden;
 }
 
 .skeleton_about {

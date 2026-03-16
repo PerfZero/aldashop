@@ -46,6 +46,24 @@ const normalizeHref = (url) => {
   }
 };
 
+const getVideoMimeType = (url) => {
+  if (!url || typeof url !== "string") {
+    return "video/mp4";
+  }
+
+  const normalizedUrl = url.toLowerCase();
+
+  if (normalizedUrl.endsWith(".webm")) {
+    return "video/webm";
+  }
+
+  if (normalizedUrl.endsWith(".ogg") || normalizedUrl.endsWith(".ogv")) {
+    return "video/ogg";
+  }
+
+  return "video/mp4";
+};
+
 const buildSecondBlockCards = (data) => {
   if (!data) {
     return [];
@@ -268,6 +286,7 @@ const normalizeMainPageData = (data) => {
     ...data,
     title: data.title || data.title_main || FALLBACK_HERO_TITLE,
     main_image: heroImage,
+    main_video: resolveImageUrl(data.main_video),
     link_main: data.link_main || categoriesLink,
     title_link_main: data.title_link_main || "Выбрать мебель",
     main_page_items: normalizedMainPageItems,
@@ -283,6 +302,7 @@ function HomeContent({
 }) {
   const [mainPageData, setMainPageData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [promoVideoError, setPromoVideoError] = useState(false);
   const [secondBlockScrollProgress, setSecondBlockScrollProgress] = useState({
     thumbWidth: 56,
     offset: 0,
@@ -336,6 +356,10 @@ function HomeContent({
 
     fetchMainPageData();
   }, []);
+
+  useEffect(() => {
+    setPromoVideoError(false);
+  }, [mainPageData?.main_video]);
 
   useEffect(() => {
     const slider = secondBlockSliderRef.current;
@@ -525,12 +549,27 @@ function HomeContent({
               : "none",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            backgroundBlendMode: "overlay",
-            backgroundColor: mainPageData?.main_image
-              ? "rgba(0, 0, 0, 0.2)"
-              : "transparent",
           }}
         >
+          {mainPageData?.main_video && !promoVideoError ? (
+            <video
+              className={styles.promoVideo}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              poster={mainPageData?.main_image || undefined}
+              onError={() => setPromoVideoError(true)}
+              aria-hidden="true"
+            >
+              <source
+                src={mainPageData.main_video}
+                type={getVideoMimeType(mainPageData.main_video)}
+              />
+            </video>
+          ) : null}
+          <div className={styles.promoOverlay} />
           {(isLoading || !mainPageData) && !mainPageData?.main_image && (
             <div
               className={`${styles.skeleton} ${styles.skeleton_promo}`}
