@@ -18,6 +18,26 @@ const toAbsoluteUrl = (url) => {
   return url.startsWith("http") ? url : `${API_HOST}${url}`;
 };
 
+const normalizeText = (value) =>
+  typeof value === "string" ? value.trim() : "";
+
+const getSizesCount = ({ availableSizes, sizes, strSizes }) => {
+  if (Array.isArray(availableSizes) && availableSizes.length > 0) {
+    return availableSizes.length;
+  }
+
+  const parsedFromText = Number(normalizeText(strSizes).match(/\d+/)?.[0]);
+  if (Number.isFinite(parsedFromText) && parsedFromText > 0) {
+    return parsedFromText;
+  }
+
+  if (sizes) {
+    return 1;
+  }
+
+  return 0;
+};
+
 const pickMainPhoto = (photos = []) =>
   photos.find((photo) => photo.main_photo) || photos[0];
 const pickHoverPhoto = (photos = []) =>
@@ -31,8 +51,15 @@ const normalizeProduct = (source, fallbackModelId = null) => {
 
   const availableMaterials =
     source?.available_materials || productData.available_materials || [];
+  const availableSizes = source?.available_sizes || productData.available_sizes || [];
   const materialPhoto =
     source?.material_photo || productData.material_photo || null;
+  const strSizes = productData?.str_sizes || source?.str_sizes || "";
+  const availableSizesCount = getSizesCount({
+    availableSizes,
+    sizes: productData?.sizes || source?.sizes,
+    strSizes,
+  });
   const mainImage =
     toAbsoluteUrl(mainPhoto?.photo) ||
     toAbsoluteUrl(materialPhoto?.photo_material) ||
@@ -52,7 +79,7 @@ const normalizeProduct = (source, fallbackModelId = null) => {
       productData.short_description ||
       source?.short_description ||
       source?.description ||
-      "Описание отсутствует",
+      "",
     price: Number(productData.price) || 0,
     discountedPrice:
       productData.discounted_price !== null &&
@@ -64,7 +91,8 @@ const normalizeProduct = (source, fallbackModelId = null) => {
     inStock: productData.in_stock !== undefined ? productData.in_stock : true,
     isBestseller: Boolean(productData.bestseller || source?.is_bestseller),
     brand: productData.brand || source?.brand || null,
-    strSizes: productData.str_sizes || source?.str_sizes || null,
+    availableSizesCount,
+    strSizes: strSizes || null,
     availableMaterials,
     materialPhoto,
     photos,
@@ -181,10 +209,6 @@ export default function ProductCard({
   const mainPrice = hasDiscount
     ? currentProduct.discountedPrice
     : currentProduct.price;
-  const currentMaterial =
-    currentProduct.availableMaterials.find(
-      (item) => item.id === selectedMaterialId,
-    ) || currentProduct.materialPhoto;
 
   return (
     <article className={styles.card}>
@@ -291,64 +315,52 @@ export default function ProductCard({
           </p>
         )}
 
-        {currentProduct.availableMaterials?.length > 0 ? (
-          <>
-            <div className={styles.card__materials}>
-              {currentProduct.availableMaterials.slice(0, 5).map((material) => {
-                const photoSrc = toAbsoluteUrl(material.photo_material);
-                return (
-                  <button
-                    key={material.id}
-                    className={`${styles.card__material} ${
-                      selectedMaterialId === material.id
-                        ? styles.card__material_selected
-                        : ""
-                    } ${isLoading ? styles.card__material_loading : ""}`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleMaterialChange(material);
-                    }}
-                    disabled={isLoading}
-                    title={`${material.title_material || "Материал"}${
-                      material.title_color ? `, ${material.title_color}` : ""
-                    }`}
-                  >
-                    {photoSrc ? (
-                      <Image
-                        src={photoSrc}
-                        alt={material.title_material || "Материал"}
-                        width={30}
-                        height={30}
-                        className={styles.card__material_image}
-                        unoptimized
-                      />
-                    ) : (
-                      <span className={styles.card__material_empty} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {currentProduct.brand && (
-              <p className={styles.card__meta}>{currentProduct.brand}</p>
-            )}
-            {!currentProduct.brand && currentMaterial?.title_material && (
-              <p className={styles.card__meta}>
-                {currentMaterial.title_material}
-              </p>
-            )}
-          </>
-        ) : (
-          <>
-            {currentProduct.strSizes && (
-              <p className={styles.card__meta}>{currentProduct.strSizes}</p>
-            )}
-            {currentProduct.brand && (
-              <p className={styles.card__meta}>{currentProduct.brand}</p>
-            )}
-          </>
+        {currentProduct.brand && (
+          <p className={styles.card__meta}>{currentProduct.brand}</p>
+        )}
+        {currentProduct.availableSizesCount > 0 && (
+          <p className={styles.card__meta}>
+            Размеров доступно: {currentProduct.availableSizesCount}
+          </p>
+        )}
+        {currentProduct.availableMaterials?.length > 0 && (
+          <div className={styles.card__materials}>
+            {currentProduct.availableMaterials.slice(0, 5).map((material) => {
+              const photoSrc = toAbsoluteUrl(material.photo_material);
+              return (
+                <button
+                  key={material.id}
+                  className={`${styles.card__material} ${
+                    selectedMaterialId === material.id
+                      ? styles.card__material_selected
+                      : ""
+                  } ${isLoading ? styles.card__material_loading : ""}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleMaterialChange(material);
+                  }}
+                  disabled={isLoading}
+                  title={`${material.title_material || "Материал"}${
+                    material.title_color ? `, ${material.title_color}` : ""
+                  }`}
+                >
+                  {photoSrc ? (
+                    <Image
+                      src={photoSrc}
+                      alt={material.title_material || "Материал"}
+                      width={30}
+                      height={30}
+                      className={styles.card__material_image}
+                      unoptimized
+                    />
+                  ) : (
+                    <span className={styles.card__material_empty} />
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
 
         <div className={styles.card__price_row}>

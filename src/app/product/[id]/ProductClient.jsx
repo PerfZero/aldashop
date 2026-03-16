@@ -97,6 +97,7 @@ export default function ProductClient({
   const galleryRef = useRef(null);
   const imageRefs = useRef([]);
   const thumbRefs = useRef([]);
+  const lightboxSwiperRef = useRef(null);
   const { addToCart } = useCart();
   const { toggleFavourite, isFavourite } = useFavourites();
 
@@ -163,6 +164,16 @@ export default function ProductClient({
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         setIsLightboxOpen(false);
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        lightboxSwiperRef.current?.slideNext();
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        lightboxSwiperRef.current?.slidePrev();
       }
     };
 
@@ -525,23 +536,23 @@ export default function ProductClient({
   return (
     <>
       <div className={styles.product}>
-        <div
-          ref={galleryRef}
-          className={styles.product__gallery}
-          onMouseEnter={() => setIsGalleryHovered(true)}
-          onMouseLeave={() => setIsGalleryHovered(false)}
-        >
-          {hasGalleryMedia && isMobile && (
-            <MobileProductGallery
-              mediaItems={galleryMedia}
-              productTitle={product.title}
-              galleryKeySeed={`${product.id}-${selectedColor?.id || "default"}`}
-              onOpenLightbox={openLightbox}
-            />
-          )}
+        <div className={styles.product__gallery_shell}>
+          <div
+            ref={galleryRef}
+            className={styles.product__gallery}
+            onMouseEnter={() => setIsGalleryHovered(true)}
+            onMouseLeave={() => setIsGalleryHovered(false)}
+          >
+            {hasGalleryMedia && isMobile && (
+              <MobileProductGallery
+                mediaItems={galleryMedia}
+                productTitle={product.title}
+                galleryKeySeed={`${product.id}-${selectedColor?.id || "default"}`}
+                onOpenLightbox={openLightbox}
+              />
+            )}
 
-          {hasGalleryMedia && !isMobile && (
-            <>
+            {hasGalleryMedia && !isMobile && (
               <div className={styles.product__gallery_desktop}>
                 <div
                   className={`${styles.product__thumbs_rail} ${isGalleryHovered ? styles.product__thumbs_rail_visible : ""}`}
@@ -630,34 +641,35 @@ export default function ProductClient({
                   ))}
                 </div>
               </div>
-              {galleryMedia.length > 1 ? (
-                <button
-                  type="button"
-                  className={styles.product__gallery_next}
-                  onClick={scrollToNextDesktopImage}
-                  aria-label="Прокрутить к следующему изображению"
-                  disabled={activeDesktopImage >= galleryMedia.length - 1}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="M4 7L10 13L16 7"
-                      stroke="currentColor"
-                      strokeWidth="1.6"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </button>
-              ) : null}
-            </>
-          )}
+            )}
+          </div>
+
+          {hasGalleryMedia && !isMobile && galleryMedia.length > 1 ? (
+            <button
+              type="button"
+              className={styles.product__gallery_next}
+              onClick={scrollToNextDesktopImage}
+              aria-label="Прокрутить к следующему изображению"
+              disabled={activeDesktopImage >= galleryMedia.length - 1}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 7L10 13L16 7"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          ) : null}
         </div>
 
         <div className={styles.product__info}>
@@ -1196,6 +1208,9 @@ export default function ProductClient({
           >
             <Swiper
               initialSlide={lightboxIndex}
+              onSwiper={(swiper) => {
+                lightboxSwiperRef.current = swiper;
+              }}
               onSlideChange={(swiper) => setLightboxIndex(swiper.activeIndex)}
               modules={[Navigation]}
               navigation
