@@ -455,19 +455,19 @@
 
 /* ── Trigger button ── */
 .trigger {
-    width: 140px;
-    min-height: 160px;
     border-radius: 0;
     background: #844025;
     border: 1px solid #844025;
     display: flex;
+    padding: 15px;
     flex-direction: column;
-    gap: 14px;
     align-items: center;
     justify-content: center;
     color: #fff;
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
+    transition:
+        box-shadow 0.2s ease,
+        transform 0.2s ease;
 }
 
 .trigger:hover {
@@ -483,7 +483,7 @@
 
 .triggerLabel {
     font-family: "Playfair Display", sans-serif;
-    font-size: 54px;
+    font-size: 14px;
     line-height: 1;
     text-transform: lowercase;
     color: #fff;

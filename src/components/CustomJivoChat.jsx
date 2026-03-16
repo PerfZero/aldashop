@@ -15,7 +15,9 @@ const parseFileMessage = (text) => {
     return { name, url: str, isImage: IMAGE_EXTS.has(ext) };
   }
   // Старый формат: [Файл: name — url]
-  const match = str.match(/^\[Файл:\s*(.+?)(?:\s*—\s*(https?:\/\/[^\s\]]+))?\]$/s);
+  const match = str.match(
+    /^\[Файл:\s*(.+?)(?:\s*—\s*(https?:\/\/[^\s\]]+))?\]$/s,
+  );
   if (!match) return null;
   const name = match[1].trim();
   const url = match[2]?.trim() || null;
@@ -218,9 +220,11 @@ export default function CustomJivoChat() {
           // Отправляем чистую ссылку — Jivo покажет превью автоматически
           messageText = messageText
             ? `${messageText}\n${fileUrl || file.name}`
-            : (fileUrl || file.name);
+            : fileUrl || file.name;
         } else {
-          messageText = messageText ? `${messageText}\n${file.name}` : file.name;
+          messageText = messageText
+            ? `${messageText}\n${file.name}`
+            : file.name;
         }
       }
 
@@ -406,23 +410,54 @@ export default function CustomJivoChat() {
                       const file = parseFileMessage(message.text);
                       if (file?.isImage && file.url) {
                         return (
-                          <a href={file.url} target="_blank" rel="noopener noreferrer">
-                            <img src={file.url} alt={file.name} className={styles.msgImage} />
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              className={styles.msgImage}
+                            />
                           </a>
                         );
                       }
                       if (file?.url) {
                         return (
-                          <a href={file.url} target="_blank" rel="noopener noreferrer" className={styles.msgFileLink}>
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-                              <path d="M8 1v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.msgFileLink}
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 14 14"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path
+                                d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z"
+                                stroke="currentColor"
+                                strokeWidth="1.2"
+                                strokeLinejoin="round"
+                              />
+                              <path
+                                d="M8 1v4h4"
+                                stroke="currentColor"
+                                strokeWidth="1.2"
+                                strokeLinejoin="round"
+                              />
                             </svg>
                             {file.name}
                           </a>
                         );
                       }
-                      return <div className={styles.msgText}>{message.text}</div>;
+                      return (
+                        <div className={styles.msgText}>{message.text}</div>
+                      );
                     })()}
                   </div>
                   {isOut && isLastInGroup && (
@@ -452,20 +487,45 @@ export default function CustomJivoChat() {
             {attachedFile && (
               <div className={styles.filePreview}>
                 {imagePreviewUrl ? (
-                  <img src={imagePreviewUrl} alt={attachedFile.name} className={styles.filePreviewImg} />
+                  <img
+                    src={imagePreviewUrl}
+                    alt={attachedFile.name}
+                    className={styles.filePreviewImg}
+                  />
                 ) : (
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z" stroke="#844025" strokeWidth="1.2" strokeLinejoin="round"/>
-                    <path d="M8 1v4h4" stroke="#844025" strokeWidth="1.2" strokeLinejoin="round"/>
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M8 1H3a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V5L8 1z"
+                      stroke="#844025"
+                      strokeWidth="1.2"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M8 1v4h4"
+                      stroke="#844025"
+                      strokeWidth="1.2"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )}
                 <span className={styles.fileName}>{attachedFile.name}</span>
                 <button
                   type="button"
                   className={styles.fileRemove}
-                  onClick={() => { setAttachedFile(null); setImagePreviewUrl(null); }}
+                  onClick={() => {
+                    setAttachedFile(null);
+                    setImagePreviewUrl(null);
+                  }}
                   aria-label="Убрать файл"
-                >×</button>
+                >
+                  ×
+                </button>
               </div>
             )}
             <input
@@ -563,7 +623,7 @@ export default function CustomJivoChat() {
             <span className={styles.triggerIcon} aria-hidden="true">
               <ChatTriggerIcon />
             </span>
-            <span className={styles.triggerLabel}>чат</span>
+            <span className={styles.triggerLabel}>Чат</span>
           </>
         )}
       </button>
