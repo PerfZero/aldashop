@@ -41,18 +41,6 @@
     z-index: 2;
 }
 
-@media (max-width: 768px) {
-    .wrap {
-        bottom: 116px;
-    }
-
-    .badge {
-        width: 50px;
-        height: 140px;
-        font-size: 28px;
-    }
-}
-
 @keyframes discountBadgeSlideIn {
     from {
         transform: translateX(-100%);

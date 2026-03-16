@@ -500,14 +500,4 @@
         width: calc(100vw - 20px);
         height: min(75vh, 660px);
     }
-
-    .trigger {
-        width: 92px;
-        min-height: 110px;
-        gap: 10px;
-    }
-
-    .triggerLabel {
-        font-size: 34px;
-    }
 }
