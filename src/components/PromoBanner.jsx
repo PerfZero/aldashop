@@ -13,6 +13,23 @@ export default function PromoBanner() {
         const response = await fetch(
           "https://aldalinde.ru/api/products/get_banner/",
         );
+        if (!response.ok) {
+          console.error(
+            `Ошибка загрузки баннера: HTTP ${response.status} ${response.statusText}`,
+          );
+          return;
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.toLowerCase().includes("application/json")) {
+          const bodySnippet = await response.text();
+          console.error(
+            "Ошибка загрузки баннера: сервер вернул не JSON",
+            bodySnippet.slice(0, 200),
+          );
+          return;
+        }
+
         const data = await response.json();
 
         if (data.success && data.data) {
