@@ -33,6 +33,8 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     overflow: hidden;
+    mix-blend-mode: darken;
+    background: transparent;
 }
 
 .card__image img {

@@ -5,16 +5,14 @@ import { useRef } from "react";
 import Image from "next/image";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import styles from "./page.module.css";
+import MobileProductGallery from "./MobileProductGallery";
 import Reviews from "@/components/Reviews";
 import { useCart } from "../../components/CartContext";
 import { useFavourites } from "../../../contexts/FavouritesContext";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination } from "swiper/modules";
+import { Navigation } from "swiper/modules";
 import "swiper/css";
 import "swiper/css/navigation";
-import "swiper/css/pagination";
-import "swiper/css/thumbs";
-import "swiper/css/free-mode";
 
 const toAbsoluteMedia = (url) => {
   if (!url) return null;
@@ -489,39 +487,12 @@ export default function ProductClient({
           onMouseLeave={() => setIsGalleryHovered(false)}
         >
           {hasDisplayPhotos && isMobile && (
-            <Swiper
-              key={`mobile-main-${product.id}-${selectedColor?.id || "default"}`}
-              pagination={{ clickable: true }}
-              modules={[Pagination]}
-              className={styles.product__main_swiper}
-            >
-              {displayPhotos.map((photo, index) => (
-                <SwiperSlide key={index}>
-                  <div
-                    className={`${styles.product__main_image} ${styles.product__main_image_clickable}`}
-                    onClick={() => openLightbox(index)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        openLightbox(index);
-                      }
-                    }}
-                    aria-label={`Открыть фото ${index + 1}`}
-                  >
-                    <Image
-                      src={photo.photo}
-                      alt={`${product.title} - фото ${index + 1}`}
-                      width={900}
-                      height={900}
-                      unoptimized
-                      priority={index === 0}
-                    />
-                  </div>
-                </SwiperSlide>
-              ))}
-            </Swiper>
+            <MobileProductGallery
+              displayPhotos={displayPhotos}
+              productTitle={product.title}
+              galleryKeySeed={`${product.id}-${selectedColor?.id || "default"}`}
+              onOpenLightbox={openLightbox}
+            />
           )}
 
           {hasDisplayPhotos && !isMobile && (

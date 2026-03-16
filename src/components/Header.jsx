@@ -26,7 +26,8 @@ export default function Header() {
   const { favourites } = useFavourites();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const searchRef = useRef(null);
+  const desktopSearchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
 
   const cartItemsCount = cartItems.reduce(
     (total, item) => total + item.quantity,
@@ -139,7 +140,14 @@ export default function Header() {
   useEffect(() => {
     if (!isSearchOpen) return;
     function handleClickOutside(event) {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
+      const isInsideDesktopSearch =
+        desktopSearchRef.current &&
+        desktopSearchRef.current.contains(event.target);
+      const isInsideMobileSearch =
+        mobileSearchRef.current &&
+        mobileSearchRef.current.contains(event.target);
+
+      if (!isInsideDesktopSearch && !isInsideMobileSearch) {
         setIsSearchOpen(false);
       }
     }
@@ -161,6 +169,7 @@ export default function Header() {
       setMobileExpandedCategory(categories[0].id);
     }
   }, [isMobileMenuOpen, categories]);
+
 
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -216,6 +225,40 @@ export default function Header() {
   return (
     <header className={styles.header}>
       <div className={styles.header__container}>
+        <div className={styles.header__mobileLeft}>
+          {/* Кнопка бургер-меню */}
+          <button
+            className={`${styles.header__burger} ${isMobileMenuOpen ? styles.active : ""}`}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label="Открыть меню"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <button
+            className={`${styles.header__icon} ${styles.header__mobileSearchButton}`}
+            onClick={() => setIsSearchOpen(true)}
+            aria-label="Открыть поиск"
+          >
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M21 21L16.657 16.657M16.657 16.657C17.3998 15.9141 17.9891 15.0322 18.3912 14.0615C18.7932 13.0909 19.0002 12.0506 19.0002 11C19.0002 9.94939 18.7932 8.90908 18.3912 7.93845C17.9891 6.96782 17.3998 6.08588 16.657 5.34299C15.9141 4.6001 15.0321 4.01081 14.0615 3.60877C13.0909 3.20672 12.0506 2.99979 11 2.99979C9.94936 2.99979 8.90905 3.20672 7.93842 3.60877C6.96779 4.01081 6.08585 4.6001 5.34296 5.34299C3.84263 6.84332 2.99976 8.87821 2.99976 11C2.99976 13.1218 3.84263 15.1567 5.34296 16.657C6.84329 18.1573 8.87818 19.0002 11 19.0002C13.1217 19.0002 15.1566 18.1573 16.657 16.657Z"
+                stroke="#323433"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+
         {/* Логотип */}
         <div className={styles.header__logo}>
           <Link href="/">
@@ -233,17 +276,6 @@ export default function Header() {
             </svg>
           </Link>
         </div>
-
-        {/* Кнопка бургер-меню */}
-        <button
-          className={`${styles.header__burger} ${isMobileMenuOpen ? styles.active : ""}`}
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="Открыть меню"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
 
         {/* Десктопное меню */}
         <nav className={styles.header__nav}>
@@ -357,65 +389,60 @@ export default function Header() {
             </div>
             {/* Правая колонка — подкатегории и картинки */}
             <div className={styles.mobileMenu__content}>
-              {mobileExpandedCategory &&
-                categories.find((cat) => cat.id === mobileExpandedCategory) && (
-                  <>
-                    {categories.find((cat) => cat.id === mobileExpandedCategory)
-                      ?.subcategories?.length > 0 ? (
-                      <div className={styles.mobileMenu__dropdownLinks}>
-                        {categories
-                          .find((cat) => cat.id === mobileExpandedCategory)
-                          ?.subcategories.map((subcategory) => {
-                            let imageSrc = "/images/sofa.png";
+              {categories.map((cat) => (
+                <div
+                  key={cat.id}
+                  style={{
+                    display: mobileExpandedCategory === cat.id ? "block" : "none",
+                  }}
+                >
+                  {cat.subcategories?.length > 0 ? (
+                    <div className={styles.mobileMenu__dropdownLinks}>
+                      {cat.subcategories.map((subcategory) => {
+                        const imageSrc = subcategory.photo_cover
+                          ? `https://aldalinde.ru${subcategory.photo_cover}`
+                          : "/images/sofa.png";
 
-                            if (subcategory.photo_cover) {
-                              imageSrc = `https://aldalinde.ru${subcategory.photo_cover}`;
-                            }
-
-                            return (
-                              <Link
-                                key={subcategory.id}
-                                href={`/categories/${subcategory.slug}`}
-                                className={styles.mobileMenu__categoryItem}
-                                onClick={() => {
-                                  console.log(
-                                    "[Header] Клик по подкатегории в мобильном меню:",
-                                    {
-                                      subcategoryId: subcategory.id,
-                                      slug: subcategory.slug,
-                                    },
-                                  );
-                                  setIsMobileMenuOpen(false);
-                                }}
-                              >
-                                <img
-                                  src={imageSrc}
-                                  alt={subcategory.title}
-                                  className={styles.mobileMenu__categoryImage}
-                                  onError={(e) => {
-                                    e.target.src = "/images/sofa.png";
-                                  }}
-                                />
-                                <div
-                                  className={styles.mobileMenu__categoryInfo}
-                                >
-                                  <div
-                                    className={styles.mobileMenu__categoryTitle}
-                                  >
-                                    {subcategory.title}
-                                  </div>
-                                </div>
-                              </Link>
-                            );
-                          })}
-                      </div>
-                    ) : (
-                      <p className={styles.mobileMenu__dropdownEmpty}>
-                        Пока нет подкатегорий
-                      </p>
-                    )}
-                  </>
-                )}
+                        return (
+                          <Link
+                            key={subcategory.id}
+                            href={`/categories/${subcategory.slug}`}
+                            className={styles.mobileMenu__categoryItem}
+                            onClick={() => {
+                              console.log(
+                                "[Header] Клик по подкатегории в мобильном меню:",
+                                {
+                                  subcategoryId: subcategory.id,
+                                  slug: subcategory.slug,
+                                },
+                              );
+                              setIsMobileMenuOpen(false);
+                            }}
+                          >
+                            <img
+                              src={imageSrc}
+                              alt={subcategory.title}
+                              className={styles.mobileMenu__categoryImage}
+                              onError={(e) => {
+                                e.target.src = "/images/sofa.png";
+                              }}
+                            />
+                            <div className={styles.mobileMenu__categoryInfo}>
+                              <div className={styles.mobileMenu__categoryTitle}>
+                                {subcategory.title}
+                              </div>
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className={styles.mobileMenu__dropdownEmpty}>
+                      Пока нет подкатегорий
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -446,7 +473,7 @@ export default function Header() {
             </button>
             {/* Десктопный поиск */}
             {isSearchOpen && (
-              <div className={styles.searchDropdown} ref={searchRef}>
+              <div className={styles.searchDropdown} ref={desktopSearchRef}>
                 <form
                   onSubmit={handleSearchSubmit}
                   className={styles.searchDropdown__header}
@@ -547,36 +574,97 @@ export default function Header() {
                 </span>
               )}
             </Link>
-          </div>
-          {/* Корзина — всегда показывается */}
-          <Link
-            href="/cart"
-            className={`${styles.header__icon} ${styles["header__icon--cart"]}`}
-          >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <Link
+              href="/cart"
+              className={`${styles.header__icon} ${styles["header__icon--cart"]}`}
             >
-              <path
-                d="M3.87302 17.02L2.66902 9.84C2.48702 8.754 2.39602 8.212 2.68802 7.856C2.97902 7.5 3.51502 7.5 4.58602 7.5H19.414C20.485 7.5 21.021 7.5 21.312 7.856C21.604 8.212 21.512 8.754 21.331 9.84L20.127 17.02C19.728 19.4 19.529 20.589 18.714 21.295C17.9 22 16.726 22 14.378 22H9.62202C7.27402 22 6.10002 22 5.28602 21.294C4.47102 20.589 4.27202 19.399 3.87302 17.019M17.5 7.5C17.5 6.04131 16.9206 4.64236 15.8891 3.61091C14.8577 2.57946 13.4587 2 12 2C10.5413 2 9.14238 2.57946 8.11093 3.61091C7.07948 4.64236 6.50002 6.04131 6.50002 7.5"
-                stroke="#323433"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3.87302 17.02L2.66902 9.84C2.48702 8.754 2.39602 8.212 2.68802 7.856C2.97902 7.5 3.51502 7.5 4.58602 7.5H19.414C20.485 7.5 21.021 7.5 21.312 7.856C21.604 8.212 21.512 8.754 21.331 9.84L20.127 17.02C19.728 19.4 19.529 20.589 18.714 21.295C17.9 22 16.726 22 14.378 22H9.62202C7.27402 22 6.10002 22 5.28602 21.294C4.47102 20.589 4.27202 19.399 3.87302 17.019M17.5 7.5C17.5 6.04131 16.9206 4.64236 15.8891 3.61091C14.8577 2.57946 13.4587 2 12 2C10.5413 2 9.14238 2.57946 8.11093 3.61091C7.07948 4.64236 6.50002 6.04131 6.50002 7.5"
+                  stroke="#323433"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
 
-            {cartItemsCount > 0 && (
-              <div className={styles.header__cartCount}>
-                <span className={styles.header__cartCountDot}>
-                  {cartItemsCount}
-                </span>
-              </div>
-            )}
-          </Link>
+              {cartItemsCount > 0 && (
+                <div className={styles.header__cartCount}>
+                  <span className={styles.header__cartCountDot}>
+                    {cartItemsCount}
+                  </span>
+                </div>
+              )}
+            </Link>
+          </div>
+          <div className={styles.header__mobileRight}>
+            <button
+              className={`${styles.header__icon} ${styles["header__icon--user"]}`}
+              onClick={() => {
+                if (isAuthenticated) {
+                  router.push("/account");
+                } else {
+                  setIsAuthModalOpen(true);
+                }
+              }}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <circle
+                  cx="12.0001"
+                  cy="7.16973"
+                  r="4.41973"
+                  stroke="#323433"
+                  strokeWidth="1.5"
+                  strokeLinecap="square"
+                />
+                <path
+                  d="M20.5 21H4C4.4 15.4 9.33333 14 12 14C18.5 14 20.1667 18.5 20.5 21Z"
+                  stroke="#323433"
+                  strokeWidth="1.5"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <Link
+              href="/cart"
+              className={`${styles.header__icon} ${styles["header__icon--cart"]}`}
+            >
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M3.87302 17.02L2.66902 9.84C2.48702 8.754 2.39602 8.212 2.68802 7.856C2.97902 7.5 3.51502 7.5 4.58602 7.5H19.414C20.485 7.5 21.021 7.5 21.312 7.856C21.604 8.212 21.512 8.754 21.331 9.84L20.127 17.02C19.728 19.4 19.529 20.589 18.714 21.295C17.9 22 16.726 22 14.378 22H9.62202C7.27402 22 6.10002 22 5.28602 21.294C4.47102 20.589 4.27202 19.399 3.87302 17.019M17.5 7.5C17.5 6.04131 16.9206 4.64236 15.8891 3.61091C14.8577 2.57946 13.4587 2 12 2C10.5413 2 9.14238 2.57946 8.11093 3.61091C7.07948 4.64236 6.50002 6.04131 6.50002 7.5"
+                  stroke="#323433"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {cartItemsCount > 0 && (
+                <div className={styles.header__cartCount}>
+                  <span className={styles.header__cartCountDot}>
+                    {cartItemsCount}
+                  </span>
+                </div>
+              )}
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -716,35 +804,59 @@ export default function Header() {
         onClose={() => setIsAuthModalOpen(false)}
       />
 
-      {/* Поиск для мобильной версии - только на главной странице */}
-      {pathname === "/" && (
-        <div className={styles.mobileSearch}>
+      {/* Поиск для мобильной версии */}
+      {isSearchOpen && (
+        <div className={styles.mobileSearchOverlay}>
+          <button
+            type="button"
+            className={styles.mobileSearchOverlay__backdrop}
+            onClick={() => setIsSearchOpen(false)}
+            aria-label="Закрыть поиск"
+          />
+          <div className={styles.mobileSearchOverlay__panel} ref={mobileSearchRef}>
           <form
             onSubmit={handleSearchSubmit}
             className={styles.mobileSearch__inputWrapper}
           >
+            <svg
+              className={styles.mobileSearch__icon}
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M19.0002 19L14.6572 14.657M14.6572 14.657C15.4001 13.9141 15.9894 13.0322 16.3914 12.0615C16.7935 11.0909 17.0004 10.0506 17.0004 9C17.0004 7.9494 16.7935 6.90908 16.3914 5.93845C15.9894 4.96782 15.4001 4.08589 14.6572 3.343C13.9143 2.60011 13.0324 2.01082 12.0618 1.60877C11.0911 1.20673 10.0508 0.999794 9.00021 0.999794C7.9496 0.999794 6.90929 1.20673 5.93866 1.60877C4.96803 2.01082 4.08609 2.60011 3.34321 3.343C1.84288 4.84333 1 6.87821 1 9C1 11.1218 1.84288 13.1567 3.34321 14.657C4.84354 16.1573 6.87842 17.0002 9.00021 17.0002C11.122 17.0002 13.1569 16.1573 14.6572 14.657Z"
+                stroke="#323433"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Поиск..."
               className={styles.mobileSearch__input}
+              autoFocus
             />
-            {searchQuery && (
-              <>
-                <button
-                  type="button"
-                  className={styles.mobileSearch__close}
-                  onClick={() => setSearchQuery("")}
-                >
-                  ×
-                </button>
-                <button type="submit" className={styles.mobileSearch__submit}>
-                  Поиск
-                </button>
-              </>
+            {searchQuery ? (
+              <button
+                type="button"
+                className={styles.mobileSearch__close}
+                onClick={() => setSearchQuery("")}
+              >
+                ×
+              </button>
+            ) : (
+              <button type="button" className={styles.mobileSearch__close} onClick={() => setIsSearchOpen(false)}>
+                ×
+              </button>
             )}
           </form>
+          </div>
         </div>
       )}
     </header>

@@ -291,6 +291,19 @@ function HomeContent({
   const [sceneDimensions, setSceneDimensions] = useState({});
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const [activeHotspotId, setActiveHotspotId] = useState(null);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(null);
+
+  useEffect(() => {
+    if (mobileProductsOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileProductsOpen]);
   const [fourthBlockScrollProgress, setFourthBlockScrollProgress] = useState({
     thumbWidth: 32,
     offset: 0,
@@ -643,6 +656,24 @@ function HomeContent({
                   style={{
                     aspectRatio: stageAspectRatio,
                   }}
+                  onTouchStart={(e) => setTouchStartX(e.touches[0].clientX)}
+                  onTouchEnd={(e) => {
+                    if (touchStartX === null) return;
+                    const delta = touchStartX - e.changedTouches[0].clientX;
+                    if (Math.abs(delta) > 40) {
+                      if (
+                        delta > 0 &&
+                        activeSceneIndex < interactiveScenes.length - 1
+                      ) {
+                        setActiveSceneIndex(activeSceneIndex + 1);
+                        setActiveHotspotId(null);
+                      } else if (delta < 0 && activeSceneIndex > 0) {
+                        setActiveSceneIndex(activeSceneIndex - 1);
+                        setActiveHotspotId(null);
+                      }
+                    }
+                    setTouchStartX(null);
+                  }}
                 >
                   <Image
                     src={activeScene.image}
@@ -695,7 +726,10 @@ function HomeContent({
                         }}
                         onMouseEnter={() => setActiveHotspotId(coordinate.id)}
                         onFocus={() => setActiveHotspotId(coordinate.id)}
-                        onClick={() => setActiveHotspotId(coordinate.id)}
+                        onClick={() => {
+                          setActiveHotspotId(coordinate.id);
+                          setMobileProductsOpen(true);
+                        }}
                         aria-label={coordinate.product.title}
                       />
                     );
@@ -715,9 +749,9 @@ function HomeContent({
                           <Image
                             src={activeHotspot.product.photo}
                             alt={activeHotspot.product.title}
-                            fill
+                            width={100}
+                            height={100}
                             unoptimized={true}
-                            sizes="64px"
                             className={styles.thirdBlockProductImage}
                           />
                         </div>
@@ -748,6 +782,16 @@ function HomeContent({
                   ) : null}
                 </div>
 
+                <div className={styles.thirdBlockMobileProgress}>
+                  <div
+                    className={styles.thirdBlockMobileProgressBar}
+                    style={{
+                      width: `${100 / interactiveScenes.length}%`,
+                      transform: `translateX(${activeSceneIndex * 100}%)`,
+                    }}
+                  />
+                </div>
+
                 <div className={styles.thirdBlockThumbs}>
                   {interactiveScenes.map((scene, index) => (
                     <button
@@ -770,6 +814,105 @@ function HomeContent({
                         className={styles.thirdBlockThumbImage}
                       />
                     </button>
+                  ))}
+                </div>
+
+                {mobileProductsOpen && (
+                  <div
+                    className={styles.thirdBlockMobileOverlay}
+                    onClick={() => setMobileProductsOpen(false)}
+                  />
+                )}
+                <div
+                  className={`${styles.thirdBlockMobileProducts} ${
+                    mobileProductsOpen
+                      ? styles.thirdBlockMobileProductsOpen
+                      : ""
+                  }`}
+                >
+                  <div className={styles.thirdBlockMobileProductsHeader}>
+                    <div>
+                      <p className={styles.thirdBlockMobileProductsTitle}>
+                        В этом образе
+                      </p>
+                      <p className={styles.thirdBlockMobileProductsCount}>
+                        {activeScene.coordinates.length}{" "}
+                        {activeScene.coordinates.length === 1
+                          ? "товар"
+                          : activeScene.coordinates.length < 5
+                            ? "товара"
+                            : "товаров"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.thirdBlockMobileProductsClose}
+                      onClick={() => setMobileProductsOpen(false)}
+                      aria-label="Закрыть"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 18 18"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M1 1L17 17M17 1L1 17"
+                          stroke="#3C101E"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  {activeScene.coordinates.map((coordinate) => (
+                    <Link
+                      key={coordinate.id}
+                      href={`/product/${coordinate.product.id}`}
+                      className={styles.thirdBlockMobileProductItem}
+                    >
+                      {coordinate.product.photo ? (
+                        <div
+                          className={styles.thirdBlockMobileProductImageWrap}
+                        >
+                          <Image
+                            src={coordinate.product.photo}
+                            alt={coordinate.product.title}
+                            fill
+                            unoptimized={true}
+                            sizes="72px"
+                            className={styles.thirdBlockMobileProductImage}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className={styles.thirdBlockMobileProductImageWrap}
+                        />
+                      )}
+                      <div className={styles.thirdBlockMobileProductContent}>
+                        <span className={styles.thirdBlockMobileProductName}>
+                          {coordinate.product.title}
+                        </span>
+                        <span className={styles.thirdBlockMobileProductPrice}>
+                          {formatPrice(coordinate.product.price)}
+                        </span>
+                      </div>
+                      <svg
+                        width="9"
+                        height="17"
+                        viewBox="0 0 9 17"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M0.5 0.5L8.5 8.5L0.5 16.5"
+                          stroke="#3C101E"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </Link>
                   ))}
                 </div>
               </>

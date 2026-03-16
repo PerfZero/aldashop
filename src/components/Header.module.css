@@ -21,6 +21,16 @@
     height: 40px;
 }
 
+.header__mobileLeft,
+.header__mobileRight,
+.header__mobileSearchButton {
+    display: none;
+}
+
+.mobileSearchOverlay {
+    display: none;
+}
+
 .header__burger {
     display: none;
     flex-direction: column;
@@ -307,42 +317,88 @@
         display: none;
     }
 
-    .header__icon--cart {
-        display: inline-flex;
+    .header__mobileLeft,
+    .header__mobileRight {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        z-index: 2;
     }
 
-    .header__icon--favorite {
+    .header__mobileSearchButton {
         display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .header__container {
+        height: auto;
+        padding: 16px;
+        justify-content: center;
         position: relative;
+    }
+
+    .header__logo {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1;
+    }
+
+    .header__logo svg {
+        height: auto;
+        display: block;
+    }
+
+    .header__mobileLeft {
+        margin-right: auto;
+    }
+
+    .header__mobileRight {
+        margin-left: auto;
+    }
+
+    .header__icons {
+        margin-left: 0;
+        gap: 0;
     }
 
     .mobileSearch {
         width: 100%;
         background: #fff;
-        padding: 0;
         box-sizing: border-box;
 
-        padding: 0 16px;
+        padding: 0 16px 16px 16px;
         position: relative;
         z-index: 10;
     }
 
-    .header__icons {
-        order: 2;
-        margin-left: auto;
+    .mobileSearchOverlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1200;
+        display: block;
     }
 
-    .header__logo {
-        order: 1;
+    .mobileSearchOverlay__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(26, 26, 26, 0.45);
+        border: none;
+        padding: 0;
+        margin: 0;
     }
 
-    .header__burger {
-        order: 3;
-        margin-left: 5px;
+    .mobileSearchOverlay__panel {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: #fbfaf6;
     }
 
     .header {
-        padding-bottom: 16px;
+        padding-bottom: 0;
         box-shadow: none;
     }
 
@@ -350,11 +406,10 @@
         display: flex;
         align-items: center;
         border: 1px solid #e5e5e5;
-        border-radius: 24px;
         padding: 0 12px;
         height: 44px;
-        background: #fff;
-        margin-top: 8px;
+        background: #fbfaf6;
+        margin-top: 0;
         gap: 8px;
     }
 
@@ -370,7 +425,7 @@
         font-size: 16px;
         flex: 1;
         background: transparent;
-        color: #323433;
+        color: rgb(60, 16, 30) !important   ;
     }
 
     .mobileSearch__close {
@@ -480,6 +535,12 @@
 
 /* Десктопные стили */
 @media (min-width: 769px) {
+    .header__mobileLeft,
+    .header__mobileRight,
+    .header__mobileSearchButton {
+        display: none;
+    }
+
     /* Скрываем мобильное меню на десктопе */
     .mobileMenu {
         display: none;
@@ -503,6 +564,9 @@
         display: inline-flex;
     }
     .mobileSearch {
+        display: none;
+    }
+    .mobileSearchOverlay {
         display: none;
     }
 }
