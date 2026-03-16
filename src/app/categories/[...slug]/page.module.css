@@ -1,5 +1,5 @@
 .hero__content {
-    height: 329px;
+    height: 229px;
     position: relative;
     display: flex;
     align-items: center;
@@ -15,7 +15,7 @@
     z-index: -1;
     width: 100%;
     object-fit: cover;
-    height: 329px;
+    height: 229px;
 }
 
 .hero__content:before {
@@ -285,7 +285,7 @@
     bottom: 0;
     left: 0;
     z-index: -1;
-    background-color: #a45b38;
+    background-color: #844025;
 }
 
 .hero__skeleton_text {

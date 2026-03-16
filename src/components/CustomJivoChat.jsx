@@ -55,6 +55,33 @@ function AldaIcon() {
   );
 }
 
+function ChatTriggerIcon() {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M12.0048 10.5H12.0128M15.9998 10.5H16.0088M8.00879 10.5H8.01779"
+        stroke="white"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M2 10.5C2 9.73001 2.013 8.97701 2.04 8.25001C2.123 5.87701 2.165 4.69001 3.13 3.71701C4.095 2.74501 5.316 2.69301 7.756 2.58801C9.16988 2.52865 10.5849 2.49931 12 2.50001C13.48 2.50001 14.905 2.53001 16.244 2.58801C18.684 2.69301 19.904 2.74501 20.87 3.71801C21.835 4.69001 21.877 5.87701 21.96 8.25001C22.0127 9.74955 22.0127 11.2505 21.96 12.75C21.877 15.123 21.835 16.31 20.87 17.283C19.905 18.255 18.684 18.307 16.244 18.412C15.5093 18.4433 14.751 18.4667 13.969 18.482C13.229 18.496 12.858 18.502 12.532 18.627C12.206 18.752 11.932 18.985 11.384 19.455L9.205 21.325C9.09895 21.4159 8.96906 21.4744 8.83073 21.4937C8.69241 21.513 8.55146 21.4922 8.42461 21.4337C8.29776 21.3753 8.19033 21.2817 8.11507 21.1641C8.03981 21.0464 7.99987 20.9097 8 20.77V18.422L7.756 18.412C5.316 18.307 4.096 18.255 3.13 17.282C2.165 16.31 2.123 15.123 2.04 12.75C2.01348 12.0003 2.00015 11.2502 2 10.5Z"
+        stroke="white"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function CustomJivoChat() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
@@ -526,13 +553,18 @@ export default function CustomJivoChat() {
           >
             <path
               d="M4 4L16 16M16 4L4 16"
-              stroke="#6c3b2b"
+              stroke="#ffffff"
               strokeWidth="2"
               strokeLinecap="round"
             />
           </svg>
         ) : (
-          <AldaIcon />
+          <>
+            <span className={styles.triggerIcon} aria-hidden="true">
+              <ChatTriggerIcon />
+            </span>
+            <span className={styles.triggerLabel}>чат</span>
+          </>
         )}
       </button>
     </div>

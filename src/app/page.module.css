@@ -29,7 +29,7 @@
 
 .loadingBarProgress {
     height: 100%;
-    background: #a45b38;
+    background: #844025;
     animation: loadingAnimation 1s ease-in-out infinite;
 }
 
@@ -110,14 +110,14 @@
     align-items: center;
     padding: 15px 30px;
 
-    background: #a45b38;
+    background: #844025;
     border: 1px solid #fff;
     transition: 0.2s;
 }
 
 .promo__button:hover {
     background: #fff;
-    color: #a45b38;
+    color: #844025;
 }
 
 .promo__button path {
@@ -125,7 +125,7 @@
 }
 
 .promo__button:hover path {
-    fill: #a45b38;
+    fill: #844025;
 }
 
 .section__container {
@@ -212,7 +212,7 @@
 }
 
 .section__container:hover h2 {
-    color: #a45b38;
+    color: #844025;
 }
 
 .section__container:hover .section__row h2 {
@@ -241,12 +241,12 @@
 }
 
 .section__container .section__content:hover .section__button {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 
 .section__container .section__row:hover .section__button {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 
@@ -419,7 +419,7 @@
 }
 
 .section__row:hover .section__button {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 
@@ -610,7 +610,7 @@
     position: absolute;
     width: 25%;
     height: 100%;
-    background-color: #a45b38;
+    background-color: #844025;
     top: 0;
     left: 0;
     transition: left 0.3s ease;
@@ -1099,7 +1099,7 @@
 }
 
 .section__link:hover .section__button {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 

@@ -455,20 +455,38 @@
 
 /* ── Trigger button ── */
 .trigger {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    background: #fff;
-    border: 1.5px solid #e3d6ca;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+    width: 140px;
+    min-height: 160px;
+    border-radius: 0;
+    background: #844025;
+    border: 1px solid #844025;
     display: flex;
+    flex-direction: column;
+    gap: 14px;
     align-items: center;
     justify-content: center;
-    transition: box-shadow 0.2s;
+    color: #fff;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .trigger:hover {
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.22);
+    transform: translateY(-1px);
+}
+
+.triggerIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.triggerLabel {
+    font-family: "Playfair Display", sans-serif;
+    font-size: 54px;
+    line-height: 1;
+    text-transform: lowercase;
+    color: #fff;
 }
 
 /* ── Mobile ── */
@@ -481,5 +499,15 @@
     .panel {
         width: calc(100vw - 20px);
         height: min(75vh, 660px);
+    }
+
+    .trigger {
+        width: 92px;
+        min-height: 110px;
+        gap: 10px;
+    }
+
+    .triggerLabel {
+        font-size: 34px;
     }
 }

@@ -139,7 +139,7 @@ html {
 /* Стили для стрелок Swiper */
 .swiper-button-next,
 .swiper-button-prev {
-    color: #a45b38 !important;
+    color: #844025 !important;
     background: #ffffff !important;
     width: 44px !important;
     height: 44px !important;
@@ -154,14 +154,14 @@ html {
 
 .swiper-button-next::after,
 .swiper-button-prev::after {
-    color: #a45b38 !important;
+    color: #844025 !important;
     font-size: 16px !important;
     font-weight: bold !important;
 }
 
 /* Стили для активных слайдов в галерее */
 .swiper-slide-thumb-active {
-    border: 1px solid #a45b38 !important;
+    border: 1px solid #844025 !important;
 }
 
 .button {
@@ -187,7 +187,7 @@ html {
 }
 
 .swiper-slide-active {
-    border: 1px solid #a45b38 !important;
+    border: 1px solid #844025 !important;
 }
 
 /* Стили для неактивных слайдов */

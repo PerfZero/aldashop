@@ -486,9 +486,7 @@ export default function ProductClient({
             type: "video",
             src: product.video.video,
             thumbnail:
-              product.video.video_thumbnail ||
-              mainDisplayPhoto?.photo ||
-              null,
+              product.video.video_thumbnail || mainDisplayPhoto?.photo || null,
             alt: `${product.title} - видео`,
           },
         ]
@@ -800,10 +798,11 @@ export default function ProductClient({
           {product.available_sizes && product.available_sizes.length > 0 && (
             <div className={styles.product__sizes}>
               <h3 className={styles.product__section_title}>
-                Размер (ШхВхГ):{" "}
+                Размер (ШхВхГ)
+                {/* {" "}
                 <span className={styles.product__size_name}>
                   {selectedSize?.title}
-                </span>
+                </span>*/}
               </h3>
               <div className={styles.product__sizes_list}>
                 {product.available_sizes.map((size) => (
@@ -840,7 +839,8 @@ export default function ProductClient({
                   className={`${styles.product__materials_preview} ${hoveredMaterial ? styles.product__materials_preview_visible : ""}`}
                   aria-hidden={!hoveredMaterial}
                 >
-                  {hoveredMaterial && toAbsoluteMedia(hoveredMaterial.photo_material) ? (
+                  {hoveredMaterial &&
+                  toAbsoluteMedia(hoveredMaterial.photo_material) ? (
                     <>
                       <div className={styles.product__materials_preview_image}>
                         <Image
@@ -852,7 +852,9 @@ export default function ProductClient({
                           sizes="(max-width: 1400px) 36vw, 520px"
                         />
                       </div>
-                      <div className={styles.product__materials_preview_caption}>
+                      <div
+                        className={styles.product__materials_preview_caption}
+                      >
                         {hoveredMaterial.title_material || "Материал"}
                         {hoveredMaterial.title_color
                           ? `, ${hoveredMaterial.title_color}`
@@ -920,7 +922,10 @@ export default function ProductClient({
               >
                 <path d="M13.5558 20.7C13.3724 20.9 13.1391 21 12.8558 21C12.5724 21 12.3308 20.9 12.1308 20.7L3.33077 11.9C3.23077 11.8 3.15177 11.6873 3.09377 11.562C3.0351 11.4373 3.00577 11.3 3.00577 11.15V4C3.00577 3.73333 3.10577 3.5 3.30577 3.3C3.50577 3.1 3.7391 3 4.00577 3H11.1558C11.2891 3 11.4184 3.025 11.5438 3.075C11.6684 3.125 11.7808 3.2 11.8808 3.3L20.6808 12.1C20.8808 12.3 20.9851 12.5457 20.9938 12.837C21.0018 13.129 20.9058 13.3667 20.7058 13.55L13.5558 20.7ZM6.50577 7.5C6.7891 7.5 7.02677 7.40433 7.21877 7.213C7.4101 7.021 7.50577 6.78333 7.50577 6.5C7.50577 6.21667 7.4101 5.979 7.21877 5.787C7.02677 5.59567 6.7891 5.5 6.50577 5.5C6.22243 5.5 5.98477 5.59567 5.79277 5.787C5.60143 5.979 5.50577 6.21667 5.50577 6.5C5.50577 6.78333 5.60143 7.021 5.79277 7.213C5.98477 7.40433 6.22243 7.5 6.50577 7.5Z" />
               </svg>
-              <p key={`notice-${activeNotice}`} className={styles.product__notice_text}>
+              <p
+                key={`notice-${activeNotice}`}
+                className={styles.product__notice_text}
+              >
                 {PROMO_NOTICES[activeNotice]}
               </p>
             </div>

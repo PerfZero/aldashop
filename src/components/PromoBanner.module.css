@@ -1,56 +1,56 @@
 .promoBanner {
-  width: 100%;
-  background: #a45b38;
-  padding: 10px 20px;
-  text-align: center;
-  min-height: 38px;
+    width: 100%;
+    background: #844025;
+    padding: 10px 20px;
+    text-align: center;
+    min-height: 38px;
 }
 
 .promoBanner__container {
-  max-width: 1400px;
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 .promoBanner__text {
-  color: #FFFFFF;
-  font-size: 16px;
-  font-weight: 500;
-  font-family: var(--font-playfair-display), serif;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: var(--font-playfair-display), serif;
 }
 
 .promoBanner__timer {
-  color: #FFFFFF;
-  font-size: 16px;
-  font-weight: bold;
-  font-family: var(--font-playfair-display), serif;
-  text-shadow: 
-    -0.001px -0.001px 0 #fff,
-    0.001px -0.001px 0 #fff,
-    -0.001px 0.001px 0 #fff,
-    0.001px 0.001px 0 #fff,
-    -0.001px 0 0 #fff,
-    0.001px 0 0 #fff,
-    0 -0.001px 0 #fff,
-    0 0.001px 0 #fff;
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: var(--font-playfair-display), serif;
+    text-shadow:
+        -0.001px -0.001px 0 #fff,
+        0.001px -0.001px 0 #fff,
+        -0.001px 0.001px 0 #fff,
+        0.001px 0.001px 0 #fff,
+        -0.001px 0 0 #fff,
+        0.001px 0 0 #fff,
+        0 -0.001px 0 #fff,
+        0 0.001px 0 #fff;
 }
 
 @media (max-width: 768px) {
-  .promoBanner {
-    padding: 8px 16px;
-    gap: 5px;
-  }
-  
-  .promoBanner__container {
-    gap: 5px;
-  }
+    .promoBanner {
+        padding: 8px 16px;
+        gap: 5px;
+    }
 
-  .promoBanner__text,
-  .promoBanner__timer {
-    font-size: 12px;
-  }
+    .promoBanner__container {
+        gap: 5px;
+    }
+
+    .promoBanner__text,
+    .promoBanner__timer {
+        font-size: 12px;
+    }
 }

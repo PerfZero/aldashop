@@ -78,13 +78,13 @@
 }
 
 .header__navItem:hover .header__navLink {
-    color: #a45b38;
+    color: #844025;
 }
 
 .header__navItem:hover {
-    color: #a45b38;
-    color: #a45b38;
-    border-bottom: 1px solid #a45b38;
+    color: #844025;
+    color: #844025;
+    border-bottom: 1px solid #844025;
 }
 
 .header__navLink {
@@ -100,7 +100,7 @@
 }
 
 .header__navLink.active {
-    color: #a45b38;
+    color: #844025;
 }
 
 /* Мобильные стили */
@@ -193,9 +193,9 @@
     }
 
     .mobileMenu__sidebarItem.active {
-        color: #a45b38;
+        color: #844025;
 
-        border-right: 3px solid #a45b38;
+        border-right: 3px solid #844025;
     }
     .mobileMenu__sidebarBottom {
         /* margin-top: auto; */
@@ -700,7 +700,7 @@
 }
 
 .searchDropdown__info .header__navLink:hover {
-    color: #a45b38;
+    color: #844025;
 }
 
 /* Удалим старый индикатор при наведении */
@@ -710,14 +710,14 @@
 
 /* Стиль для активного пункта меню */
 .header__navLink.active {
-    color: #a45b38;
+    color: #844025;
 }
 
 /* Индикатор под меню */
 .nav-indicator {
     position: absolute;
     height: 1px;
-    background-color: #a45b38;
+    background-color: #844025;
     bottom: -20px;
     transition:
         left 0.3s ease,
@@ -742,20 +742,20 @@
 }
 
 .header__icon:hover path {
-    stroke: #a45b38;
+    stroke: #844025;
 }
 
 .header__icon:hover circle {
-    stroke: #a45b38;
+    stroke: #844025;
 }
 
 .header__icon:first-child:hover path {
-    stroke: #a45b38;
+    stroke: #844025;
     fill: transparent;
 }
 
 .header__icon:last-child:hover path {
-    stroke: #a45b38;
+    stroke: #844025;
     fill: transparent;
 }
 
@@ -846,7 +846,7 @@
 }
 
 .dropdown__link:hover {
-    color: #a45b38;
+    color: #844025;
 }
 
 .dropdown__empty {
@@ -871,7 +871,7 @@
 
 .dropdown__rightItem:hover .dropdown__rightLink {
     color: #fff;
-    background-color: #a45b38;
+    background-color: #844025;
 }
 
 .dropdown__image {
@@ -899,14 +899,14 @@
 }
 
 .dropdown__rightLink:hover {
-    color: #a45b38;
+    color: #844025;
 }
 
 .header__cartCount {
     position: absolute;
     top: -5px;
     right: -5px;
-    background-color: #a45b38;
+    background-color: #844025;
 
     border-radius: 50%;
     min-width: 14px;
@@ -929,7 +929,7 @@
     position: absolute;
     top: -5px;
     right: -5px;
-    background-color: #a45b38;
+    background-color: #844025;
     color: white;
     font-size: 10px;
     font-weight: bold;
@@ -1003,11 +1003,11 @@
     }
 
     .burgerMenu__item:hover {
-        color: #a45b38;
+        color: #844025;
     }
 
     .burgerMenu__item:hover path {
-        fill: #a45b38;
-        stroke: #a45b38;
+        fill: #844025;
+        stroke: #844025;
     }
 }

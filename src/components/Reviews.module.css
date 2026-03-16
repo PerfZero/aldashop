@@ -245,7 +245,7 @@
 }
 
 .reviews__button:hover {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 
@@ -367,9 +367,9 @@
     font-family: var(--font-playfair-display), serif;
     font-weight: 500;
     font-size: 14px;
-    color: #a45b38;
+    color: #844025;
     background: none;
-    border: 1px solid #a45b38;
+    border: 1px solid #844025;
     padding: 8px 16px;
     border-radius: 4px;
     cursor: pointer;
@@ -377,7 +377,7 @@
 }
 
 .modal__upload_button:hover {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 
@@ -394,7 +394,7 @@
     font-weight: 600;
     font-size: 16px;
     color: #fff;
-    background: #a45b38;
+    background: #844025;
     border: none;
     padding: 12px 24px;
     border-radius: 4px;

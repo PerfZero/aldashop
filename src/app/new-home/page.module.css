@@ -46,7 +46,7 @@
 
 .loadingBarProgress {
     height: 100%;
-    background: #a45b38;
+    background: #844025;
     animation: loadingAnimation 1s ease-in-out infinite;
 }
 
@@ -280,8 +280,9 @@
 .secondBlockProgressActive {
     display: block;
     width: 56%;
-    height: 100%;
+    height: 3px;
     background: #844025;
+    border-radius: 4px;
     transition:
         transform 0.18s ease-out,
         width 0.18s ease-out,
@@ -753,7 +754,7 @@
     display: block;
     width: 32%;
     height: 100%;
-    background: #a45b38;
+    background: #844025;
     transition:
         transform 0.18s ease-out,
         width 0.18s ease-out,
@@ -766,7 +767,7 @@
 }
 
 .promo__button:hover {
-    color: #a45b38;
+    color: #844025;
     background: #fff;
 }
 
@@ -854,7 +855,7 @@
 }
 
 .section__container:hover h2 {
-    color: #a45b38;
+    color: #844025;
 }
 
 .section__container:hover .section__row h2 {
@@ -883,12 +884,12 @@
 }
 
 .section__container .section__content:hover .section__button {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 
 .section__container .section__row:hover .section__button {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 
@@ -1061,7 +1062,7 @@
 }
 
 .section__row:hover .section__button {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 
@@ -1253,7 +1254,7 @@
     position: absolute;
     width: 25%;
     height: 100%;
-    background-color: #a45b38;
+    background-color: #844025;
     top: 0;
     left: 0;
     transition: left 0.3s ease;
@@ -2121,7 +2122,7 @@
 }
 
 .section__link:hover .section__button {
-    background: #a45b38;
+    background: #844025;
     color: #fff;
 }
 

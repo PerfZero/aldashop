@@ -62,7 +62,7 @@
 }
 
 .product__mobile_thumbs_swiper :global(.swiper-scrollbar-drag) {
-    background: #a45b38 !important;
+    background: #844025 !important;
     min-width: 18px;
 }
 
@@ -89,7 +89,7 @@
 }
 
 .product__mobile_thumb_active {
-    border-color: #a45b38;
+    border-color: #844025;
     opacity: 1;
 }
 

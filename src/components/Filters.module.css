@@ -137,7 +137,7 @@
 }
 
 .checkboxLabel:hover .checkboxInput {
-    border-color: #a45b38;
+    border-color: #844025;
 }
 
 .checkboxInput {
@@ -150,15 +150,15 @@
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    border: 1.5px solid #a45b38;
+    border: 1.5px solid #844025;
     border-radius: 2px;
     background: #fff;
     transition: all 0.2s ease;
 }
 
 .checkboxInput:checked {
-    background: #a45b38;
-    border-color: #a45b38;
+    background: #844025;
+    border-color: #844025;
 }
 
 .checkboxInput:checked::after {
@@ -199,7 +199,7 @@
     position: absolute;
     top: 0;
     height: 100%;
-    background: #a45b38;
+    background: #844025;
     border-radius: 3px;
     pointer-events: none;
 }
@@ -223,7 +223,7 @@
     width: 20px;
     height: 20px;
     background: #fff;
-    border: 2px solid #a45b38;
+    border: 2px solid #844025;
     border-radius: 50%;
     cursor: pointer;
     pointer-events: auto;
@@ -234,7 +234,7 @@
     width: 20px;
     height: 20px;
     background: #fff;
-    border: 2px solid #a45b38;
+    border: 2px solid #844025;
     border-radius: 50%;
     cursor: pointer;
     pointer-events: auto;
@@ -279,7 +279,7 @@
     appearance: none;
     width: 16px;
     height: 16px;
-    background: #a45b38;
+    background: #844025;
     border-radius: 50%;
     cursor: pointer;
 }
@@ -287,7 +287,7 @@
 .range__input::-moz-range-thumb {
     width: 16px;
     height: 16px;
-    background: #a45b38;
+    background: #844025;
     border-radius: 50%;
     cursor: pointer;
     border: none;
@@ -364,7 +364,7 @@
 
 .selectOption_active {
     background-color: rgba(164, 91, 56, 0.2);
-    color: #a45b38;
+    color: #844025;
 }
 
 .filter__colors {
@@ -389,7 +389,7 @@
 }
 
 .colorOptionActive {
-    border-color: #a45b38;
+    border-color: #844025;
     box-shadow: 0 0 0 2px rgba(164, 91, 56, 0.3);
 }
 
@@ -445,8 +445,8 @@
 
 .filters__button_cancel {
     background: none;
-    border: 1px solid #a45b38;
-    color: #a45b38;
+    border: 1px solid #844025;
+    color: #844025;
 }
 
 .filters__button_cancel:hover {
@@ -454,7 +454,7 @@
 }
 
 .filters__button_apply {
-    background: #a45b38;
+    background: #844025;
     border: none;
     color: #fff;
 }
@@ -546,12 +546,12 @@
 
     .filters__button_cancel {
         background: none;
-        border: 1px solid #a45b38;
-        color: #a45b38;
+        border: 1px solid #844025;
+        color: #844025;
     }
 
     .filters__button_apply {
-        background: #a45b38;
+        background: #844025;
         border: none;
         color: #fff;
     }
@@ -629,7 +629,7 @@
 }
 
 .category__header_active .category__title {
-    color: #a45b38;
+    color: #844025;
     font-weight: 600;
 }
 
@@ -658,10 +658,10 @@
 }
 
 .category__link:hover {
-    color: #a45b38;
+    color: #844025;
 }
 
 .category__link_active {
-    color: #a45b38;
+    color: #844025;
     font-weight: 500;
 }
