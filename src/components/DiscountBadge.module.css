@@ -1,0 +1,63 @@
+.wrap {
+    position: fixed;
+    left: 0;
+    bottom: 160px;
+    z-index: 10000;
+    animation: discountBadgeSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.badge {
+    border: 1px solid #844025;
+    border-radius: 0;
+    background: #844025;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    justify-content: center;
+    font-family: "Playfair Display", sans-serif;
+    font-size: 14px;
+    line-height: 1;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+}
+
+.close {
+    position: absolute;
+    top: -10px;
+    right: -8px;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: #fff;
+    border: 1px solid #844025;
+    color: #844025;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    line-height: 1;
+    z-index: 2;
+}
+
+@media (max-width: 768px) {
+    .wrap {
+        bottom: 116px;
+    }
+
+    .badge {
+        width: 50px;
+        height: 140px;
+        font-size: 28px;
+    }
+}
+
+@keyframes discountBadgeSlideIn {
+    from {
+        transform: translateX(-100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}

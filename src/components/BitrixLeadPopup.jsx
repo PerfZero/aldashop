@@ -20,15 +20,19 @@ export default function BitrixLeadPopup() {
 
   useEffect(() => {
     setIsReady(true);
-    const handled = sessionStorage.getItem(SESSION_HANDLED_KEY) === "1";
-    if (!handled) {
-      setIsVisible(true);
-    }
-
     const storedEmail = localStorage.getItem(EMAIL_STORAGE_KEY);
     if (storedEmail) {
       setEmail(storedEmail);
     }
+  }, []);
+
+  useEffect(() => {
+    const onOpen = () => {
+      setIsVisible(true);
+    };
+
+    window.addEventListener("open-bitrix-lead-popup", onOpen);
+    return () => window.removeEventListener("open-bitrix-lead-popup", onOpen);
   }, []);
 
   useEffect(() => {
@@ -40,6 +44,7 @@ export default function BitrixLeadPopup() {
   const closePopup = () => {
     sessionStorage.setItem(SESSION_HANDLED_KEY, "1");
     setIsVisible(false);
+    window.dispatchEvent(new CustomEvent("show-discount-badge"));
   };
 
   const handleSubmit = async (event) => {

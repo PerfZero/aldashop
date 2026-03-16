@@ -15,6 +15,7 @@ import CookieConsent from "../components/CookieConsent";
 import RouteLoadingBar from "../components/RouteLoadingBar";
 import BitrixLeadPopup from "../components/BitrixLeadPopup";
 import CustomJivoChat from "../components/CustomJivoChat";
+import DiscountBadge from "../components/DiscountBadge";
 import "./globals.css";
 
 const organizationJsonLd = {
@@ -142,6 +143,7 @@ export default function RootLayout({ children }) {
                   <main>{children}</main>
                   <Footer />
                   <CookieConsent />
+                  <DiscountBadge />
                   <CustomJivoChat />
                 </FavouritesProvider>
               </CartProvider>
