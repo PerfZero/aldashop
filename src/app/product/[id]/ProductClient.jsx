@@ -94,6 +94,7 @@ export default function ProductClient({
   const [showProductInfo, setShowProductInfo] = useState(true);
   const [showActualSizes, setShowActualSizes] = useState(true);
   const [isChangingOptions, setIsChangingOptions] = useState(false);
+  const galleryRef = useRef(null);
   const imageRefs = useRef([]);
   const thumbRefs = useRef([]);
   const { addToCart } = useCart();
@@ -174,21 +175,24 @@ export default function ProductClient({
 
   useEffect(() => {
     if (isMobile) return;
+    const gallery = galleryRef.current;
     const nodes = imageRefs.current.filter(Boolean);
-    if (!nodes.length) return;
+    if (!gallery || !nodes.length) return;
     let rafId = 0;
 
     const updateActiveThumbByScroll = () => {
-      const anchorY = window.innerHeight * 0.32;
+      const anchorY = gallery.scrollTop + gallery.clientHeight * 0.32;
       let nextActive = 0;
 
       for (let i = 0; i < nodes.length; i += 1) {
-        const rect = nodes[i].getBoundingClientRect();
-        if (rect.top <= anchorY && rect.bottom >= anchorY) {
+        const top = nodes[i].offsetTop;
+        const bottom = top + nodes[i].offsetHeight;
+
+        if (top <= anchorY && bottom >= anchorY) {
           nextActive = i;
           break;
         }
-        if (rect.top > anchorY) {
+        if (top > anchorY) {
           nextActive = Math.max(0, i - 1);
           break;
         }
@@ -209,10 +213,12 @@ export default function ProductClient({
     };
 
     updateActiveThumbByScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    gallery.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
 
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      gallery.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       if (rafId) window.cancelAnimationFrame(rafId);
     };
   }, [
@@ -494,8 +500,21 @@ export default function ProductClient({
   const scrollToDesktopImage = (index) => {
     setActiveDesktopImage(index);
     const node = imageRefs.current[index];
-    if (!node) return;
-    node.scrollIntoView({ behavior: "smooth", block: "start" });
+    const gallery = galleryRef.current;
+    if (!node || !gallery) return;
+
+    gallery.scrollTo({
+      top: Math.max(node.offsetTop, 0),
+      behavior: "smooth",
+    });
+  };
+
+  const scrollToNextDesktopImage = () => {
+    if (activeDesktopImage >= galleryMedia.length - 1) {
+      return;
+    }
+
+    scrollToDesktopImage(activeDesktopImage + 1);
   };
 
   const hasDiscount =
@@ -507,6 +526,7 @@ export default function ProductClient({
     <>
       <div className={styles.product}>
         <div
+          ref={galleryRef}
           className={styles.product__gallery}
           onMouseEnter={() => setIsGalleryHovered(true)}
           onMouseLeave={() => setIsGalleryHovered(false)}
@@ -521,95 +541,122 @@ export default function ProductClient({
           )}
 
           {hasGalleryMedia && !isMobile && (
-            <div className={styles.product__gallery_desktop}>
-              <div
-                className={`${styles.product__thumbs_rail} ${isGalleryHovered ? styles.product__thumbs_rail_visible : ""}`}
-              >
-                {galleryMedia.map((item, index) => (
-                  <button
-                    key={`thumb-${item.id || index}`}
-                    ref={(node) => {
-                      thumbRefs.current[index] = node;
-                    }}
-                    className={`${styles.product__thumb_rail_item} ${activeDesktopImage === index ? styles.product__thumb_rail_item_active : ""}`}
-                    onMouseEnter={() => scrollToDesktopImage(index)}
-                    onClick={() => scrollToDesktopImage(index)}
-                    aria-label={
-                      item.type === "video"
-                        ? "Видео товара"
-                        : `Фото ${item.lightboxIndex + 1}`
-                    }
-                    type="button"
-                  >
-                    {item.thumbnail || item.src ? (
-                      <Image
-                        src={item.thumbnail || item.src}
-                        alt={
-                          item.type === "video"
-                            ? `${product.title} превью видео`
-                            : `${product.title} превью ${item.lightboxIndex + 1}`
-                        }
-                        width={72}
-                        height={72}
-                        unoptimized
-                      />
-                    ) : null}
-                    {item.type === "video" ? (
-                      <span className={styles.product__thumb_video_badge}>
-                        Video
-                      </span>
-                    ) : null}
-                  </button>
-                ))}
-              </div>
-
-              <div className={styles.product__gallery_stack}>
-                {galleryMedia.map((item, index) => (
-                  <div
-                    key={`stack-${item.id || index}`}
-                    ref={(node) => {
-                      imageRefs.current[index] = node;
-                    }}
-                    data-image-index={index}
-                    className={`${styles.product__stack_item} ${
-                      item.type === "video"
-                        ? styles.product__stack_item_video
-                        : ""
-                    }`}
-                    onClick={() => {
-                      if (item.type === "image") {
-                        openLightbox(item.lightboxIndex);
+            <>
+              <div className={styles.product__gallery_desktop}>
+                <div
+                  className={`${styles.product__thumbs_rail} ${isGalleryHovered ? styles.product__thumbs_rail_visible : ""}`}
+                >
+                  {galleryMedia.map((item, index) => (
+                    <button
+                      key={`thumb-${item.id || index}`}
+                      ref={(node) => {
+                        thumbRefs.current[index] = node;
+                      }}
+                      className={`${styles.product__thumb_rail_item} ${activeDesktopImage === index ? styles.product__thumb_rail_item_active : ""}`}
+                      onClick={() => scrollToDesktopImage(index)}
+                      aria-label={
+                        item.type === "video"
+                          ? "Видео товара"
+                          : `Фото ${item.lightboxIndex + 1}`
                       }
-                    }}
-                  >
-                    {item.type === "video" ? (
-                      <video
-                        className={styles.product__stack_video}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        preload="metadata"
-                        poster={item.thumbnail || undefined}
-                        aria-hidden="true"
-                      >
-                        <source src={item.src} />
-                      </video>
-                    ) : (
-                      <Image
-                        src={item.src}
-                        alt={item.alt}
-                        width={1200}
-                        height={1200}
-                        unoptimized
-                        priority={index === 0}
-                        className={styles.product__stack_image}
-                      />
-                    )}
-                  </div>
-                ))}
+                      type="button"
+                    >
+                      {item.thumbnail || item.src ? (
+                        <Image
+                          src={item.thumbnail || item.src}
+                          alt={
+                            item.type === "video"
+                              ? `${product.title} превью видео`
+                              : `${product.title} превью ${item.lightboxIndex + 1}`
+                          }
+                          width={72}
+                          height={72}
+                          unoptimized
+                        />
+                      ) : null}
+                      {item.type === "video" ? (
+                        <span className={styles.product__thumb_video_badge}>
+                          Video
+                        </span>
+                      ) : null}
+                    </button>
+                  ))}
+                </div>
+
+                <div className={styles.product__gallery_stack}>
+                  {galleryMedia.map((item, index) => (
+                    <div
+                      key={`stack-${item.id || index}`}
+                      ref={(node) => {
+                        imageRefs.current[index] = node;
+                      }}
+                      data-image-index={index}
+                      className={`${styles.product__stack_item} ${
+                        item.type === "video"
+                          ? styles.product__stack_item_video
+                          : ""
+                      }`}
+                      onClick={() => {
+                        if (item.type === "image") {
+                          openLightbox(item.lightboxIndex);
+                        }
+                      }}
+                    >
+                      {item.type === "video" ? (
+                        <video
+                          className={styles.product__stack_video}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          preload="metadata"
+                          poster={item.thumbnail || undefined}
+                          aria-hidden="true"
+                        >
+                          <source src={item.src} />
+                        </video>
+                      ) : (
+                        <Image
+                          src={item.src}
+                          alt={item.alt}
+                          width={1200}
+                          height={1200}
+                          unoptimized
+                          priority={index === 0}
+                          className={styles.product__stack_image}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+              {galleryMedia.length > 1 ? (
+                <button
+                  type="button"
+                  className={styles.product__gallery_next}
+                  onClick={scrollToNextDesktopImage}
+                  aria-label="Прокрутить к следующему изображению"
+                  disabled={activeDesktopImage >= galleryMedia.length - 1}
+                >
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M4 7L10 13L16 7"
+                      stroke="currentColor"
+                      strokeWidth="1.6"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              ) : null}
+            </>
           )}
         </div>
 

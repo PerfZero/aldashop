@@ -287,6 +287,7 @@ const normalizeMainPageData = (data) => {
     title: data.title || data.title_main || FALLBACK_HERO_TITLE,
     main_image: heroImage,
     main_video: resolveImageUrl(data.main_video),
+    video_thumbnail: resolveImageUrl(data.video_thumbnail),
     link_main: data.link_main || categoriesLink,
     title_link_main: data.title_link_main || "Выбрать мебель",
     main_page_items: normalizedMainPageItems,
@@ -559,7 +560,11 @@ function HomeContent({
               loop
               playsInline
               preload="metadata"
-              poster={mainPageData?.main_image || undefined}
+              poster={
+                mainPageData?.video_thumbnail ||
+                mainPageData?.main_image ||
+                undefined
+              }
               onError={() => setPromoVideoError(true)}
               aria-hidden="true"
             >
