@@ -30,7 +30,7 @@ export default function DiscountBadge() {
         onClick={() => setIsVisible(false)}
         aria-label="Скрыть бейдж скидки"
       >
-        ×
+        <span> ×</span>
       </button>
       <button
         type="button"
