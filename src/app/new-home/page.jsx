@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect, Suspense, useRef } from "react";
+import { useState, useEffect, Suspense, useRef, useMemo } from "react";
 import styles from "./page.module.css";
 import DeliverySection from "../components/DeliverySection";
 import EmailVerificationModal from "../../components/EmailVerificationModal";
@@ -135,6 +135,112 @@ const formatPrice = (price) => {
   return `${new Intl.NumberFormat("ru-RU").format(price)} ₽`;
 };
 
+const resolvePhotoValue = (photo) => {
+  if (!photo) {
+    return "";
+  }
+
+  if (typeof photo === "string") {
+    return resolveImageUrl(photo);
+  }
+
+  if (typeof photo === "object") {
+    return resolveImageUrl(
+      photo.photo || photo.image || photo.url || photo.src,
+    );
+  }
+
+  return "";
+};
+
+const pickMainPhoto = (photos = []) =>
+  photos.find((photo) => photo?.main_photo) || photos[0] || null;
+
+const pickHoverPhoto = (photos = []) =>
+  photos.find((photo) => photo?.photo_interior) || photos[1] || null;
+
+const normalizeFourthBlockItem = (item, index) => {
+  const product = item?.product || item;
+  if (!product?.id) {
+    return null;
+  }
+
+  const photos = Array.isArray(product.photos)
+    ? product.photos
+    : Array.isArray(item?.photos)
+      ? item.photos
+      : [];
+
+  const primaryPhotoFromCollection = resolvePhotoValue(pickMainPhoto(photos));
+  const hoverPhotoFromCollection = resolvePhotoValue(pickHoverPhoto(photos));
+
+  const primaryPhoto = resolvePhotoValue(
+    product.photo?.photo ||
+      product.photo ||
+      item?.image ||
+      item?.photo ||
+      item?.photo1 ||
+      item?.image1,
+  );
+
+  const hoverPhoto = resolvePhotoValue(
+    hoverPhotoFromCollection ||
+      product.photo_interior ||
+      product.photo_2 ||
+      product.photo2 ||
+      item?.photo_interior ||
+      item?.photo_2 ||
+      item?.photo2 ||
+      item?.image2 ||
+      item?.second_image ||
+      item?.second_photo,
+  );
+
+  const finalPrimaryPhoto = primaryPhoto || primaryPhotoFromCollection;
+  const finalHoverPhoto =
+    hoverPhoto && hoverPhoto !== finalPrimaryPhoto ? hoverPhoto : "";
+
+  return {
+    id: product.id,
+    title: product.title || item?.title || `Товар ${index + 1}`,
+    price: product.discounted_price ?? product.price ?? 0,
+    photo: finalPrimaryPhoto,
+    hoverPhoto: finalHoverPhoto,
+    bestseller:
+      product.bestseller ?? item?.bestseller ?? item?.is_bestseller ?? false,
+  };
+};
+
+const buildFourthBlockRequestPayload = (link) => {
+  if (!link || typeof link !== "string") {
+    return { flag_type: "bestseller_flag_category", page: 1, limit: 8 };
+  }
+
+  try {
+    const parsed = new URL(link, "https://aldalinde.ru");
+    const params = parsed.searchParams;
+
+    const payload = {
+      flag_type: params.get("flag_type") || "bestseller_flag_category",
+      page: 1,
+      limit: 8,
+    };
+
+    const categoryId = params.get("category_id");
+    const subcategoryId = params.get("subcategory_id");
+    if (categoryId) {
+      payload.category_id = Number(categoryId) || categoryId;
+    }
+    if (subcategoryId) {
+      payload.subcategory_id = Number(subcategoryId) || subcategoryId;
+    }
+
+    return payload;
+  } catch {
+    return { flag_type: "bestseller_flag_category", page: 1, limit: 8 };
+  }
+};
+
 const buildInteractiveScenes = (data) => {
   if (!data || !Array.isArray(data.images_block_items)) {
     return [];
@@ -191,55 +297,9 @@ const buildFourthBlockProducts = (data) => {
     ? data.modul_block4_items
     : [];
 
-  const normalizedDirectItems = directItems
-    .map((item, index) => {
-      const product = item?.product || item;
-      if (!product?.id) {
-        return null;
-      }
-
-      return {
-        id: product.id,
-        title: product.title || item?.title || `Товар ${index + 1}`,
-        price: product.discounted_price ?? product.price ?? 0,
-        photo: resolveImageUrl(
-          product.photo?.photo || product.photo || item?.image || item?.photo,
-        ),
-        bestseller:
-          product.bestseller ??
-          item?.bestseller ??
-          item?.is_bestseller ??
-          false,
-      };
-    })
+  return directItems
+    .map((item, index) => normalizeFourthBlockItem(item, index))
     .filter(Boolean);
-
-  if (normalizedDirectItems.length > 0) {
-    return normalizedDirectItems;
-  }
-
-  const seen = new Set();
-  const fallbackProducts = [];
-
-  for (const scene of data.images_block_items || []) {
-    for (const coordinate of scene.coordinates || []) {
-      const product = coordinate?.product;
-      if (!product?.id || !product.bestseller || seen.has(product.id)) {
-        continue;
-      }
-
-      seen.add(product.id);
-      fallbackProducts.push({
-        id: product.id,
-        title: product.title,
-        price: product.discounted_price ?? product.price ?? 0,
-        photo: resolveImageUrl(product.photo?.photo),
-        bestseller: true,
-      });
-    }
-  }
-
-  return fallbackProducts;
 };
 
 const normalizeMainPageData = (data) => {
@@ -314,6 +374,7 @@ function HomeContent({
   const [activeHotspotId, setActiveHotspotId] = useState(null);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const [touchStartX, setTouchStartX] = useState(null);
+  const [fourthBlockProducts, setFourthBlockProducts] = useState([]);
 
   useEffect(() => {
     if (mobileProductsOpen) {
@@ -336,7 +397,66 @@ function HomeContent({
   const { toggleFavourite, isFavourite } = useFavourites();
   const secondBlockCards = buildSecondBlockCards(mainPageData);
   const interactiveScenes = buildInteractiveScenes(mainPageData);
-  const fourthBlockProducts = buildFourthBlockProducts(mainPageData);
+  const directFourthBlockProducts = useMemo(
+    () => buildFourthBlockProducts(mainPageData),
+    [mainPageData],
+  );
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const loadFourthBlockProducts = async () => {
+      if (directFourthBlockProducts.length > 0) {
+        setFourthBlockProducts(directFourthBlockProducts);
+        return;
+      }
+
+      const requestBody = buildFourthBlockRequestPayload(
+        mainPageData?.link_block4,
+      );
+
+      try {
+        const response = await fetch("/api/products/models-list/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(localStorage.getItem("accessToken") && {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            }),
+          },
+          credentials: "include",
+          body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+          if (!isCancelled) {
+            setFourthBlockProducts([]);
+          }
+          return;
+        }
+
+        const data = await response.json();
+        const items = Array.isArray(data?.results) ? data.results : [];
+        const normalized = items
+          .map((item, index) => normalizeFourthBlockItem(item, index))
+          .filter(Boolean);
+
+        if (!isCancelled) {
+          setFourthBlockProducts(normalized);
+        }
+      } catch {
+        if (!isCancelled) {
+          setFourthBlockProducts([]);
+        }
+      }
+    };
+
+    loadFourthBlockProducts();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [directFourthBlockProducts, mainPageData?.link_block4]);
 
   useEffect(() => {
     const fetchMainPageData = async () => {
@@ -1004,16 +1124,34 @@ function HomeContent({
                         </span>
                       ) : null}
 
-                      <div className={styles.fourthBlockImageWrap}>
+                      <div
+                        className={`${styles.fourthBlockImageWrap} ${
+                          product.hoverPhoto
+                            ? styles.fourthBlockImageWrapHasHover
+                            : ""
+                        }`}
+                      >
                         {product.photo ? (
-                          <Image
-                            src={product.photo}
-                            alt={product.title}
-                            fill
-                            unoptimized={true}
-                            sizes="(max-width: 768px) 70vw, 24vw"
-                            className={styles.fourthBlockImage}
-                          />
+                          <>
+                            <Image
+                              src={product.photo}
+                              alt={product.title}
+                              fill
+                              unoptimized={true}
+                              sizes="(max-width: 768px) 70vw, 24vw"
+                              className={styles.fourthBlockImage}
+                            />
+                            {product.hoverPhoto ? (
+                              <Image
+                                src={product.hoverPhoto}
+                                alt={`${product.title} - вид 2`}
+                                fill
+                                unoptimized={true}
+                                sizes="(max-width: 768px) 70vw, 24vw"
+                                className={`${styles.fourthBlockImage} ${styles.fourthBlockImageHover}`}
+                              />
+                            ) : null}
+                          </>
                         ) : null}
                       </div>
 
