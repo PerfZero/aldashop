@@ -1,7 +1,7 @@
 export async function GET() {
   try {
-    const response = await fetch(
-      "https://aldalinde.ru/api/products/get_banner_sale_mailing/",
+    let response = await fetch(
+      "https://aldalinde.ru/api/products/get_banner_sale_mailing",
       {
         method: "GET",
         headers: {
@@ -10,6 +10,19 @@ export async function GET() {
         cache: "no-store",
       },
     );
+
+    if (response.status === 404) {
+      response = await fetch(
+        "https://aldalinde.ru/api/products/get_banner_sale_mailing/",
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+          cache: "no-store",
+        },
+      );
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -24,14 +37,20 @@ export async function GET() {
 
     const contentType = response.headers.get("content-type") || "";
     if (!contentType.toLowerCase().includes("application/json")) {
-      return Response.json({ error: "External API returned non-JSON" }, { status: 502 });
+      return Response.json(
+        { error: "External API returned non-JSON" },
+        { status: 502 },
+      );
     }
 
     const data = await response.json();
     return Response.json(data, { status: 200 });
   } catch (error) {
     return Response.json(
-      { error: "Internal server error", details: error?.message || "Unknown error" },
+      {
+        error: "Internal server error",
+        details: error?.message || "Unknown error",
+      },
       { status: 500 },
     );
   }
