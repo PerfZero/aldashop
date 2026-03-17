@@ -2,104 +2,105 @@ name: Deploy to Server
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   workflow_dispatch: # Позволяет запускать вручную
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        
-    - name: Install dependencies
-      run: npm ci
-      
-    - name: Run linting
-      run: npm run lint || echo "Linting completed with warnings"
-      
-    - name: Skip build in dev deploy mode
-      run: echo "Build skipped (dev deploy mode)"
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint || echo "Linting completed with warnings"
+
+      - name: Run production build
+        run: npm run build
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
-    - name: Stop application
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
-        timeout: 30s
-        script: |
-          echo "🛑 Останавливаем приложение..."
-          pm2 stop aldalinde 2>/dev/null || echo "Процесс не запущен"
-          pm2 delete aldalinde 2>/dev/null || echo "Процесс не существует"
-          sleep 3
+      - name: Stop application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          timeout: 30s
+          script: |
+            echo "🛑 Останавливаем приложение..."
+            pm2 stop aldalinde 2>/dev/null || echo "Процесс не запущен"
+            pm2 delete aldalinde 2>/dev/null || echo "Процесс не существует"
+            sleep 3
 
-    - name: Update code (dev mode)
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
-        timeout: 300s
-        script: |
-          cd /var/www/aldalinde
-          echo "📥 Получаем код..."
-          git stash push -m "Auto stash before deploy" || echo "Нечего сохранять"
-          git pull origin main
-          
-          echo "🧹 Очищаем кеш..."
-          rm -rf .next node_modules/.cache
-          
-          echo "📦 Устанавливаем зависимости..."
-          npm ci --silent --maxsockets 1
-          npm i @next/env@16.0.7 --no-save --silent
-          echo "✅ Build step skipped (running next dev on server)"
+      - name: Update code and build
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          timeout: 300s
+          script: |
+            cd /var/www/aldalinde
+            echo "📥 Получаем код..."
+            git stash push -m "Auto stash before deploy" || echo "Нечего сохранять"
+            git pull origin main
 
-    - name: Start application
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
-        timeout: 60s
-        script: |
-          cd /var/www/aldalinde
-          echo "▶️ Запускаем приложение (DEV MODE)..."
-          pm2 start npm --name "aldalinde" -- run start
-          pm2 save
-          
-          echo "✅ Деплой завершен успешно!"
-          pm2 status
+            echo "🧹 Очищаем кеш..."
+            rm -rf .next node_modules/.cache
 
-    - name: Diagnostic check
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.SERVER_HOST }}
-        username: ${{ secrets.SERVER_USER }}
-        password: ${{ secrets.SERVER_PASSWORD }}
-        timeout: 60s
-        script: |
-          cd /var/www/aldalinde
-          echo "🔍 Диагностика сервера..."
-          echo "Статус PM2:"
-          pm2 status
-          echo "Логи PM2:"
-          pm2 logs --lines 20
-          echo "Порты:"
-          netstat -tlnp | grep :3000 || echo "Порт 3000 не занят"
-          echo "Процессы Node:"
-          ps aux | grep node | head -5
-          echo "Размер .next:"
-          du -sh .next/ || echo "Папка .next еще не сформирована"
+            echo "📦 Устанавливаем зависимости..."
+            npm ci --silent --maxsockets 1
+            npm i @next/env@16.0.7 --no-save --silent
+            echo "🏗️ Собираем production build..."
+            npm run build
+
+      - name: Start application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          timeout: 60s
+          script: |
+            cd /var/www/aldalinde
+            echo "▶️ Запускаем приложение (PRODUCTION MODE)..."
+            pm2 start npm --name "aldalinde" -- run start
+            pm2 save
+
+            echo "✅ Деплой завершен успешно!"
+            pm2 status
+
+      - name: Diagnostic check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          timeout: 60s
+          script: |
+            cd /var/www/aldalinde
+            echo "🔍 Диагностика сервера..."
+            echo "Статус PM2:"
+            pm2 status
+            echo "Логи PM2:"
+            pm2 logs --lines 20
+            echo "Порты:"
+            netstat -tlnp | grep :3000 || echo "Порт 3000 не занят"
+            echo "Процессы Node:"
+            ps aux | grep node | head -5
+            echo "Размер .next:"
+            du -sh .next/ || echo "Папка .next еще не сформирована"

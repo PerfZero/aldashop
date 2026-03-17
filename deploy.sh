@@ -19,10 +19,13 @@ npm ci
 # Hotfix for server npm environment where Next.js may miss @next/env after ci
 npm i @next/env@16.0.7 --no-save
 
+echo -e "${YELLOW}🏗️ Собираем production build...${NC}"
+npm run build
+
 echo -e "${YELLOW}🛑 Останавливаем приложение...${NC}"
 pm2 stop aldalinde || true
 
-echo -e "${YELLOW}▶️ Запускаем приложение (DEV MODE)...${NC}"
+echo -e "${YELLOW}▶️ Запускаем приложение (PRODUCTION MODE)...${NC}"
 pm2 start npm --name "aldalinde" -- run start
 
 echo -e "${YELLOW}💾 Сохраняем конфигурацию PM2...${NC}"
