@@ -96,16 +96,18 @@
     .promoBanner {
         padding: 8px 16px;
         gap: 5px;
+        min-height: auto;
     }
 
     .promoBanner__container {
         gap: 5px;
-        padding-right: 24px;
+        padding-right: 14px;
     }
 
     .promoBanner__content {
         gap: 5px;
         min-height: 18px;
+        flex-direction: column;
     }
 
     .promoBanner__text,
