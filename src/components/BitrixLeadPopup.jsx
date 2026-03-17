@@ -8,6 +8,18 @@ import styles from "./BitrixLeadPopup.module.css";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION_HANDLED_KEY = "bitrixLeadPopupHandled";
 const EMAIL_STORAGE_KEY = "bitrixLeadPopupEmail";
+
+const DEFAULT_CONTENT = {
+  title_mailing: "Присоединяйтесь к нам",
+  text_mailing:
+    "Будьте первыми, кто узнает о наших эксклюзивных предложениях.\nА еще получите дополнительную скидку 500 рублей на первый заказ.",
+  text_mailing_input: "Почта",
+  text_mailing_button: "Подписаться",
+  text_mailing2:
+    "Будьте первыми, кто узнает о наших эксклюзивных предложениях.",
+  image_url: "",
+};
+
 export default function BitrixLeadPopup() {
   const { user } = useAuth();
 
@@ -17,7 +29,7 @@ export default function BitrixLeadPopup() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [content, setContent] = useState(null);
+  const [content, setContent] = useState(DEFAULT_CONTENT);
   const closeRequestedRef = useRef(false);
 
   useEffect(() => {
@@ -55,19 +67,22 @@ export default function BitrixLeadPopup() {
         }
 
         const data = await response.json();
-        const payload = data?.data;
+        const payloadRaw = data?.data ?? data;
+        const payload = Array.isArray(payloadRaw) ? payloadRaw[0] : payloadRaw;
         if (!payload || typeof payload !== "object") {
           console.error("Ошибка загрузки popup-баннера: пустой payload");
           return;
         }
 
         setContent({
-          title_mailing: payload.title_mailing || "",
-          text_mailing: payload.text_mailing || "",
-          text_mailing_input: payload.text_mailing_input || "",
-          text_mailing_button: payload.text_mailing_button || "",
-          text_mailing2: payload.text_mailing2 || "",
-          image_url: payload.image_url || "",
+          title_mailing: payload.title_mailing || DEFAULT_CONTENT.title_mailing,
+          text_mailing: payload.text_mailing || DEFAULT_CONTENT.text_mailing,
+          text_mailing_input:
+            payload.text_mailing_input || DEFAULT_CONTENT.text_mailing_input,
+          text_mailing_button:
+            payload.text_mailing_button || DEFAULT_CONTENT.text_mailing_button,
+          text_mailing2: payload.text_mailing2 || DEFAULT_CONTENT.text_mailing2,
+          image_url: payload.image_url || DEFAULT_CONTENT.image_url,
         });
       } catch (error) {
         console.error(
@@ -158,7 +173,7 @@ export default function BitrixLeadPopup() {
     }
   };
 
-  if (!isReady || !isVisible || !content) {
+  if (!isReady || !isVisible) {
     return null;
   }
 
