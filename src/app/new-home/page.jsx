@@ -135,6 +135,14 @@ const formatPrice = (price) => {
   return `${new Intl.NumberFormat("ru-RU").format(price)} ₽`;
 };
 
+const formatPriceValue = (price) => {
+  if (typeof price !== "number") {
+    return "";
+  }
+
+  return new Intl.NumberFormat("ru-RU").format(price);
+};
+
 const resolvePhotoValue = (photo) => {
   if (!photo) {
     return "";
@@ -925,7 +933,11 @@ function HomeContent({
                           {activeHotspot.product.title}
                         </span>
                         <span className={styles.thirdBlockProductPrice}>
-                          {formatPrice(activeHotspot.product.price)}
+                          {formatPriceValue(activeHotspot.product.price)}
+                          <span className={styles.thirdBlockProductCurrency}>
+                            {" "}
+                            ₽
+                          </span>
                         </span>
                       </div>
                       <svg

@@ -425,10 +425,21 @@
     }
 }
 
+.thirdBlockProductCurrency {
+    font-family: "Montserrat", sans-serif;
+    font-weight: 400;
+    margin-left: 2px;
+    font-size: 17px;
+    text-align: center;
+    color: #3c101e;
+}
+
 .thirdBlockProductCard {
     position: absolute;
     z-index: 3;
     width: 368px;
+    display: flex;
+
     min-height: 120px;
     padding: 20px;
     background: rgba(255, 251, 247, 1);
@@ -470,6 +481,11 @@
     font-weight: 400;
     font-size: 20px;
     line-height: 1;
+}
+
+.thirdBlockProductCurrency {
+    display: inline-block;
+    font-family: var(--font-montserrat), sans-serif;
 }
 
 .thirdBlockProductArrow {
@@ -1472,6 +1488,7 @@
         width: 340px;
         grid-template-columns: 56px 1fr 18px;
         gap: 14px;
+        display: flex;
     }
 
     .thirdBlockProductTitle {
