@@ -381,11 +381,32 @@ function HomeContent({
   const [activeSceneIndex, setActiveSceneIndex] = useState(0);
   const [activeHotspotId, setActiveHotspotId] = useState(null);
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [touchStartX, setTouchStartX] = useState(null);
   const [fourthBlockProducts, setFourthBlockProducts] = useState([]);
 
   useEffect(() => {
-    if (mobileProductsOpen) {
+    const mediaQuery = window.matchMedia("(max-width: 768px)");
+
+    const applyViewport = () => {
+      const isMobile = mediaQuery.matches;
+      setIsMobileViewport(isMobile);
+
+      if (!isMobile) {
+        setMobileProductsOpen(false);
+      }
+    };
+
+    applyViewport();
+    mediaQuery.addEventListener("change", applyViewport);
+
+    return () => {
+      mediaQuery.removeEventListener("change", applyViewport);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (mobileProductsOpen && isMobileViewport) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -393,7 +414,7 @@ function HomeContent({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [mobileProductsOpen]);
+  }, [mobileProductsOpen, isMobileViewport]);
   const [fourthBlockScrollProgress, setFourthBlockScrollProgress] = useState({
     thumbWidth: 32,
     offset: 0,
@@ -900,7 +921,10 @@ function HomeContent({
                         onFocus={() => setActiveHotspotId(coordinate.id)}
                         onClick={() => {
                           setActiveHotspotId(coordinate.id);
-                          setMobileProductsOpen(true);
+
+                          if (isMobileViewport) {
+                            setMobileProductsOpen(true);
+                          }
                         }}
                         aria-label={coordinate.product.title}
                       />
