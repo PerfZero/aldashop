@@ -23,40 +23,6 @@ function normalizeBanners(payload) {
     .filter((item) => Boolean(item.text) || Boolean(item.description));
 }
 
-const BANNER_ENDPOINTS = ["/api/products/banner", "/api/products/banner/"];
-
-async function fetchBannerPayload() {
-  for (const endpoint of BANNER_ENDPOINTS) {
-    try {
-      const response = await fetch(endpoint, {
-        method: "GET",
-        cache: "no-store",
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          continue;
-        }
-        throw new Error(`HTTP ${response.status} ${response.statusText}`);
-      }
-
-      const contentType = response.headers.get("content-type") || "";
-      if (!contentType.toLowerCase().includes("application/json")) {
-        const bodySnippet = await response.text();
-        throw new Error(`Non-JSON response: ${bodySnippet.slice(0, 200)}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      if (endpoint === BANNER_ENDPOINTS[BANNER_ENDPOINTS.length - 1]) {
-        throw error;
-      }
-    }
-  }
-
-  throw new Error("Banner endpoint not found");
-}
-
 export default function PromoBanner() {
   const [banners, setBanners] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -68,7 +34,24 @@ export default function PromoBanner() {
   useEffect(() => {
     const fetchBanner = async () => {
       try {
-        const data = await fetchBannerPayload();
+        const response = await fetch(
+          "https://aldalinde.ru/api/products/get_banner",
+          {
+            method: "GET",
+            cache: "no-store",
+          },
+        );
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} ${response.statusText}`);
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.toLowerCase().includes("application/json")) {
+          const bodySnippet = await response.text();
+          throw new Error(`Non-JSON response: ${bodySnippet.slice(0, 200)}`);
+        }
+
+        const data = await response.json();
         const normalized = normalizeBanners(data);
         setBanners(normalized);
         setActiveIndex(0);

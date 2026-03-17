@@ -8,17 +8,6 @@ import styles from "./BitrixLeadPopup.module.css";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION_HANDLED_KEY = "bitrixLeadPopupHandled";
 const EMAIL_STORAGE_KEY = "bitrixLeadPopupEmail";
-const FALLBACK_CONTENT = {
-  title_mailing: "Присоединяйтесь к нам",
-  text_mailing:
-    "Будьте первыми, кто узнает о наших эксклюзивных предложениях.\nА еще получите дополнительную скидку 500 рублей на первый заказ.",
-  text_mailing_input: "Почта",
-  text_mailing_button: "Подписаться",
-  text_mailing2:
-    "Будьте первыми, кто узнает о наших эксклюзивных предложениях.",
-  image_url: "/pops.jpg",
-};
-
 export default function BitrixLeadPopup() {
   const { user } = useAuth();
 
@@ -28,7 +17,7 @@ export default function BitrixLeadPopup() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [content, setContent] = useState(FALLBACK_CONTENT);
+  const [content, setContent] = useState(null);
   const closeRequestedRef = useRef(false);
 
   useEffect(() => {
@@ -42,34 +31,49 @@ export default function BitrixLeadPopup() {
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const response = await fetch("/api/products/banner-sale-mailing", {
-          method: "GET",
-          cache: "no-store",
-        });
+        const response = await fetch(
+          "https://aldalinde.ru/api/products/get_banner_sale_mailing",
+          {
+            method: "GET",
+            cache: "no-store",
+          },
+        );
         if (!response.ok) {
+          console.error(
+            `Ошибка загрузки popup-баннера: HTTP ${response.status} ${response.statusText}`,
+          );
+          return;
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.toLowerCase().includes("application/json")) {
+          const bodySnippet = await response.text();
+          console.error(
+            `Ошибка загрузки popup-баннера: не JSON (${bodySnippet.slice(0, 200)})`,
+          );
           return;
         }
 
         const data = await response.json();
         const payload = data?.data;
         if (!payload || typeof payload !== "object") {
+          console.error("Ошибка загрузки popup-баннера: пустой payload");
           return;
         }
 
         setContent({
-          title_mailing:
-            payload.title_mailing || FALLBACK_CONTENT.title_mailing,
-          text_mailing: payload.text_mailing || FALLBACK_CONTENT.text_mailing,
-          text_mailing_input:
-            payload.text_mailing_input || FALLBACK_CONTENT.text_mailing_input,
-          text_mailing_button:
-            payload.text_mailing_button || FALLBACK_CONTENT.text_mailing_button,
-          text_mailing2:
-            payload.text_mailing2 || FALLBACK_CONTENT.text_mailing2,
-          image_url: payload.image_url || FALLBACK_CONTENT.image_url,
+          title_mailing: payload.title_mailing || "",
+          text_mailing: payload.text_mailing || "",
+          text_mailing_input: payload.text_mailing_input || "",
+          text_mailing_button: payload.text_mailing_button || "",
+          text_mailing2: payload.text_mailing2 || "",
+          image_url: payload.image_url || "",
         });
-      } catch {
-        // keep fallback content
+      } catch (error) {
+        console.error(
+          "Ошибка загрузки popup-баннера:",
+          error?.message || error,
+        );
       }
     };
 
@@ -154,7 +158,7 @@ export default function BitrixLeadPopup() {
     }
   };
 
-  if (!isReady || !isVisible) {
+  if (!isReady || !isVisible || !content) {
     return null;
   }
 
@@ -170,7 +174,9 @@ export default function BitrixLeadPopup() {
         <div
           className={styles.image}
           style={{
-            backgroundImage: `url(${content.image_url || FALLBACK_CONTENT.image_url})`,
+            backgroundImage: content.image_url
+              ? `url(${content.image_url})`
+              : "none",
           }}
         />
         <div className={styles.content}>
