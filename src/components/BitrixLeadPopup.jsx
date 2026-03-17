@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useAuth } from "../contexts/AuthContext";
 import styles from "./BitrixLeadPopup.module.css";
@@ -14,9 +14,11 @@ export default function BitrixLeadPopup() {
 
   const [isReady, setIsReady] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const closeRequestedRef = useRef(false);
 
   useEffect(() => {
     setIsReady(true);
@@ -28,6 +30,8 @@ export default function BitrixLeadPopup() {
 
   useEffect(() => {
     const onOpen = () => {
+      closeRequestedRef.current = false;
+      setIsClosing(false);
       setIsVisible(true);
     };
 
@@ -42,9 +46,26 @@ export default function BitrixLeadPopup() {
   }, [user, email]);
 
   const closePopup = () => {
+    if (closeRequestedRef.current) {
+      return;
+    }
+
+    closeRequestedRef.current = true;
     sessionStorage.setItem(SESSION_HANDLED_KEY, "1");
-    setIsVisible(false);
+    setIsClosing(true);
     window.dispatchEvent(new CustomEvent("show-discount-badge"));
+  };
+
+  const handleModalAnimationEnd = (event) => {
+    if (
+      isClosing &&
+      event.target === event.currentTarget &&
+      event.animationName === "popupModalOutRight"
+    ) {
+      setIsVisible(false);
+      setIsClosing(false);
+      closeRequestedRef.current = false;
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -92,10 +113,11 @@ export default function BitrixLeadPopup() {
   return createPortal(
     <div className={styles.overlay}>
       <div
-        className={styles.modal}
+        className={`${styles.modal} ${isClosing ? styles.modalClosing : ""}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="bitrix-lead-title"
+        onAnimationEnd={handleModalAnimationEnd}
       >
         <div className={styles.image} />
         <div className={styles.content}>
@@ -113,8 +135,8 @@ export default function BitrixLeadPopup() {
           </h2>
           <p className={styles.text}>
             Будьте первыми, кто узнает о наших эксклюзивных предложениях.
-            <br />
-            А еще получите дополнительную скидку 500 рублей на первый заказ.
+            <br />А еще получите дополнительную скидку 500 рублей на первый
+            заказ.
           </p>
 
           <form onSubmit={handleSubmit}>
@@ -130,7 +152,11 @@ export default function BitrixLeadPopup() {
               autoComplete="email"
             />
             {error && <p className={styles.error}>{error}</p>}
-            <button type="submit" className={styles.button} disabled={isSubmitting}>
+            <button
+              type="submit"
+              className={styles.button}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Отправка..." : "Подписаться"}
             </button>
           </form>

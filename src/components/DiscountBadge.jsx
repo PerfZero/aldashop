@@ -1,33 +1,70 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./DiscountBadge.module.css";
 
 export default function DiscountBadge() {
-  const [isVisible, setIsVisible] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [isEntered, setIsEntered] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const closeRequestedRef = useRef(false);
+  const enterTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    const showTimeout = window.setTimeout(() => {
-      setIsVisible(true);
-    }, 3500);
-
-    const onShow = () => setIsVisible(true);
-    window.addEventListener("show-discount-badge", onShow);
-
-    return () => {
-      window.clearTimeout(showTimeout);
-      window.removeEventListener("show-discount-badge", onShow);
-    };
+  const showBadge = useCallback(() => {
+    closeRequestedRef.current = false;
+    setIsClosing(false);
+    setIsMounted(true);
+    setIsEntered(false);
+    window.setTimeout(() => {
+      setIsEntered(true);
+    }, 24);
   }, []);
 
-  if (!isVisible) return null;
+  const hideBadge = useCallback(() => {
+    if (closeRequestedRef.current) {
+      return;
+    }
+
+    closeRequestedRef.current = true;
+    setIsClosing(true);
+    setIsEntered(false);
+  }, []);
+
+  useEffect(() => {
+    enterTimeoutRef.current = window.setTimeout(showBadge, 3500);
+
+    window.addEventListener("show-discount-badge", showBadge);
+
+    return () => {
+      if (enterTimeoutRef.current) {
+        window.clearTimeout(enterTimeoutRef.current);
+      }
+      window.removeEventListener("show-discount-badge", showBadge);
+    };
+  }, [showBadge]);
+
+  if (!isMounted) return null;
 
   return (
-    <div className={styles.wrap} aria-label="Промо скидка 50%">
+    <div
+      className={`${styles.wrap} ${isClosing ? styles.wrapClosing : isEntered ? styles.wrapVisible : ""}`}
+      aria-label="Промо скидка 50%"
+      onAnimationEnd={(event) => {
+        if (
+          isClosing &&
+          event.target === event.currentTarget &&
+          event.animationName === "discountBadgeSlideOutLeft"
+        ) {
+          setIsMounted(false);
+          setIsClosing(false);
+          closeRequestedRef.current = false;
+        }
+      }}
+    >
       <button
         type="button"
         className={styles.close}
-        onClick={() => setIsVisible(false)}
+        onClick={hideBadge}
         aria-label="Скрыть бейдж скидки"
       >
         <span> ×</span>
@@ -36,7 +73,7 @@ export default function DiscountBadge() {
         type="button"
         className={styles.badge}
         onClick={() => {
-          setIsVisible(false);
+          hideBadge();
           window.dispatchEvent(new CustomEvent("open-bitrix-lead-popup"));
         }}
         aria-label="Скидка 50%, показать форму подписки"

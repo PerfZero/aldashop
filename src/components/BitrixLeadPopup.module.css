@@ -22,7 +22,14 @@
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
     pointer-events: auto;
     transform-origin: right bottom;
-    animation: popupModalIn 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translate3d(120%, 0, 0);
+    animation: popupModalInRight 1s ease 0.25s 1 normal both;
+    will-change: transform;
+}
+
+.modalClosing {
+    animation: popupModalOutRight 0.9s ease 0s 1 normal forwards;
+    pointer-events: none;
 }
 
 .image {
@@ -120,12 +127,21 @@
     line-height: 1.2;
 }
 
-@keyframes popupModalIn {
+@keyframes popupModalInRight {
     from {
-        transform: translateX(42px);
+        transform: translate3d(120%, 0, 0);
     }
     to {
-        transform: translateX(0);
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+@keyframes popupModalOutRight {
+    from {
+        transform: translate3d(0, 0, 0);
+    }
+    to {
+        transform: translate3d(120%, 0, 0);
     }
 }
 
