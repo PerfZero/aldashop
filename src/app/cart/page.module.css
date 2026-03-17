@@ -2,14 +2,16 @@
     max-width: 1720px;
     margin: 0 auto;
     padding: 20px;
+    background-color: #fff;
 }
 
 .title {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 400;
     font-size: 32px;
+    color: #3c101e;
     margin-bottom: 30px;
     margin-top: 60px;
-    color: #323433;
 }
 
 .empty {
@@ -47,7 +49,6 @@
 }
 
 .cartLeft {
-    border-top: 1px solid rgba(193, 175, 134, 0.5);
     flex: 1;
 }
 
@@ -74,7 +75,6 @@
 }
 
 .productImage {
-    width: 140px;
     height: 100px;
     display: flex;
     justify-content: center;
@@ -85,6 +85,7 @@
 .productImage img {
     width: 100%;
     height: 100%;
+    mix-blend-mode: darken;
     object-fit: cover;
 }
 
@@ -130,19 +131,19 @@
 }
 
 .productName {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Montserrat", sans-serif;
     font-weight: 500;
     font-size: 18px;
     line-height: 135%;
-    color: #323433;
-    transition: color 0.3s ease;
+    color: #3c101e;
 }
 
 .productArticle {
+    font-family: "Montserrat", sans-serif;
     font-weight: 400;
     font-size: 14px;
     line-height: 140%;
-    color: #323433;
+    color: #3c101e;
     margin: 15px 0;
 }
 
@@ -153,7 +154,7 @@
 }
 
 .colorMaterial span {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Montserrat", sans-serif;
     font-weight: 500;
     font-size: 14px;
     line-height: 140%;
@@ -218,16 +219,20 @@
 }
 
 .price {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
     font-weight: 400;
     font-size: 20px;
+    text-align: center;
+    color: #844025;
     text-align: center;
     color: #844025;
 }
 
 .currency {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
     font-size: 20px;
+    text-align: center;
     color: #844025;
 }
 
@@ -485,16 +490,16 @@ input:checked + .slider:before {
     width: 400px;
     flex-shrink: 0;
     padding: 60px 20px;
-    border: 1px solid rgba(193, 175, 134, 0.5);
     display: flex;
     height: max-content;
     flex-direction: column;
 }
 
 .summaryTitle {
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Playfair Display", sans-serif;
+    font-weight: 400;
     font-size: 32px;
-    color: #323433;
+    color: #3c101e;
     margin-bottom: 60px;
 }
 
@@ -512,28 +517,31 @@ input:checked + .slider:before {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Playfair Display", sans-serif;
     font-weight: 400;
     font-size: 20px;
-    text-align: center;
-    color: rgba(50, 52, 51, 0.8);
+    color: #3c101e;
 }
 
 .summaryRowPrice {
     display: flex;
     align-items: center;
     gap: 2px;
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
     font-size: 20px;
-    color: rgba(50, 52, 51, 0.8);
+    text-align: center;
+    color: rgba(60, 16, 30, 0.8);
 }
 
 .summaryTotal {
     display: flex;
     align-items: center;
     gap: 2px;
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
     font-size: 20px;
+    text-align: center;
     color: #844025;
 }
 
@@ -633,13 +641,19 @@ input:checked + .slider:before {
     align-items: center;
     width: 100%;
     margin-top: 30px;
-    padding: 15px 30px;
-    background-color: #844025;
+    padding: 15px 20px;
+    background: #d25c1b;
     color: white;
+    border-radius: 5px;
+
     border: none;
-    font-family: var(--font-playfair-display), serif;
+    font-family: "Playfair Display", sans-serif;
     font-weight: 600;
-    font-size: 20px;
+    gap: 10px;
+    font-size: 18px;
+    line-height: 150%;
+    text-align: center;
+    color: #fbfaf6;
     cursor: pointer;
     transition: background-color 0.3s;
 }

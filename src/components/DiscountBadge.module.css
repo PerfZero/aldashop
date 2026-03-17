@@ -3,7 +3,8 @@
     left: 0;
     bottom: 160px;
     z-index: 10000;
-    animation: discountBadgeSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: discountBadgeSlideIn 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
 }
 
 .badge {
@@ -44,8 +45,10 @@
 @keyframes discountBadgeSlideIn {
     from {
         transform: translateX(-100%);
+        opacity: 0;
     }
     to {
         transform: translateX(0);
+        opacity: 1;
     }
 }

@@ -14,29 +14,82 @@
     justify-content: center;
     gap: 10px;
     flex-wrap: wrap;
+    position: relative;
+    padding-right: 28px;
+}
+
+.promoBanner__content {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 22px;
+    transform: translateY(0);
 }
 
 .promoBanner__text {
-    color: #ffffff;
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
     font-size: 16px;
-    font-weight: 500;
-    font-family: var(--font-playfair-display), serif;
+    line-height: 150%;
+    color: #fff;
 }
 
 .promoBanner__timer {
-    color: #ffffff;
+    font-family: "Tenor Sans", sans-serif;
+    font-weight: 400;
     font-size: 16px;
-    font-weight: bold;
-    font-family: var(--font-playfair-display), serif;
-    text-shadow:
-        -0.001px -0.001px 0 #fff,
-        0.001px -0.001px 0 #fff,
-        -0.001px 0.001px 0 #fff,
-        0.001px 0.001px 0 #fff,
-        -0.001px 0 0 #fff,
-        0.001px 0 0 #fff,
-        0 -0.001px 0 #fff,
-        0 0.001px 0 #fff;
+    line-height: 150%;
+    color: #fff;
+}
+
+.promoBanner__content_out {
+    animation: promoBannerSlideOutDown 0.22s ease-in forwards;
+}
+
+.promoBanner__content_in {
+    animation: promoBannerSlideInFromTop 0.3s cubic-bezier(0.16, 1, 0.3, 1)
+        forwards;
+}
+
+@keyframes promoBannerSlideOutDown {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(125%);
+    }
+}
+
+@keyframes promoBannerSlideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-125%);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.promoBanner__close {
+    position: fixed;
+    right: 10px;
+    width: 42px;
+    height: 42px;
+    top: -2px;
+    border-radius: 50%;
+    background: transparent;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
 }
 
 @media (max-width: 768px) {
@@ -47,10 +100,22 @@
 
     .promoBanner__container {
         gap: 5px;
+        padding-right: 24px;
+    }
+
+    .promoBanner__content {
+        gap: 5px;
+        min-height: 18px;
     }
 
     .promoBanner__text,
     .promoBanner__timer {
         font-size: 12px;
+    }
+
+    .promoBanner__close {
+        width: 20px;
+        height: 20px;
+        font-size: 13px;
     }
 }
