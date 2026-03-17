@@ -8,6 +8,16 @@ import styles from "./BitrixLeadPopup.module.css";
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SESSION_HANDLED_KEY = "bitrixLeadPopupHandled";
 const EMAIL_STORAGE_KEY = "bitrixLeadPopupEmail";
+const FALLBACK_CONTENT = {
+  title_mailing: "Присоединяйтесь к нам",
+  text_mailing:
+    "Будьте первыми, кто узнает о наших эксклюзивных предложениях.\nА еще получите дополнительную скидку 500 рублей на первый заказ.",
+  text_mailing_input: "Почта",
+  text_mailing_button: "Подписаться",
+  text_mailing2:
+    "Будьте первыми, кто узнает о наших эксклюзивных предложениях.",
+  image_url: "/pops.jpg",
+};
 
 export default function BitrixLeadPopup() {
   const { user } = useAuth();
@@ -18,6 +28,7 @@ export default function BitrixLeadPopup() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [content, setContent] = useState(FALLBACK_CONTENT);
   const closeRequestedRef = useRef(false);
 
   useEffect(() => {
@@ -26,6 +37,43 @@ export default function BitrixLeadPopup() {
     if (storedEmail) {
       setEmail(storedEmail);
     }
+  }, []);
+
+  useEffect(() => {
+    const loadContent = async () => {
+      try {
+        const response = await fetch("/api/products/banner-sale-mailing", {
+          method: "GET",
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          return;
+        }
+
+        const data = await response.json();
+        const payload = data?.data;
+        if (!payload || typeof payload !== "object") {
+          return;
+        }
+
+        setContent({
+          title_mailing:
+            payload.title_mailing || FALLBACK_CONTENT.title_mailing,
+          text_mailing: payload.text_mailing || FALLBACK_CONTENT.text_mailing,
+          text_mailing_input:
+            payload.text_mailing_input || FALLBACK_CONTENT.text_mailing_input,
+          text_mailing_button:
+            payload.text_mailing_button || FALLBACK_CONTENT.text_mailing_button,
+          text_mailing2:
+            payload.text_mailing2 || FALLBACK_CONTENT.text_mailing2,
+          image_url: payload.image_url || FALLBACK_CONTENT.image_url,
+        });
+      } catch {
+        // keep fallback content
+      }
+    };
+
+    loadContent();
   }, []);
 
   useEffect(() => {
@@ -119,7 +167,12 @@ export default function BitrixLeadPopup() {
         aria-labelledby="bitrix-lead-title"
         onAnimationEnd={handleModalAnimationEnd}
       >
-        <div className={styles.image} />
+        <div
+          className={styles.image}
+          style={{
+            backgroundImage: `url(${content.image_url || FALLBACK_CONTENT.image_url})`,
+          }}
+        />
         <div className={styles.content}>
           <button
             type="button"
@@ -131,19 +184,15 @@ export default function BitrixLeadPopup() {
           </button>
 
           <h2 id="bitrix-lead-title" className={styles.title}>
-            Присоединяйтесь к нам
+            {content.title_mailing}
           </h2>
-          <p className={styles.text}>
-            Будьте первыми, кто узнает о наших эксклюзивных предложениях.
-            <br />А еще получите дополнительную скидку 500 рублей на первый
-            заказ.
-          </p>
+          <p className={styles.text}>{content.text_mailing}</p>
 
           <form onSubmit={handleSubmit}>
             <input
               type="email"
               className={`${styles.input} ${error ? styles.inputError : ""}`}
-              placeholder="Почта"
+              placeholder={content.text_mailing_input}
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -157,13 +206,11 @@ export default function BitrixLeadPopup() {
               className={styles.button}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Отправка..." : "Подписаться"}
+              {isSubmitting ? "Отправка..." : content.text_mailing_button}
             </button>
           </form>
 
-          <p className={styles.note}>
-            Будьте первыми, кто узнает о наших эксклюзивных предложениях.
-          </p>
+          <p className={styles.note}>{content.text_mailing2}</p>
         </div>
       </div>
     </div>,

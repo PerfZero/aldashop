@@ -23,6 +23,40 @@ function normalizeBanners(payload) {
     .filter((item) => Boolean(item.text) || Boolean(item.description));
 }
 
+const BANNER_ENDPOINTS = ["/api/products/banner", "/api/products/banner/"];
+
+async function fetchBannerPayload() {
+  for (const endpoint of BANNER_ENDPOINTS) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "GET",
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          continue;
+        }
+        throw new Error(`HTTP ${response.status} ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.toLowerCase().includes("application/json")) {
+        const bodySnippet = await response.text();
+        throw new Error(`Non-JSON response: ${bodySnippet.slice(0, 200)}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      if (endpoint === BANNER_ENDPOINTS[BANNER_ENDPOINTS.length - 1]) {
+        throw error;
+      }
+    }
+  }
+
+  throw new Error("Banner endpoint not found");
+}
+
 export default function PromoBanner() {
   const [banners, setBanners] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -34,33 +68,12 @@ export default function PromoBanner() {
   useEffect(() => {
     const fetchBanner = async () => {
       try {
-        const response = await fetch("/api/products/banner", {
-          method: "GET",
-          cache: "no-store",
-        });
-        if (!response.ok) {
-          console.error(
-            `Ошибка загрузки баннера: HTTP ${response.status} ${response.statusText}`,
-          );
-          return;
-        }
-
-        const contentType = response.headers.get("content-type") || "";
-        if (!contentType.toLowerCase().includes("application/json")) {
-          const bodySnippet = await response.text();
-          console.error(
-            "Ошибка загрузки баннера: сервер вернул не JSON",
-            bodySnippet.slice(0, 200),
-          );
-          return;
-        }
-
-        const data = await response.json();
+        const data = await fetchBannerPayload();
         const normalized = normalizeBanners(data);
         setBanners(normalized);
         setActiveIndex(0);
       } catch (error) {
-        console.error("Ошибка загрузки баннера:", error);
+        console.error("Ошибка загрузки баннера:", error?.message || error);
       }
     };
 

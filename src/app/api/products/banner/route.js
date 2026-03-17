@@ -15,11 +15,19 @@ export async function GET(request) {
       headers.Cookie = cookieHeader;
     }
 
-    const response = await fetch("https://aldalinde.ru/api/products/get_banner/", {
+    let response = await fetch("https://aldalinde.ru/api/products/get_banner", {
       method: "GET",
       headers,
       cache: "no-store",
     });
+
+    if (response.status === 404) {
+      response = await fetch("https://aldalinde.ru/api/products/get_banner/", {
+        method: "GET",
+        headers,
+        cache: "no-store",
+      });
+    }
 
     if (!response.ok) {
       const errorText = await response.text();

@@ -74,6 +74,7 @@
     color: #616161;
     font-size: 14px;
     line-height: 1.24;
+    white-space: pre-line;
 }
 
 .input {
