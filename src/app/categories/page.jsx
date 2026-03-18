@@ -101,7 +101,6 @@ function CategoryPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [previewFilters, setPreviewFilters] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
 
   // Инициализация фильтров из URL при монтировании
@@ -125,7 +124,6 @@ function CategoryPageContent() {
       setCurrentPage(1);
       setSortBy(1);
       setAppliedFilters({ in_stock: true });
-      setPreviewFilters(null);
     }
     prevScopeRef.current = scopeKey;
   }, [scopeKey]);
@@ -151,14 +149,8 @@ function CategoryPageContent() {
     categoryId, subcategoryId, stablePayload,
   );
 
-  // useProducts использует preview если он активен
-  const productsPayload = useMemo(
-    () => previewFilters || stablePayload,
-    [previewFilters, stablePayload],
-  );
-
   const { data, isLoading: isProductsLoading, isError: isProductsError, error: productsError } = useProducts(
-    productsPayload, categoryId, subcategoryId, sortBy, currentPage,
+    stablePayload, categoryId, subcategoryId, sortBy, currentPage,
   );
 
   const products = data?.products || [];
@@ -197,7 +189,6 @@ function CategoryPageContent() {
 
   // --- Применение фильтров ---
   const handleFiltersApply = useCallback((newFilters) => {
-    setPreviewFilters(null);
     setAppliedFilters(newFilters);
 
     const url = new URL(window.location.href);
@@ -308,7 +299,6 @@ function CategoryPageContent() {
         <Filters
           isVisible={isClient ? showFilters : false}
           onClose={() => {
-            setPreviewFilters(null);
             setShowFilters(false);
             sessionStorage.setItem("showFilters", "false");
           }}
@@ -316,7 +306,6 @@ function CategoryPageContent() {
           loading={categoriesLoading || filtersLoading || isProductsLoading}
           error={null}
           onApply={handleFiltersApply}
-          onPreviewChange={setPreviewFilters}
           appliedFilters={appliedFilters}
           categories={categories}
         />

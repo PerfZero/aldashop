@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import RangeSlider from "./RangeSlider";
@@ -12,7 +12,6 @@ export default function Filters({
   loading = false,
   error = null,
   onApply,
-  onPreviewChange,
   appliedFilters = {},
   categories = [],
 }) {
@@ -77,9 +76,11 @@ export default function Filters({
   }, [isVisible]);
 
   const filteredFilters = useMemo(() => {
-    return filters.filter(
-      (filter) => filter.slug !== "sort" && filter.slug !== "in_stock",
-    );
+    return filters.filter((filter) => {
+      if (filter.slug === "sort" || filter.slug === "in_stock") return false;
+      if (filter.type === "select" && !filter.options?.length) return false;
+      return true;
+    });
   }, [filters]);
 
   const filterKeys = useMemo(() => {
@@ -137,29 +138,21 @@ export default function Filters({
 
   const handleReset = () => {
     setTempFilters({});
-
-    const resetFilters = {};
-
-    if (inStockDelivery) {
-      resetFilters.in_stock = true;
-    }
-
     if (onApply) {
-      onApply(resetFilters);
+      onApply(inStockDelivery ? { in_stock: true } : {});
     }
   };
 
   const handleCancel = () => {
-    if (onPreviewChange) {
-      onPreviewChange(null);
-    }
     onClose();
   };
 
-  const buildFinalFilters = useCallback(() => {
-    const finalFilters = { ...tempFilters };
+  const buildFinalFilters = useCallback((tempFiltersOverride, inStockOverride) => {
+    const tf = tempFiltersOverride !== undefined ? tempFiltersOverride : tempFilters;
+    const isStock = inStockOverride !== undefined ? inStockOverride : inStockDelivery;
+    const finalFilters = { ...tf };
 
-    if (inStockDelivery) {
+    if (isStock) {
       finalFilters.in_stock = true;
     } else {
       delete finalFilters.in_stock;
@@ -170,13 +163,9 @@ export default function Filters({
     );
     if (priceFilter) {
       const displayedMin =
-        tempFilters.price?.min !== undefined
-          ? tempFilters.price.min
-          : priceFilter.min || 0;
+        tf.price?.min !== undefined ? tf.price.min : priceFilter.min || 0;
       const displayedMax =
-        tempFilters.price?.max !== undefined
-          ? tempFilters.price.max
-          : priceFilter.max || 100000;
+        tf.price?.max !== undefined ? tf.price.max : priceFilter.max || 100000;
 
       finalFilters.price = {
         min: displayedMin,
@@ -204,36 +193,7 @@ export default function Filters({
     return finalFilters;
   }, [tempFilters, inStockDelivery, filters]);
 
-  const prevPreviewRef = useRef(null);
-  useEffect(() => {
-    if (!onPreviewChange) {
-      return;
-    }
-
-    const newFilters = buildFinalFilters();
-    const newStr = JSON.stringify(newFilters);
-    if (prevPreviewRef.current === newStr) return;
-    prevPreviewRef.current = newStr;
-    onPreviewChange(newFilters);
-  }, [onPreviewChange, buildFinalFilters]);
-
-  useEffect(() => {
-    if (!isVisible && onPreviewChange) {
-      onPreviewChange(null);
-    }
-  }, [isVisible, onPreviewChange]);
-
   const handleApply = () => {
-    const finalFilters = buildFinalFilters();
-
-    if (onApply) {
-      onApply(finalFilters);
-    }
-
-    if (onPreviewChange) {
-      onPreviewChange(null);
-    }
-
     if (window.innerWidth <= 768) {
       onClose();
     }
@@ -277,7 +237,9 @@ export default function Filters({
               type="checkbox"
               checked={inStockDelivery}
               onChange={() => {
-                setInStockDelivery(!inStockDelivery);
+                const newValue = !inStockDelivery;
+                setInStockDelivery(newValue);
+                if (onApply) onApply(buildFinalFilters(tempFilters, newValue));
               }}
               className={styles.toggleInput}
             />
@@ -537,11 +499,13 @@ export default function Filters({
                                 : currentValues.filter(
                                     (val) => val !== option.id,
                                   );
-                              setTempFilters((prev) => ({
-                                ...prev,
+                              const newTempFilters = {
+                                ...tempFilters,
                                 [filter.slug]:
                                   newValues.length > 0 ? newValues : undefined,
-                              }));
+                              };
+                              setTempFilters(newTempFilters);
+                              if (onApply) onApply(buildFinalFilters(newTempFilters));
                             }}
                             className={styles.checkboxInput}
                           />
@@ -559,12 +523,11 @@ export default function Filters({
                       <input
                         type="checkbox"
                         checked={tempFilters[filter.slug] || false}
-                        onChange={(e) =>
-                          setTempFilters((prev) => ({
-                            ...prev,
-                            [filter.slug]: e.target.checked,
-                          }))
-                        }
+                        onChange={(e) => {
+                          const newTempFilters = { ...tempFilters, [filter.slug]: e.target.checked };
+                          setTempFilters(newTempFilters);
+                          if (onApply) onApply(buildFinalFilters(newTempFilters));
+                        }}
                         className={styles.checkboxInput}
                       />
                       <span className={styles.checkboxText}>Да</span>
@@ -590,13 +553,15 @@ export default function Filters({
                             tempFilters[filter.slug]?.[key]?.max ?? max,
                           ]}
                           onChange={([minVal, maxVal]) => {
-                            setTempFilters((prev) => ({
-                              ...prev,
+                            const newTempFilters = {
+                              ...tempFilters,
                               [filter.slug]: {
-                                ...prev[filter.slug],
+                                ...tempFilters[filter.slug],
                                 [key]: { min: minVal, max: maxVal },
                               },
-                            }));
+                            };
+                            setTempFilters(newTempFilters);
+                            if (onApply) onApply(buildFinalFilters(newTempFilters));
                           }}
                         />
                       </div>
@@ -611,14 +576,16 @@ export default function Filters({
                       max={filter.max || 100000}
                       unit="₽"
                       value={[
-                        tempFilters[filter.slug]?.min ?? filter.min ?? 0,
-                        tempFilters[filter.slug]?.max ?? filter.max ?? 100000,
+                        tempFilters[filter.slug]?.min ?? (filter.min || 0),
+                        tempFilters[filter.slug]?.max ?? (filter.max || 100000),
                       ]}
                       onChange={([minVal, maxVal]) => {
-                        setTempFilters((prev) => ({
-                          ...prev,
+                        const newTempFilters = {
+                          ...tempFilters,
                           [filter.slug]: { min: minVal, max: maxVal },
-                        }));
+                        };
+                        setTempFilters(newTempFilters);
+                        if (onApply) onApply(buildFinalFilters(newTempFilters));
                       }}
                     />
                   </div>
@@ -640,10 +607,9 @@ export default function Filters({
                           const newValues = currentValues.includes(color.id)
                             ? currentValues.filter((val) => val !== color.id)
                             : [...currentValues, color.id];
-                          setTempFilters((prev) => ({
-                            ...prev,
-                            [filter.slug]: newValues,
-                          }));
+                          const newTempFilters = { ...tempFilters, [filter.slug]: newValues };
+                          setTempFilters(newTempFilters);
+                          if (onApply) onApply(buildFinalFilters(newTempFilters));
                         }}
                         title={color.title}
                       />
