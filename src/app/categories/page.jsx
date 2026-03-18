@@ -303,7 +303,7 @@ function CategoryPageContent() {
             sessionStorage.setItem("showFilters", "false");
           }}
           filters={filters}
-          loading={categoriesLoading || filtersLoading || isProductsLoading}
+          loading={categoriesLoading || (filtersLoading && filters.length === 0)}
           error={null}
           onApply={handleFiltersApply}
           appliedFilters={appliedFilters}

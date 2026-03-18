@@ -850,7 +850,7 @@ function CategoryPageContent() {
             }
           }}
           filters={filters}
-          loading={loading}
+          loading={categoriesLoading || (filtersLoading && filters.length === 0)}
           error={error}
           onApply={handleFiltersApply}
           appliedFilters={appliedFilters}
