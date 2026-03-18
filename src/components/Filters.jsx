@@ -158,18 +158,11 @@ export default function Filters({
       delete finalFilters.in_stock;
     }
 
-    const priceFilter = filters.find(
-      (f) => f.slug === "price" && f.type === "range",
-    );
-    if (priceFilter) {
-      const displayedMin =
-        tf.price?.min !== undefined ? tf.price.min : priceFilter.min || 0;
-      const displayedMax =
-        tf.price?.max !== undefined ? tf.price.max : priceFilter.max || 100000;
-
+    // Добавляем цену только если пользователь явно изменил слайдер
+    if (tf.price?.min !== undefined) {
       finalFilters.price = {
-        min: displayedMin,
-        max: displayedMax,
+        min: tf.price.min,
+        max: tf.price.max ?? 100000,
       };
     }
 
