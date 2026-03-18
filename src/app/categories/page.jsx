@@ -140,7 +140,7 @@ function CategoryPageContent() {
 
   // --- Фильтры и товары ---
   const stablePayload = useMemo(
-    () => ({ ...appliedFilters, ...dynamicFilters }),
+    () => ({ ...dynamicFilters, ...appliedFilters }),
     [appliedFilters, dynamicFilters],
   );
 
@@ -192,16 +192,30 @@ function CategoryPageContent() {
     setAppliedFilters(newFilters);
 
     const url = new URL(window.location.href);
-    ["in_stock", "bestseller", "price_min", "price_max", "colors", "material",
-      "width_min", "width_max", "height_min", "height_max", "depth_min", "depth_max", "sort",
-    ].forEach(k => url.searchParams.delete(k));
-
-    if (newFilters.in_stock) url.searchParams.set("in_stock", "true");
-    if (newFilters.bestseller) url.searchParams.set("bestseller", "true");
-    if (newFilters.price?.min) url.searchParams.set("price_min", String(newFilters.price.min));
-    if (newFilters.price?.max) url.searchParams.set("price_max", String(newFilters.price.max));
-    if (newFilters.colors?.length) url.searchParams.set("colors", newFilters.colors.join(","));
-    if (newFilters.material?.length) url.searchParams.set("material", newFilters.material.join(","));
+    // Удаляем все параметры кроме навигационных
+    const navKeys = new Set(["category_id", "subcategory_id", "flag_type"]);
+    for (const key of Array.from(url.searchParams.keys())) {
+      if (!navKeys.has(key)) url.searchParams.delete(key);
+    }
+    // Записываем все фильтры из newFilters
+    Object.entries(newFilters).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (key === "price") {
+        if (value?.min != null) url.searchParams.set("price_min", String(value.min));
+        if (value?.max != null) url.searchParams.set("price_max", String(value.max));
+      } else if (key === "sizes") {
+        ["width", "height", "depth"].forEach((dim) => {
+          if (value?.[dim]?.min != null) url.searchParams.set(`${dim}_min`, String(value[dim].min));
+          if (value?.[dim]?.max != null) url.searchParams.set(`${dim}_max`, String(value[dim].max));
+        });
+      } else if (Array.isArray(value) && value.length > 0) {
+        url.searchParams.set(key, value.join(","));
+      } else if (value === true) {
+        url.searchParams.set(key, "true");
+      } else if (typeof value === "number" && !isNaN(value)) {
+        url.searchParams.set(key, String(value));
+      }
+    });
 
     window.history.replaceState({}, "", url.toString());
   }, []);

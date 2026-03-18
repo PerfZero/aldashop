@@ -383,160 +383,36 @@ function CategoryPageContent() {
 
   const handleFiltersApply = (newFilters) => {
     setAppliedFilters(newFilters);
+    // Сбрасываем dynamicFilters, чтобы он не перекрывал appliedFilters в stablePayload
+    setDynamicFilters({});
 
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-
-      const isReset =
-        Object.keys(newFilters).length === 0 ||
-        (Object.keys(newFilters).length === 1 && newFilters.in_stock === true);
-
-      if (isReset) {
-        if (newFilters.in_stock === true) {
-          url.searchParams.set("in_stock", "true");
-        } else {
-          url.searchParams.delete("in_stock");
-        }
-        url.searchParams.delete("bestseller");
-        url.searchParams.delete("price_min");
-        url.searchParams.delete("price_max");
-        url.searchParams.delete("colors");
-        url.searchParams.delete("material");
-        url.searchParams.delete("width_min");
-        url.searchParams.delete("width_max");
-        url.searchParams.delete("height_min");
-        url.searchParams.delete("height_max");
-        url.searchParams.delete("depth_min");
-        url.searchParams.delete("depth_max");
-        url.searchParams.delete("sort");
-
-        const paramsToKeep = [];
-        if (newFilters.in_stock === true) {
-          paramsToKeep.push("in_stock");
-        }
-        const paramsToDelete = [];
-        for (const [key] of url.searchParams.entries()) {
-          if (!paramsToKeep.includes(key)) {
-            paramsToDelete.push(key);
-          }
-        }
-        paramsToDelete.forEach((key) => url.searchParams.delete(key));
-
-        setSortBy(null);
-        setSort(undefined);
-      } else {
-        if (newFilters.in_stock === true) {
-          url.searchParams.set("in_stock", "true");
-        } else {
-          url.searchParams.delete("in_stock");
-        }
-
-        if (newFilters.bestseller === true) {
-          url.searchParams.set("bestseller", "true");
-        } else {
-          url.searchParams.delete("bestseller");
-        }
-
-        if (newFilters.price) {
-          if (newFilters.price.min)
-            url.searchParams.set("price_min", newFilters.price.min.toString());
-          if (newFilters.price.max)
-            url.searchParams.set("price_max", newFilters.price.max.toString());
-        } else {
-          url.searchParams.delete("price_min");
-          url.searchParams.delete("price_max");
-        }
-
-        if (
-          newFilters.colors &&
-          Array.isArray(newFilters.colors) &&
-          newFilters.colors.length > 0
-        ) {
-          url.searchParams.set("colors", newFilters.colors.join(","));
-        } else {
-          url.searchParams.delete("colors");
-        }
-
-        if (
-          newFilters.material &&
-          Array.isArray(newFilters.material) &&
-          newFilters.material.length > 0
-        ) {
-          url.searchParams.set("material", newFilters.material.join(","));
-        } else {
-          url.searchParams.delete("material");
-        }
-
-        if (newFilters.sizes) {
-          if (newFilters.sizes.width) {
-            if (newFilters.sizes.width.min)
-              url.searchParams.set(
-                "width_min",
-                newFilters.sizes.width.min.toString(),
-              );
-            if (newFilters.sizes.width.max)
-              url.searchParams.set(
-                "width_max",
-                newFilters.sizes.width.max.toString(),
-              );
-          }
-          if (newFilters.sizes.height) {
-            if (newFilters.sizes.height.min)
-              url.searchParams.set(
-                "height_min",
-                newFilters.sizes.height.min.toString(),
-              );
-            if (newFilters.sizes.height.max)
-              url.searchParams.set(
-                "height_max",
-                newFilters.sizes.height.max.toString(),
-              );
-          }
-          if (newFilters.sizes.depth) {
-            if (newFilters.sizes.depth.min)
-              url.searchParams.set(
-                "depth_min",
-                newFilters.sizes.depth.min.toString(),
-              );
-            if (newFilters.sizes.depth.max)
-              url.searchParams.set(
-                "depth_max",
-                newFilters.sizes.depth.max.toString(),
-              );
-          }
-        } else {
-          url.searchParams.delete("width_min");
-          url.searchParams.delete("width_max");
-          url.searchParams.delete("height_min");
-          url.searchParams.delete("height_max");
-          url.searchParams.delete("depth_min");
-          url.searchParams.delete("depth_max");
-        }
-
-        Object.keys(newFilters).forEach((key) => {
-          if (
-            ![
-              "in_stock",
-              "bestseller",
-              "price",
-              "colors",
-              "material",
-              "sizes",
-              "sort",
-            ].includes(key)
-          ) {
-            const value = newFilters[key];
-            if (Array.isArray(value) && value.length > 0) {
-              url.searchParams.set(key, value.join(","));
-            } else if (value) {
-              url.searchParams.set(key, value.toString());
-            }
-          }
-        });
-      }
-
-      window.history.replaceState({}, "", url.toString());
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    // Удаляем все параметры кроме навигационных
+    const navKeys = new Set(["flag_type"]);
+    for (const key of Array.from(url.searchParams.keys())) {
+      if (!navKeys.has(key)) url.searchParams.delete(key);
     }
+    // Записываем все фильтры из newFilters
+    Object.entries(newFilters).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+      if (key === "price") {
+        if (value?.min != null) url.searchParams.set("price_min", String(value.min));
+        if (value?.max != null) url.searchParams.set("price_max", String(value.max));
+      } else if (key === "sizes") {
+        ["width", "height", "depth"].forEach((dim) => {
+          if (value?.[dim]?.min != null) url.searchParams.set(`${dim}_min`, String(value[dim].min));
+          if (value?.[dim]?.max != null) url.searchParams.set(`${dim}_max`, String(value[dim].max));
+        });
+      } else if (Array.isArray(value) && value.length > 0) {
+        url.searchParams.set(key, value.join(","));
+      } else if (value === true) {
+        url.searchParams.set(key, "true");
+      } else if (typeof value === "number" && !isNaN(value)) {
+        url.searchParams.set(key, String(value));
+      }
+    });
+    window.history.replaceState({}, "", url.toString());
   };
 
   useEffect(() => {
