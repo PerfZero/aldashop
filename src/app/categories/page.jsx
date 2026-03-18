@@ -1,23 +1,7 @@
 "use client";
 
-import {
-  useState,
-  useEffect,
-  useCallback,
-  Suspense,
-  useRef,
-  useMemo,
-} from "react";
-import { useParams, usePathname, useSearchParams } from "next/navigation";
-import {
-  useQueryParam,
-  NumberParam,
-  StringParam,
-  withDefault,
-} from "use-query-params";
-import Image from "next/image";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
+import { useState, useEffect, useCallback, Suspense, useRef, useMemo } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import Filters from "@/components/Filters";
 import ProductCard from "@/components/ProductCard";
@@ -29,864 +13,271 @@ import { useFilters } from "@/hooks/useFilters";
 import { useNoCategoryInfo } from "@/hooks/useNoCategoryInfo";
 import styles from "./[...slug]/page.module.css";
 
+const cx = (...classes) => classes.filter(Boolean).join(" ");
+
+function parseFiltersFromSearchParams(searchParams) {
+  const filters = {};
+  if (searchParams.get("in_stock") === "true") filters.in_stock = true;
+  if (searchParams.get("bestseller") === "true") filters.bestseller = true;
+  const priceMin = searchParams.get("price_min");
+  const priceMax = searchParams.get("price_max");
+  if (priceMin || priceMax) {
+    filters.price = {};
+    if (priceMin) filters.price.min = parseInt(priceMin);
+    if (priceMax) filters.price.max = parseInt(priceMax);
+  }
+  const colors = searchParams.get("colors");
+  if (colors) filters.colors = colors.split(",").map(Number).filter(Boolean);
+  const material = searchParams.get("material");
+  if (material) filters.material = material.split(",").map(Number).filter(Boolean);
+  return filters;
+}
+
+function getPhotoUrl(photo) {
+  if (!photo) return null;
+  return photo.startsWith("http") ? photo : `https://aldalinde.ru${photo}`;
+}
+
 function CategoryPageContent() {
-  const cx = (...classes) => classes.filter(Boolean).join(" ");
-  const params = useParams();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const slugDep = Array.isArray(params?.slug)
-    ? params.slug.join("/")
-    : params?.slug || "";
-  const [sortBy, setSortBy] = useState(1);
+
+  // --- Всё из URL, без state ---
+  const categoryId = useMemo(() => {
+    const id = searchParams.get("category_id");
+    return id ? parseInt(id, 10) : null;
+  }, [searchParams]);
+
+  const subcategoryId = useMemo(() => {
+    const id = searchParams.get("subcategory_id");
+    return id ? parseInt(id, 10) : null;
+  }, [searchParams]);
+
+  const flagType = searchParams.get("flag_type") || null;
+
+  const dynamicFilters = useMemo(() => {
+    const excluded = new Set([
+      "price_min", "price_max", "in_stock", "sort", "material", "colors",
+      "bestseller", "category_id", "subcategory_id",
+      "width_min", "width_max", "height_min", "height_max", "depth_min", "depth_max",
+    ]);
+    const result = {};
+    for (const [key, value] of searchParams.entries()) {
+      if (excluded.has(key)) continue;
+      if (key === "flag_type") {
+        result[key] = value;
+      } else if (value.includes(",")) {
+        result[key] = value.split(",").map(v => { const n = parseInt(v); return isNaN(n) ? v : n; });
+      } else {
+        const n = parseInt(value);
+        result[key] = isNaN(n) ? [value] : [n];
+      }
+    }
+    return result;
+  }, [searchParams]);
+
+  // --- Категории ---
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+
+  const currentCategory = useMemo(() => {
+    if (!categoryId || !categories.length) return null;
+    return categories.find(c => c.id === categoryId) || null;
+  }, [categoryId, categories]);
+
+  const currentSubcategory = useMemo(() => {
+    if (!subcategoryId || !currentCategory) return null;
+    return currentCategory.subcategories?.find(s => s.id === subcategoryId) || null;
+  }, [subcategoryId, currentCategory]);
+
+  // --- No-category info (только для /categories без category_id) ---
+  const shouldFetchNoCategoryInfo = !categoryId && pathname === "/categories";
+  const { data: noCategoryInfo, isLoading: noCategoryInfoLoading } = useNoCategoryInfo(shouldFetchNoCategoryInfo);
+
+  // --- UI state ---
+  const [sortBy, setSortBy] = useState(() => {
+    const sort = searchParams.get("sort");
+    return sort ? parseInt(sort, 10) : 1;
+  });
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    const isMobile = window.innerWidth < 768;
-    setShowFilters(!isMobile);
-  }, []);
-  const [error, setError] = useState(null);
-  const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
-  const [previewFilters, setPreviewFilters] = useState(null);
-  const [categoryId, setCategoryId] = useState(null);
-  const [subcategoryId, setSubcategoryId] = useState(null);
-  const [currentCategory, setCurrentCategory] = useState(null);
-  const [currentSubcategory, setCurrentSubcategory] = useState(null);
-
-  const [sort, setSort] = useQueryParam("sort", NumberParam);
-
-  const [dynamicFilters, setDynamicFilters] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
-  const prevScopeRef = useRef("");
-  const scrollRestoredRef = useRef(false);
-  const productsSectionRef = useRef(null);
-  const previousPageRef = useRef(1);
+  const [previewFilters, setPreviewFilters] = useState(null);
+  const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
 
-  const { data: categories = [], isLoading: categoriesLoading } =
-    useCategories();
-
-  const shouldFetchNoCategoryInfo =
-    pathname === "/categories" && !categoryId && !subcategoryId;
-  const { data: noCategoryInfo, isLoading: noCategoryInfoLoading } =
-    useNoCategoryInfo(shouldFetchNoCategoryInfo);
-
+  // Инициализация фильтров из URL при монтировании
   useEffect(() => {
-    setIsClient(true);
+    const urlFilters = parseFiltersFromSearchParams(searchParams);
+    if (Object.keys(urlFilters).length > 0) {
+      setAppliedFilters(urlFilters);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { setIsClient(true); }, []);
+  useEffect(() => {
+    setShowFilters(window.innerWidth >= 768);
   }, []);
 
+  // Сброс состояния при смене категории/флага
+  const scopeKey = `${categoryId ?? ""}|${subcategoryId ?? ""}|${flagType ?? ""}`;
+  const prevScopeRef = useRef(null);
   useEffect(() => {
-    if (isClient) {
-      sessionStorage.setItem("showFilters", showFilters.toString());
+    if (prevScopeRef.current !== null && prevScopeRef.current !== scopeKey) {
+      setCurrentPage(1);
+      setSortBy(1);
+      setAppliedFilters({ in_stock: true });
+      setPreviewFilters(null);
     }
-  }, [showFilters, isClient]);
+    prevScopeRef.current = scopeKey;
+  }, [scopeKey]);
 
-  const parseDynamicFiltersFromUrl = useCallback(() => {
-    try {
-      if (typeof window === "undefined") return {};
-
-      const url = new URL(window.location.href);
-      const dynamicFilters = {};
-
-      for (const [key, value] of url.searchParams.entries()) {
-        if (
-          ![
-            "price_min",
-            "price_max",
-            "in_stock",
-            "sort",
-            "material",
-            "colors",
-            "bestseller",
-            "category_id",
-            "subcategory_id",
-          ].includes(key)
-        ) {
-          if (key === "flag_type") {
-            dynamicFilters[key] = value;
-          } else if (value && value.includes(",")) {
-            dynamicFilters[key] = value.split(",").map((v) => {
-              const num = parseInt(v);
-              return isNaN(num) ? v : num;
-            });
-          } else if (value) {
-            const num = parseInt(value);
-            dynamicFilters[key] = isNaN(num) ? value : num;
-          }
-        }
-      }
-
-      return dynamicFilters;
-    } catch (error) {
-      return {};
-    }
-  }, []);
-
-  const searchParamsString = searchParams?.toString() || "";
-
-  const urlDynamicFiltersMemo = useMemo(() => {
-    return parseDynamicFiltersFromUrl();
-  }, [searchParamsString, parseDynamicFiltersFromUrl]);
-
-  const prevFiltersRef = useRef(null);
-  const prevCategoryRef = useRef({ categoryId: null, subcategoryId: null });
-
-  const categoryParams = useMemo(() => {
-    if (typeof window === "undefined")
-      return { categoryId: null, subcategoryId: null, flagType: null };
-    try {
-      const url = new URL(window.location.href);
-      return {
-        categoryId: url.searchParams.get("category_id"),
-        subcategoryId: url.searchParams.get("subcategory_id"),
-        flagType: url.searchParams.get("flag_type"),
-      };
-    } catch {
-      return { categoryId: null, subcategoryId: null, flagType: null };
-    }
-  }, [searchParamsString]);
-
+  // Сброс страницы при смене фильтров или сортировки
+  const prevFiltersKeyRef = useRef(null);
   useEffect(() => {
-    const urlDynamicFilters = urlDynamicFiltersMemo;
-
-    const filtersString = JSON.stringify(urlDynamicFilters);
-    if (prevFiltersRef.current !== filtersString) {
-      prevFiltersRef.current = filtersString;
-      setDynamicFilters(urlDynamicFilters);
+    const key = JSON.stringify(appliedFilters) + String(sortBy);
+    if (prevFiltersKeyRef.current !== null && prevFiltersKeyRef.current !== key) {
+      setCurrentPage(1);
     }
+    prevFiltersKeyRef.current = key;
+  }, [appliedFilters, sortBy]);
 
-    if (categoryParams.categoryId) {
-      const newCategoryId = parseInt(categoryParams.categoryId);
-      const newSubcategoryId = categoryParams.subcategoryId
-        ? parseInt(categoryParams.subcategoryId)
-        : null;
-
-      if (
-        prevCategoryRef.current.categoryId !== newCategoryId ||
-        prevCategoryRef.current.subcategoryId !== newSubcategoryId
-      ) {
-        prevCategoryRef.current = {
-          categoryId: newCategoryId,
-          subcategoryId: newSubcategoryId,
-        };
-        console.log("[categories/page] Смена категории из URL:", {
-          categoryId: newCategoryId,
-          subcategoryId: newSubcategoryId,
-          pathname,
-        });
-        setCategoryId(newCategoryId);
-        setSubcategoryId(newSubcategoryId);
-
-        if (categories.length > 0) {
-          const category = categories.find((c) => c.id === newCategoryId);
-          if (category) {
-            setCurrentCategory({
-              id: category.id,
-              slug: category.slug,
-              title: category.title,
-              description: category.description,
-              photo_cover: category.photo_cover,
-            });
-
-            if (newSubcategoryId) {
-              const subcategory = category.subcategories?.find(
-                (s) => s.id === newSubcategoryId,
-              );
-              if (subcategory) {
-                setCurrentSubcategory({
-                  id: subcategory.id,
-                  slug: subcategory.slug,
-                  title: subcategory.title,
-                  description: subcategory.description,
-                  photo_cover: subcategory.photo_cover,
-                });
-              } else {
-                setCurrentSubcategory(null);
-              }
-            } else {
-              setCurrentSubcategory(null);
-            }
-          }
-        }
-      }
-    } else if (pathname === "/categories") {
-      if (
-        !categoryParams.flagType &&
-        (prevCategoryRef.current.categoryId !== null ||
-          prevCategoryRef.current.subcategoryId !== null)
-      ) {
-        prevCategoryRef.current = { categoryId: null, subcategoryId: null };
-        setCategoryId(null);
-        setSubcategoryId(null);
-        setCurrentCategory(null);
-        setCurrentSubcategory(null);
-      }
-    }
-  }, [
-    pathname,
-    searchParamsString,
-    categories,
-    urlDynamicFiltersMemo,
-    categoryParams,
-  ]);
-
-  useEffect(() => {
-    console.log("[categories/page] Изменение параметров:", {
-      categoryId,
-      subcategoryId,
-      dynamicFilters,
-      mergedFilters: { ...appliedFilters, ...dynamicFilters },
-    });
-  }, [categoryId, subcategoryId, dynamicFilters, appliedFilters]);
-
-  const filtersRequestPayload = useMemo(
-    () => previewFilters || { ...dynamicFilters, ...appliedFilters },
-    [previewFilters, dynamicFilters, appliedFilters],
+  // --- Фильтры и товары ---
+  const stablePayload = useMemo(
+    () => ({ ...appliedFilters, ...dynamicFilters }),
+    [appliedFilters, dynamicFilters],
   );
 
+  // useFilters всегда использует стабильный payload (без preview) — иначе бесконечный цикл
   const { data: filters = [], isLoading: filtersLoading } = useFilters(
-    categoryId,
-    subcategoryId,
-    filtersRequestPayload,
+    categoryId, subcategoryId, stablePayload,
   );
 
-  const mergedFilters = useMemo(() => {
-    const urlCategoryId = searchParams.get("category_id");
-    const urlSubcategoryId = searchParams.get("subcategory_id");
-    const filters = { ...appliedFilters, ...dynamicFilters };
+  // useProducts использует preview если он активен
+  const productsPayload = useMemo(
+    () => previewFilters || stablePayload,
+    [previewFilters, stablePayload],
+  );
 
-    if (urlCategoryId && !filters.category_id) {
-      filters.category_id = parseInt(urlCategoryId);
-    }
-    if (urlSubcategoryId && !filters.subcategory_id) {
-      filters.subcategory_id = parseInt(urlSubcategoryId);
-    }
-
-    return filters;
-  }, [appliedFilters, dynamicFilters, searchParams]);
-  // Используем TanStack Query для загрузки товаров
-
-  const categoryIdFromQuery = searchParams.get("category_id");
-  const parsedCategoryIdFromQuery = categoryIdFromQuery
-    ? parseInt(categoryIdFromQuery, 10)
-    : null;
-  const effectiveCategoryId = Number.isFinite(parsedCategoryIdFromQuery)
-    ? parsedCategoryIdFromQuery
-    : categoryId;
-
-  const subcategoryIdFromQuery = searchParams.get("subcategory_id");
-  const parsedSubcategoryIdFromQuery = subcategoryIdFromQuery
-    ? parseInt(subcategoryIdFromQuery, 10)
-    : null;
-  const effectiveSubcategoryId = Number.isFinite(parsedSubcategoryIdFromQuery)
-    ? parsedSubcategoryIdFromQuery
-    : subcategoryId;
-
-  const {
-    data,
-    isLoading: isProductsLoading,
-    isError: isProductsError,
-    error: productsError,
-  } = useProducts(
-    mergedFilters,
-    effectiveCategoryId,
-    effectiveSubcategoryId,
-    sortBy,
-    currentPage,
+  const { data, isLoading: isProductsLoading, isError: isProductsError, error: productsError } = useProducts(
+    productsPayload, categoryId, subcategoryId, sortBy, currentPage,
   );
 
   const products = data?.products || [];
   const totalPages = data?.totalPages || 1;
-  const loading = categoriesLoading || filtersLoading || isProductsLoading;
 
-  useEffect(() => {
-    const scopeKey = `${categoryParams.categoryId || ""}|${categoryParams.subcategoryId || ""}|${categoryParams.flagType || ""}`;
-    if (prevScopeRef.current && prevScopeRef.current !== scopeKey) {
-      setAppliedFilters({ in_stock: true });
-      setSortBy(1);
-      setSort(undefined);
-    }
-    prevScopeRef.current = scopeKey;
-  }, [
-    categoryParams.categoryId,
-    categoryParams.subcategoryId,
-    categoryParams.flagType,
-    setSort,
-  ]);
+  // --- Скролл ---
+  const scrollRestoredRef = useRef(false);
+  const productsSectionRef = useRef(null);
+  const previousPageRef = useRef(1);
 
-  const paginationPages = useMemo(() => {
-    const maxVisible = 5;
-    if (totalPages <= maxVisible) {
-      return Array.from({ length: totalPages }, (_, i) => i + 1);
-    }
-
-    let start = Math.max(1, currentPage - 2);
-    let end = Math.min(totalPages, start + maxVisible - 1);
-
-    if (end - start < maxVisible - 1) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  }, [currentPage, totalPages]);
+  useEffect(() => { scrollRestoredRef.current = false; }, [scopeKey]);
 
   useEffect(() => {
     const savedPosition = sessionStorage.getItem("catalogScrollPosition");
-    if (
-      savedPosition &&
-      !isProductsLoading &&
-      products.length > 0 &&
-      !scrollRestoredRef.current
-    ) {
-      const scrollPosition = parseInt(savedPosition, 10);
+    if (savedPosition && !isProductsLoading && products.length > 0 && !scrollRestoredRef.current) {
       scrollRestoredRef.current = true;
-
-      const restoreScroll = () => {
+      const pos = parseInt(savedPosition, 10);
+      setTimeout(() => {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            window.scrollTo({
-              top: scrollPosition,
-              behavior: "instant",
-            });
+            window.scrollTo({ top: pos, behavior: "instant" });
             sessionStorage.removeItem("catalogScrollPosition");
           });
         });
-      };
-
-      setTimeout(restoreScroll, 200);
+      }, 200);
     }
   }, [isProductsLoading, products.length]);
-
-  const updateUrlWithDynamicFilters = (filters, isReset = false) => {
-    try {
-      if (typeof window === "undefined") return;
-
-      const url = new URL(window.location.href);
-
-      // Удаляем все динамические параметры, кроме важных
-      Object.keys(url.searchParams).forEach((key) => {
-        if (
-          ![
-            "price_min",
-            "price_max",
-            "in_stock",
-            "sort",
-            "material",
-            "colors",
-            "bestseller",
-            "category_id",
-            "subcategory_id",
-            "flag_type",
-          ].includes(key)
-        ) {
-          url.searchParams.delete(key);
-        }
-      });
-
-      // Если это не сброс, добавляем новые динамические фильтры
-      if (!isReset) {
-        Object.keys(filters).forEach((key) => {
-          const value = filters[key];
-          if (Array.isArray(value) && value.length > 0) {
-            url.searchParams.set(key, value.join(","));
-          } else if (value !== undefined && value !== null && value !== "") {
-            url.searchParams.set(key, value.toString());
-          }
-        });
-      }
-
-      window.history.replaceState({}, "", url.toString());
-    } catch (error) {
-      console.error("Error in updateUrlWithDynamicFilters:", error);
-    }
-  };
-
-  const handleFiltersApply = (newFilters) => {
-    setPreviewFilters(null);
-    setAppliedFilters(newFilters);
-
-    if (typeof window !== "undefined") {
-      const url = new URL(window.location.href);
-
-      const isReset =
-        Object.keys(newFilters).length === 0 ||
-        (Object.keys(newFilters).length === 1 && newFilters.in_stock === true);
-
-      if (isReset) {
-        if (newFilters.in_stock === true) {
-          url.searchParams.set("in_stock", "true");
-        } else {
-          url.searchParams.delete("in_stock");
-        }
-        url.searchParams.delete("bestseller");
-        url.searchParams.delete("price_min");
-        url.searchParams.delete("price_max");
-        url.searchParams.delete("colors");
-        url.searchParams.delete("material");
-        url.searchParams.delete("width_min");
-        url.searchParams.delete("width_max");
-        url.searchParams.delete("height_min");
-        url.searchParams.delete("height_max");
-        url.searchParams.delete("depth_min");
-        url.searchParams.delete("depth_max");
-        url.searchParams.delete("sort");
-
-        const paramsToKeep = ["flag_type", "category_id", "subcategory_id"];
-        if (newFilters.in_stock === true) {
-          paramsToKeep.push("in_stock");
-        }
-        const paramsToDelete = [];
-        for (const [key] of url.searchParams.entries()) {
-          if (!paramsToKeep.includes(key)) {
-            paramsToDelete.push(key);
-          }
-        }
-        paramsToDelete.forEach((key) => url.searchParams.delete(key));
-
-        setSortBy(null);
-        setSort(undefined);
-      } else {
-        if (newFilters.in_stock === true) {
-          url.searchParams.set("in_stock", "true");
-        } else {
-          url.searchParams.delete("in_stock");
-        }
-
-        if (newFilters.bestseller === true) {
-          url.searchParams.set("bestseller", "true");
-        } else {
-          url.searchParams.delete("bestseller");
-        }
-
-        if (newFilters.price) {
-          if (newFilters.price.min)
-            url.searchParams.set("price_min", newFilters.price.min.toString());
-          if (newFilters.price.max)
-            url.searchParams.set("price_max", newFilters.price.max.toString());
-        } else {
-          url.searchParams.delete("price_min");
-          url.searchParams.delete("price_max");
-        }
-
-        if (
-          newFilters.colors &&
-          Array.isArray(newFilters.colors) &&
-          newFilters.colors.length > 0
-        ) {
-          url.searchParams.set("colors", newFilters.colors.join(","));
-        } else {
-          url.searchParams.delete("colors");
-        }
-
-        if (
-          newFilters.material &&
-          Array.isArray(newFilters.material) &&
-          newFilters.material.length > 0
-        ) {
-          url.searchParams.set("material", newFilters.material.join(","));
-        } else {
-          url.searchParams.delete("material");
-        }
-
-        if (newFilters.sizes) {
-          if (newFilters.sizes.width) {
-            if (newFilters.sizes.width.min)
-              url.searchParams.set(
-                "width_min",
-                newFilters.sizes.width.min.toString(),
-              );
-            if (newFilters.sizes.width.max)
-              url.searchParams.set(
-                "width_max",
-                newFilters.sizes.width.max.toString(),
-              );
-          }
-          if (newFilters.sizes.height) {
-            if (newFilters.sizes.height.min)
-              url.searchParams.set(
-                "height_min",
-                newFilters.sizes.height.min.toString(),
-              );
-            if (newFilters.sizes.height.max)
-              url.searchParams.set(
-                "height_max",
-                newFilters.sizes.height.max.toString(),
-              );
-          }
-          if (newFilters.sizes.depth) {
-            if (newFilters.sizes.depth.min)
-              url.searchParams.set(
-                "depth_min",
-                newFilters.sizes.depth.min.toString(),
-              );
-            if (newFilters.sizes.depth.max)
-              url.searchParams.set(
-                "depth_max",
-                newFilters.sizes.depth.max.toString(),
-              );
-          }
-        } else {
-          url.searchParams.delete("width_min");
-          url.searchParams.delete("width_max");
-          url.searchParams.delete("height_min");
-          url.searchParams.delete("height_max");
-          url.searchParams.delete("depth_min");
-          url.searchParams.delete("depth_max");
-        }
-
-        Object.keys(newFilters).forEach((key) => {
-          if (
-            ![
-              "in_stock",
-              "bestseller",
-              "price",
-              "colors",
-              "material",
-              "sizes",
-              "sort",
-            ].includes(key)
-          ) {
-            const value = newFilters[key];
-            if (Array.isArray(value) && value.length > 0) {
-              url.searchParams.set(key, value.join(","));
-            } else if (value) {
-              url.searchParams.set(key, value.toString());
-            }
-          }
-        });
-
-        const flagType = url.searchParams.get("flag_type");
-        const categoryIdParam = url.searchParams.get("category_id");
-        if (flagType) {
-          url.searchParams.set("flag_type", flagType);
-        }
-        if (categoryIdParam) {
-          url.searchParams.set("category_id", categoryIdParam);
-        }
-      }
-
-      window.history.replaceState({}, "", url.toString());
-    }
-  };
-
-  useEffect(() => {
-    scrollRestoredRef.current = false;
-  }, [slugDep]);
-
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [mergedFilters, effectiveCategoryId, effectiveSubcategoryId, sortBy]);
 
   useEffect(() => {
     if (previousPageRef.current !== currentPage) {
       previousPageRef.current = currentPage;
-      const top =
-        (productsSectionRef.current?.getBoundingClientRect().top || 0) +
-        window.scrollY -
-        110;
-
-      window.scrollTo({
-        top: Math.max(0, top),
-        behavior: "smooth",
-      });
+      const top = (productsSectionRef.current?.getBoundingClientRect().top || 0) + window.scrollY - 110;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
     }
   }, [currentPage]);
 
-  useEffect(() => {
-    if (!categories.length) return;
+  // --- Применение фильтров ---
+  const handleFiltersApply = useCallback((newFilters) => {
+    setPreviewFilters(null);
+    setAppliedFilters(newFilters);
 
-    const sortedData = categories
-      .sort((a, b) => {
-        const aDisplayId = a.display_id || 999;
-        const bDisplayId = b.display_id || 999;
-        return aDisplayId - bDisplayId;
-      })
-      .map((category) => ({
-        ...category,
-        subcategories:
-          category.subcategories?.sort((a, b) => {
-            const aDisplayId = a.display_id || 999;
-            const bDisplayId = b.display_id || 999;
-            return aDisplayId - bDisplayId;
-          }) || [],
-      }));
+    const url = new URL(window.location.href);
+    ["in_stock", "bestseller", "price_min", "price_max", "colors", "material",
+      "width_min", "width_max", "height_min", "height_max", "depth_min", "depth_max", "sort",
+    ].forEach(k => url.searchParams.delete(k));
 
-    const slugArr = Array.isArray(params?.slug)
-      ? params.slug
-      : params?.slug
-        ? [params.slug]
-        : [];
-    if (!slugArr || slugArr.length === 0) return;
+    if (newFilters.in_stock) url.searchParams.set("in_stock", "true");
+    if (newFilters.bestseller) url.searchParams.set("bestseller", "true");
+    if (newFilters.price?.min) url.searchParams.set("price_min", String(newFilters.price.min));
+    if (newFilters.price?.max) url.searchParams.set("price_max", String(newFilters.price.max));
+    if (newFilters.colors?.length) url.searchParams.set("colors", newFilters.colors.join(","));
+    if (newFilters.material?.length) url.searchParams.set("material", newFilters.material.join(","));
 
-    if (slugArr.length >= 2) {
-      const [catSlug, subSlug] = slugArr;
-      const cat = sortedData.find((c) => c.slug === catSlug);
-      if (cat) {
-        const sub = (cat.subcategories || []).find(
-          (s) => s.slug === subSlug && subSlug !== "all",
-        );
-        console.log("[categories/page] Смена категории (подкатегория):", {
-          categoryId: cat.id,
-          subcategoryId: sub?.id,
-          slug: catSlug,
-          subSlug,
-        });
-        setCategoryId(cat.id);
-        setSubcategoryId(sub ? sub.id : null);
-        setCurrentCategory({
-          id: cat.id,
-          slug: cat.slug,
-          title: cat.title,
-          description: cat.description,
-          photo_cover: cat.photo_cover,
-        });
-        setCurrentSubcategory(
-          sub
-            ? {
-                id: sub.id,
-                slug: sub.slug,
-                title: sub.title,
-                description: sub.description,
-                photo_cover: sub.photo_cover,
-              }
-            : null,
-        );
-        return;
-      }
-    }
+    window.history.replaceState({}, "", url.toString());
+  }, []);
 
-    const currentSlug = slugArr[0];
+  // --- Пагинация ---
+  const paginationPages = useMemo(() => {
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) return Array.from({ length: totalPages }, (_, i) => i + 1);
+    let start = Math.max(1, currentPage - 2);
+    let end = Math.min(totalPages, start + maxVisible - 1);
+    if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
+    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  }, [currentPage, totalPages]);
 
-    const cat = sortedData.find((c) => c.slug === currentSlug);
-    if (cat) {
-      console.log("[categories/page] Смена категории:", {
-        categoryId: cat.id,
-        subcategoryId: null,
-        slug: currentSlug,
-      });
-      setCategoryId(cat.id);
-      setSubcategoryId(null);
-      setCurrentCategory({
-        id: cat.id,
-        slug: cat.slug,
-        title: cat.title,
-        description: cat.description,
-        photo_cover: cat.photo_cover,
-      });
-      setCurrentSubcategory(null);
-      return;
-    } else {
-    }
-
-    for (const c of sortedData) {
-      const sub = (c.subcategories || []).find((s) => s.slug === currentSlug);
-      if (sub) {
-        console.log(
-          "[categories/page] Смена категории (подкатегория найдена):",
-          { categoryId: c.id, subcategoryId: sub.id, slug: currentSlug },
-        );
-        setCategoryId(c.id);
-        setSubcategoryId(sub.id);
-        setCurrentCategory({
-          id: c.id,
-          slug: c.slug,
-          title: c.title,
-          description: c.description,
-          photo_cover: c.photo_cover,
-        });
-        setCurrentSubcategory({
-          id: sub.id,
-          slug: sub.slug,
-          title: sub.title,
-          description: sub.description,
-          photo_cover: sub.photo_cover,
-        });
-        return;
-      }
-    }
-  }, [categories, slugDep]);
-
-  useEffect(() => {
-    const handleUrlChange = () => {
-      const urlDynamicFilters = parseDynamicFiltersFromUrl();
-      setDynamicFilters(urlDynamicFilters);
-
-      const url = new URL(window.location.href);
-      const categoryIdFromUrl = url.searchParams.get("category_id");
-      const subcategoryIdFromUrl = url.searchParams.get("subcategory_id");
-
-      if (categoryIdFromUrl) {
-        const newCategoryId = parseInt(categoryIdFromUrl);
-        const newSubcategoryId = subcategoryIdFromUrl
-          ? parseInt(subcategoryIdFromUrl)
-          : null;
-        setCategoryId(newCategoryId);
-        setSubcategoryId(newSubcategoryId);
-
-        if (categories.length > 0) {
-          const category = categories.find((c) => c.id === newCategoryId);
-          if (category) {
-            setCurrentCategory({
-              id: category.id,
-              slug: category.slug,
-              title: category.title,
-              description: category.description,
-              photo_cover: category.photo_cover,
-            });
-
-            if (newSubcategoryId) {
-              const subcategory = category.subcategories?.find(
-                (s) => s.id === newSubcategoryId,
-              );
-              if (subcategory) {
-                setCurrentSubcategory({
-                  id: subcategory.id,
-                  slug: subcategory.slug,
-                  title: subcategory.title,
-                  description: subcategory.description,
-                  photo_cover: subcategory.photo_cover,
-                });
-              } else {
-                setCurrentSubcategory(null);
-              }
-            } else {
-              setCurrentSubcategory(null);
-            }
-          }
-        }
-      } else {
-        setCategoryId(null);
-        setSubcategoryId(null);
-        setCurrentCategory(null);
-        setCurrentSubcategory(null);
-      }
-    };
-
-    window.addEventListener("popstate", handleUrlChange);
-    return () => window.removeEventListener("popstate", handleUrlChange);
-  }, [categories]);
-
+  // --- Хлебные крошки ---
   const breadcrumbs = [
     { text: "Главная", href: "/" },
-    ...(currentCategory
-      ? [
-          {
-            text: currentCategory.title,
-            href: `/categories/${currentCategory.slug}`,
-          },
-        ]
-      : []),
+    ...(currentCategory ? [{ text: currentCategory.title, href: `/categories/${currentCategory.slug}` }] : []),
     ...(currentSubcategory
-      ? [
-          {
-            text: currentSubcategory.title,
-            href: `/categories/${currentCategory?.slug}/${currentSubcategory.slug}`,
-          },
-        ]
+      ? [{ text: currentSubcategory.title, href: `/categories/${currentCategory?.slug}/${currentSubcategory.slug}` }]
       : currentCategory
-        ? [
-            {
-              text: "Все товары",
-              href: `/categories/${currentCategory.slug}/all`,
-            },
-          ]
+        ? [{ text: "Все товары", href: `/categories/${currentCategory.slug}/all` }]
         : []),
   ];
 
-  const transformProduct = (product) => {
-    return product;
-  };
-
-  const heroTitle =
-    currentSubcategory?.title ||
-    currentCategory?.title ||
-    noCategoryInfo?.title;
-  const heroDescription =
-    currentSubcategory?.description ||
-    currentCategory?.description ||
-    noCategoryInfo?.description;
+  // --- Hero ---
+  const heroTitle = currentSubcategory?.title || currentCategory?.title || noCategoryInfo?.title;
+  const heroDescription = currentSubcategory?.description || currentCategory?.description || noCategoryInfo?.description;
   const heroPhoto =
-    currentSubcategory?.photo_cover && currentSubcategory.photo_cover !== null
-      ? currentSubcategory.photo_cover.startsWith("http")
-        ? currentSubcategory.photo_cover
-        : `https://aldalinde.ru${currentSubcategory.photo_cover}`
-      : currentCategory?.photo_cover && currentCategory.photo_cover !== null
-        ? currentCategory.photo_cover.startsWith("http")
-          ? currentCategory.photo_cover
-          : `https://aldalinde.ru${currentCategory.photo_cover}`
-        : noCategoryInfo?.photo_cover && noCategoryInfo.photo_cover !== null
-          ? noCategoryInfo.photo_cover.startsWith("http")
-            ? noCategoryInfo.photo_cover
-            : `https://aldalinde.ru${noCategoryInfo.photo_cover}`
-          : null;
+    getPhotoUrl(currentSubcategory?.photo_cover) ||
+    getPhotoUrl(currentCategory?.photo_cover) ||
+    getPhotoUrl(noCategoryInfo?.photo_cover);
   const showHero = heroTitle || heroDescription || heroPhoto;
   const isLoadingHero =
-    (noCategoryInfoLoading && shouldFetchNoCategoryInfo) ||
-    (categoriesLoading &&
-      pathname === "/categories" &&
-      !categoryId &&
-      !subcategoryId &&
-      !noCategoryInfo);
+    (categoryId && categoriesLoading && !currentCategory) ||
+    (!categoryId && noCategoryInfoLoading && shouldFetchNoCategoryInfo);
 
   return (
     <main className={styles.page}>
       <Breadcrumbs items={breadcrumbs} />
 
-      {showHero || isLoadingHero ? (
+      {(showHero || isLoadingHero) && (
         <div className={styles.hero}>
-          <div
-            className={cx(
-              styles.hero__content,
-              isLoadingHero && styles.skeleton,
-            )}
-          >
+          <div className={cx(styles.hero__content, isLoadingHero && styles.skeleton, heroPhoto && styles.photo_cover)}>
             {isLoadingHero ? (
               <>
                 <div className={styles.hero__skeleton_bg} />
-                <div
-                  className={styles.hero__skeleton_text}
-                  style={{
-                    height: "32px",
-                    width: "300px",
-                    marginBottom: "20px",
-                    zIndex: 3,
-                    position: "relative",
-                  }}
-                />
-                <div
-                  className={styles.hero__skeleton_text}
-                  style={{
-                    height: "20px",
-                    width: "600px",
-                    maxWidth: "824px",
-                    zIndex: 3,
-                    position: "relative",
-                    margin: "0 auto",
-                  }}
-                />
+                <div className={styles.hero__skeleton_text} style={{ height: "32px", width: "300px", marginBottom: "20px", zIndex: 3, position: "relative" }} />
+                <div className={styles.hero__skeleton_text} style={{ height: "20px", width: "600px", maxWidth: "824px", zIndex: 3, position: "relative", margin: "0 auto" }} />
               </>
             ) : (
               <>
-                {heroTitle && (
-                  <h1 className={styles.hero__title}>{heroTitle}</h1>
-                )}
-                {heroDescription && (
-                  <p className={styles.hero__description}>{heroDescription}</p>
-                )}
+                {heroTitle && <h1 className={styles.hero__title}>{heroTitle}</h1>}
+                {heroDescription && <p className={styles.hero__description}>{heroDescription}</p>}
                 {heroPhoto && (
                   <img
                     className={`${styles.hero__img} ${styles.photo_cover}`}
                     src={heroPhoto}
                     alt={heroTitle || "Категория"}
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                    }}
+                    onError={(e) => { e.target.style.display = "none"; }}
                   />
                 )}
               </>
             )}
           </div>
         </div>
-      ) : null}
+      )}
 
       <div className={styles.controls}>
         <button
@@ -894,24 +285,16 @@ function CategoryPageContent() {
           onClick={() => {
             const next = !showFilters;
             setShowFilters(next);
-            if (typeof window !== "undefined") {
-              sessionStorage.setItem("showFilters", next.toString());
-            }
+            sessionStorage.setItem("showFilters", next.toString());
           }}
         >
-          {isClient && showFilters ? "Скрыть фильтры" : "Показать фильтры"}
+          <span suppressHydrationWarning>{showFilters ? "Скрыть фильтры" : "Показать фильтры"}</span>
         </button>
-
         <SortSelect
           value={sortBy}
           onChange={setSortBy}
           options={
-            filters
-              .find((f) => f.slug === "sort")
-              ?.options?.map((option) => ({
-                value: option.id,
-                label: option.title,
-              })) || [
+            filters.find(f => f.slug === "sort")?.options?.map(o => ({ value: o.id, label: o.title })) || [
               { value: 1, label: "Популярные" },
               { value: 2, label: "Высокий рейтинг" },
               { value: 3, label: "По возрастанию цены" },
@@ -927,62 +310,48 @@ function CategoryPageContent() {
           onClose={() => {
             setPreviewFilters(null);
             setShowFilters(false);
-            if (typeof window !== "undefined") {
-              sessionStorage.setItem("showFilters", "false");
-            }
+            sessionStorage.setItem("showFilters", "false");
           }}
           filters={filters}
-          loading={loading}
-          error={error}
+          loading={categoriesLoading || filtersLoading || isProductsLoading}
+          error={null}
           onApply={handleFiltersApply}
           onPreviewChange={setPreviewFilters}
           appliedFilters={appliedFilters}
           categories={categories}
         />
         <div className={styles.productsArea}>
-          <div
-            className={cx(styles.products, showFilters && styles.filtersOpen)}
-          >
+          <div className={cx(styles.products, showFilters && styles.filtersOpen)}>
             {isProductsLoading && products.length === 0 ? (
               <ProductSkeleton count={8} />
             ) : isProductsError ? (
-              <div className={styles.noProducts}>
-                Ошибка загрузки товаров: {productsError?.message}
-              </div>
+              <div className={styles.noProducts}>Ошибка загрузки товаров: {productsError?.message}</div>
             ) : products.length > 0 ? (
-              <>
-                {products.map((product, index) => {
-                  return (
-                    <ProductCard
-                      key={`${product.id}-${index}`}
-                      product={transformProduct(product)}
-                      filtersOpen={showFilters}
-                    />
-                  );
-                })}
-              </>
+              products.map((product, index) => (
+                <ProductCard key={`${product.id}-${index}`} product={product} filtersOpen={showFilters} />
+              ))
             ) : (
               <div className={styles.noProducts}>Товары не найдены</div>
             )}
           </div>
+
           {products.length > 0 && totalPages > 1 && (
             <div className={styles.pagination}>
               <button
                 className={`${styles.pagination__button} ${styles.pagination__button_nav}`}
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 type="button"
+                aria-label="Предыдущая страница"
               >
-                Назад
+                <svg className={styles.pagination__icon} width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M0.146446 4.03568C-0.0488157 3.84042 -0.0488157 3.52384 0.146446 3.32858L3.32843 0.146595C3.52369 -0.0486672 3.84027 -0.0486672 4.03553 0.146595C4.2308 0.341857 4.2308 0.65844 4.03553 0.853702L1.20711 3.68213L4.03553 6.51056C4.2308 6.70582 4.2308 7.0224 4.03553 7.21766C3.84027 7.41293 3.52369 7.41293 3.32843 7.21766L0.146446 4.03568ZM13.5 3.68213V4.18213H0.5V3.68213V3.18213H13.5V3.68213Z" fill="currentColor"/>
+                </svg>
               </button>
-              {paginationPages.map((page) => (
+              {paginationPages.map(page => (
                 <button
                   key={page}
-                  className={cx(
-                    styles.pagination__button,
-                    styles.pagination__button_page,
-                    page === currentPage && styles.pagination__button_active,
-                  )}
+                  className={cx(styles.pagination__button, styles.pagination__button_page, page === currentPage && styles.pagination__button_active)}
                   onClick={() => setCurrentPage(page)}
                   type="button"
                 >
@@ -991,13 +360,14 @@ function CategoryPageContent() {
               ))}
               <button
                 className={`${styles.pagination__button} ${styles.pagination__button_nav}`}
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                }
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 type="button"
+                aria-label="Следующая страница"
               >
-                Вперёд
+                <svg className={styles.pagination__icon} width="14" height="8" viewBox="0 0 14 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M13.3536 4.03568C13.5488 3.84042 13.5488 3.52384 13.3536 3.32858L10.1716 0.146595C9.97631 -0.0486672 9.65973 -0.0486672 9.46447 0.146595C9.2692 0.341857 9.2692 0.65844 9.46447 0.853702L12.2929 3.68213L9.46447 6.51056C9.2692 6.70582 9.2692 7.0224 9.46447 7.21766C9.65973 7.41293 9.97631 7.41293 10.1716 7.21766L13.3536 4.03568ZM0 3.68213V4.18213H13V3.68213V3.18213H0V3.68213Z" fill="currentColor"/>
+                </svg>
               </button>
             </div>
           )}

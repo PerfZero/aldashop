@@ -1,0 +1,11 @@
+.wrapper {
+  padding: 0 8px;
+}
+
+.values {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #3c101e;
+  margin-bottom: 12px;
+}

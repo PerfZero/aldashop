@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import RangeSlider from "./RangeSlider";
 import FiltersSkeleton from "./FiltersSkeleton";
 import styles from "./Filters.module.css";
 
@@ -203,12 +204,17 @@ export default function Filters({
     return finalFilters;
   }, [tempFilters, inStockDelivery, filters]);
 
+  const prevPreviewRef = useRef(null);
   useEffect(() => {
     if (!onPreviewChange) {
       return;
     }
 
-    onPreviewChange(buildFinalFilters());
+    const newFilters = buildFinalFilters();
+    const newStr = JSON.stringify(newFilters);
+    if (prevPreviewRef.current === newStr) return;
+    prevPreviewRef.current = newStr;
+    onPreviewChange(newFilters);
   }, [onPreviewChange, buildFinalFilters]);
 
   useEffect(() => {
@@ -568,347 +574,53 @@ export default function Filters({
 
                 {filter.type === "range" && filter.slug === "sizes" && (
                   <div className={styles.filter__sizes}>
-                    <div className={styles.size__group}>
-                      <label className={styles.size__label}>Ширина (см)</label>
-                      <div className={styles.range__container}>
-                        <div className={styles.range__track}>
-                          <div
-                            className={styles.range__progress}
-                            style={{
-                              left: `${(((tempFilters[filter.slug]?.width?.min || filter.min_width || 0) - (filter.min_width || 0)) / ((filter.max_width || 100) - (filter.min_width || 0))) * 100}%`,
-                              right: `${100 - (((tempFilters[filter.slug]?.width?.max || filter.max_width || 100) - (filter.min_width || 0)) / ((filter.max_width || 100) - (filter.min_width || 0))) * 100}%`,
-                            }}
-                          ></div>
-                          <input
-                            type="range"
-                            min={filter.min_width || 0}
-                            max={filter.max_width || 100}
-                            value={
-                              tempFilters[filter.slug]?.width?.min ||
-                              filter.min_width ||
-                              0
-                            }
-                            onChange={(e) => {
-                              const minValue = parseInt(e.target.value);
-                              const maxValue =
-                                tempFilters[filter.slug]?.width?.max ||
-                                filter.max_width ||
-                                100;
-                              if (minValue <= maxValue) {
-                                setTempFilters((prev) => ({
-                                  ...prev,
-                                  [filter.slug]: {
-                                    ...prev[filter.slug],
-                                    width: {
-                                      ...prev[filter.slug]?.width,
-                                      min: minValue,
-                                    },
-                                  },
-                                }));
-                              }
-                            }}
-                            className={`${styles.range__input} ${styles.range__input_min}`}
-                          />
-                          <input
-                            type="range"
-                            min={filter.min_width || 0}
-                            max={filter.max_width || 100}
-                            value={
-                              tempFilters[filter.slug]?.width?.max ||
-                              filter.max_width ||
-                              100
-                            }
-                            onChange={(e) => {
-                              const maxValue = parseInt(e.target.value);
-                              const minValue =
-                                tempFilters[filter.slug]?.width?.min ||
-                                filter.min_width ||
-                                0;
-                              if (maxValue >= minValue) {
-                                setTempFilters((prev) => ({
-                                  ...prev,
-                                  [filter.slug]: {
-                                    ...prev[filter.slug],
-                                    width: {
-                                      ...prev[filter.slug]?.width,
-                                      max: maxValue,
-                                    },
-                                  },
-                                }));
-                              }
-                            }}
-                            className={`${styles.range__input} ${styles.range__input_max}`}
-                          />
-                        </div>
-                        <div className={styles.range__values}>
-                          <span>
-                            {tempFilters[filter.slug]?.width?.min ||
-                              filter.min_width ||
-                              0}{" "}
-                            см
-                          </span>
-                          <span>
-                            {tempFilters[filter.slug]?.width?.max ||
-                              filter.max_width ||
-                              100}{" "}
-                            см
-                          </span>
-                        </div>
+                    {[
+                      { key: "width", label: "Ширина (см)", min: filter.min_width || 0, max: filter.max_width || 100 },
+                      { key: "height", label: "Высота (см)", min: filter.min_height || 0, max: filter.max_height || 100 },
+                      { key: "depth", label: "Глубина (см)", min: filter.min_depth || 0, max: filter.max_depth || 100 },
+                    ].map(({ key, label, min, max }) => (
+                      <div key={key} className={styles.size__group}>
+                        <label className={styles.size__label}>{label}</label>
+                        <RangeSlider
+                          min={min}
+                          max={max}
+                          unit="см"
+                          value={[
+                            tempFilters[filter.slug]?.[key]?.min ?? min,
+                            tempFilters[filter.slug]?.[key]?.max ?? max,
+                          ]}
+                          onChange={([minVal, maxVal]) => {
+                            setTempFilters((prev) => ({
+                              ...prev,
+                              [filter.slug]: {
+                                ...prev[filter.slug],
+                                [key]: { min: minVal, max: maxVal },
+                              },
+                            }));
+                          }}
+                        />
                       </div>
-                    </div>
-                    <div className={styles.size__group}>
-                      <label className={styles.size__label}>Высота (см)</label>
-                      <div className={styles.range__container}>
-                        <div className={styles.range__track}>
-                          <div
-                            className={styles.range__progress}
-                            style={{
-                              left: `${(((tempFilters[filter.slug]?.height?.min || filter.min_height || 0) - (filter.min_height || 0)) / ((filter.max_height || 100) - (filter.min_height || 0))) * 100}%`,
-                              right: `${100 - (((tempFilters[filter.slug]?.height?.max || filter.max_height || 100) - (filter.min_height || 0)) / ((filter.max_height || 100) - (filter.min_height || 0))) * 100}%`,
-                            }}
-                          ></div>
-                          <input
-                            type="range"
-                            min={filter.min_height || 0}
-                            max={filter.max_height || 100}
-                            value={
-                              tempFilters[filter.slug]?.height?.min ||
-                              filter.min_height ||
-                              0
-                            }
-                            onChange={(e) => {
-                              const minValue = parseInt(e.target.value);
-                              const maxValue =
-                                tempFilters[filter.slug]?.height?.max ||
-                                filter.max_height ||
-                                100;
-                              if (minValue <= maxValue) {
-                                setTempFilters((prev) => ({
-                                  ...prev,
-                                  [filter.slug]: {
-                                    ...prev[filter.slug],
-                                    height: {
-                                      ...prev[filter.slug]?.height,
-                                      min: minValue,
-                                    },
-                                  },
-                                }));
-                              }
-                            }}
-                            className={`${styles.range__input} ${styles.range__input_min}`}
-                          />
-                          <input
-                            type="range"
-                            min={filter.min_height || 0}
-                            max={filter.max_height || 100}
-                            value={
-                              tempFilters[filter.slug]?.height?.max ||
-                              filter.max_height ||
-                              100
-                            }
-                            onChange={(e) => {
-                              const maxValue = parseInt(e.target.value);
-                              const minValue =
-                                tempFilters[filter.slug]?.height?.min ||
-                                filter.min_height ||
-                                0;
-                              if (maxValue >= minValue) {
-                                setTempFilters((prev) => ({
-                                  ...prev,
-                                  [filter.slug]: {
-                                    ...prev[filter.slug],
-                                    height: {
-                                      ...prev[filter.slug]?.height,
-                                      max: maxValue,
-                                    },
-                                  },
-                                }));
-                              }
-                            }}
-                            className={`${styles.range__input} ${styles.range__input_max}`}
-                          />
-                        </div>
-                        <div className={styles.range__values}>
-                          <span>
-                            {tempFilters[filter.slug]?.height?.min ||
-                              filter.min_height ||
-                              0}{" "}
-                            см
-                          </span>
-                          <span>
-                            {tempFilters[filter.slug]?.height?.max ||
-                              filter.max_height ||
-                              100}{" "}
-                            см
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className={styles.size__group}>
-                      <label className={styles.size__label}>Глубина (см)</label>
-                      <div className={styles.range__container}>
-                        <div className={styles.range__track}>
-                          <div
-                            className={styles.range__progress}
-                            style={{
-                              left: `${(((tempFilters[filter.slug]?.depth?.min || filter.min_depth || 0) - (filter.min_depth || 0)) / ((filter.max_depth || 100) - (filter.min_depth || 0))) * 100}%`,
-                              right: `${100 - (((tempFilters[filter.slug]?.depth?.max || filter.max_depth || 100) - (filter.min_depth || 0)) / ((filter.max_depth || 100) - (filter.min_depth || 0))) * 100}%`,
-                            }}
-                          ></div>
-                          <input
-                            type="range"
-                            min={filter.min_depth || 0}
-                            max={filter.max_depth || 100}
-                            value={
-                              tempFilters[filter.slug]?.depth?.min ||
-                              filter.min_depth ||
-                              0
-                            }
-                            onChange={(e) => {
-                              const minValue = parseInt(e.target.value);
-                              const maxValue =
-                                tempFilters[filter.slug]?.depth?.max ||
-                                filter.max_depth ||
-                                100;
-                              if (minValue <= maxValue) {
-                                setTempFilters((prev) => ({
-                                  ...prev,
-                                  [filter.slug]: {
-                                    ...prev[filter.slug],
-                                    depth: {
-                                      ...prev[filter.slug]?.depth,
-                                      min: minValue,
-                                    },
-                                  },
-                                }));
-                              }
-                            }}
-                            className={`${styles.range__input} ${styles.range__input_min}`}
-                          />
-                          <input
-                            type="range"
-                            min={filter.min_depth || 0}
-                            max={filter.max_depth || 100}
-                            value={
-                              tempFilters[filter.slug]?.depth?.max ||
-                              filter.max_depth ||
-                              100
-                            }
-                            onChange={(e) => {
-                              const maxValue = parseInt(e.target.value);
-                              const minValue =
-                                tempFilters[filter.slug]?.depth?.min ||
-                                filter.min_depth ||
-                                0;
-                              if (maxValue >= minValue) {
-                                setTempFilters((prev) => ({
-                                  ...prev,
-                                  [filter.slug]: {
-                                    ...prev[filter.slug],
-                                    depth: {
-                                      ...prev[filter.slug]?.depth,
-                                      max: maxValue,
-                                    },
-                                  },
-                                }));
-                              }
-                            }}
-                            className={`${styles.range__input} ${styles.range__input_max}`}
-                          />
-                        </div>
-                        <div className={styles.range__values}>
-                          <span>
-                            {tempFilters[filter.slug]?.depth?.min ||
-                              filter.min_depth ||
-                              0}{" "}
-                            см
-                          </span>
-                          <span>
-                            {tempFilters[filter.slug]?.depth?.max ||
-                              filter.max_depth ||
-                              100}{" "}
-                            см
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 )}
 
                 {filter.type === "range" && filter.slug === "price" && (
                   <div className={styles.filter__range}>
-                    <div className={styles.range__container}>
-                      <div className={styles.range__track}>
-                        <div
-                          className={styles.range__progress}
-                          style={{
-                            left: `${(((tempFilters[filter.slug]?.min || filter.min || 0) - (filter.min || 0)) / ((filter.max || 100000) - (filter.min || 0))) * 100}%`,
-                            right: `${100 - (((tempFilters[filter.slug]?.max || filter.max || 100000) - (filter.min || 0)) / ((filter.max || 100000) - (filter.min || 0))) * 100}%`,
-                          }}
-                        ></div>
-                        <input
-                          type="range"
-                          min={filter.min || 0}
-                          max={filter.max || 100000}
-                          value={
-                            tempFilters[filter.slug]?.min || filter.min || 0
-                          }
-                          onChange={(e) => {
-                            const minValue = parseInt(e.target.value);
-                            const maxValue =
-                              tempFilters[filter.slug]?.max ||
-                              filter.max ||
-                              100000;
-                            if (minValue <= maxValue) {
-                              setTempFilters((prev) => ({
-                                ...prev,
-                                [filter.slug]: {
-                                  ...prev[filter.slug],
-                                  min: minValue,
-                                },
-                              }));
-                            }
-                          }}
-                          className={`${styles.range__input} ${styles.range__input_min}`}
-                        />
-                        <input
-                          type="range"
-                          min={filter.min || 0}
-                          max={filter.max || 100000}
-                          value={
-                            tempFilters[filter.slug]?.max ||
-                            filter.max ||
-                            100000
-                          }
-                          onChange={(e) => {
-                            const maxValue = parseInt(e.target.value);
-                            const minValue =
-                              tempFilters[filter.slug]?.min || filter.min || 0;
-                            if (maxValue >= minValue) {
-                              setTempFilters((prev) => ({
-                                ...prev,
-                                [filter.slug]: {
-                                  ...prev[filter.slug],
-                                  max: maxValue,
-                                },
-                              }));
-                            }
-                          }}
-                          className={`${styles.range__input} ${styles.range__input_max}`}
-                        />
-                      </div>
-                      <div className={styles.range__values}>
-                        <span>
-                          {tempFilters[filter.slug]?.min || filter.min || 0} ₽
-                        </span>
-                        <span>
-                          {tempFilters[filter.slug]?.max ||
-                            filter.max ||
-                            100000}{" "}
-                          ₽
-                        </span>
-                      </div>
-                    </div>
+                    <RangeSlider
+                      min={filter.min || 0}
+                      max={filter.max || 100000}
+                      unit="₽"
+                      value={[
+                        tempFilters[filter.slug]?.min ?? filter.min ?? 0,
+                        tempFilters[filter.slug]?.max ?? filter.max ?? 100000,
+                      ]}
+                      onChange={([minVal, maxVal]) => {
+                        setTempFilters((prev) => ({
+                          ...prev,
+                          [filter.slug]: { min: minVal, max: maxVal },
+                        }));
+                      }}
+                    />
                   </div>
                 )}
 

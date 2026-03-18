@@ -80,25 +80,29 @@ function CategoryPageContent() {
     });
   }, [categoryId, subcategoryId, dynamicFilters]);
 
-  const filtersRequestPayload = useMemo(
-    () => previewFilters || { ...dynamicFilters, ...appliedFilters },
-    [previewFilters, dynamicFilters, appliedFilters],
+  const stablePayload = useMemo(
+    () => ({ ...dynamicFilters, ...appliedFilters }),
+    [dynamicFilters, appliedFilters],
   );
 
   const { data: filters = [], isLoading: filtersLoading } = useFilters(
     categoryId,
     subcategoryId,
-    filtersRequestPayload,
+    stablePayload,
   );
 
-  // Используем TanStack Query для загрузки товаров
+  const productsPayload = useMemo(
+    () => previewFilters || stablePayload,
+    [previewFilters, stablePayload],
+  );
+
   const {
     data,
     isLoading: isProductsLoading,
     isError: isProductsError,
     error: productsError,
   } = useProducts(
-    appliedFilters,
+    productsPayload,
     categoryId,
     subcategoryId,
     sortBy,
