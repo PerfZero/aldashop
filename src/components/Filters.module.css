@@ -1,6 +1,6 @@
 .filters {
     width: 308px;
-    overflow: hidden;
+    overflow: visible;
     display: none;
 }
 
