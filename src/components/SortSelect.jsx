@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect } from 'react';
-import styles from './SortSelect.module.css';
+import { useState, useRef, useEffect } from "react";
+import styles from "./SortSelect.module.css";
 
 export default function SortSelect({ value, onChange, options = [] }) {
+  const cx = (...classes) => classes.filter(Boolean).join(" ");
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -14,9 +15,9 @@ export default function SortSelect({ value, onChange, options = [] }) {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -24,7 +25,8 @@ export default function SortSelect({ value, onChange, options = [] }) {
     return null;
   }
 
-  const currentOption = options.find(option => option.value === value) || options[0];
+  const currentOption =
+    options.find((option) => option.value === value) || options[0];
 
   return (
     <div className={styles.sortSelect} ref={dropdownRef}>
@@ -37,23 +39,36 @@ export default function SortSelect({ value, onChange, options = [] }) {
           aria-expanded={isOpen}
         >
           {currentOption?.label}
-          <svg 
-            className={`${styles.sortSelect__arrow} ${isOpen ? styles.sortSelect__arrow_open : ''}`} 
-            width="12" 
-            height="8" 
-            viewBox="0 0 12 8" 
-            fill="none" 
+          <svg
+            className={cx(
+              styles.sortSelect__arrow,
+              isOpen && styles.sortSelect__arrow_open,
+            )}
+            width="12"
+            height="8"
+            viewBox="0 0 12 8"
+            fill="none"
             xmlns="http://www.w3.org/2000/svg"
           >
-            <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path
+              d="M1 1L6 6L11 1"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         </button>
         {isOpen && (
           <div className={styles.sortSelect__dropdown}>
-            {options.map(option => (
+            {options.map((option) => (
               <button
                 key={option.value}
-                className={`${styles.sortSelect__option} ${option.value === (currentOption?.value) ? styles.sortSelect__option_active : ''}`}
+                className={cx(
+                  styles.sortSelect__option,
+                  option.value === currentOption?.value &&
+                    styles.sortSelect__option_active,
+                )}
                 onClick={() => {
                   onChange && onChange(option.value);
                   setIsOpen(false);

@@ -10,6 +10,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useFavourites } from "../contexts/FavouritesContext";
 
 export default function Header() {
+  const cx = (...classes) => classes.filter(Boolean).join(" ");
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, logout, isLoading } = useAuth();
@@ -170,7 +171,6 @@ export default function Header() {
     }
   }, [isMobileMenuOpen, categories]);
 
-
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = "hidden";
@@ -228,7 +228,10 @@ export default function Header() {
         <div className={styles.header__mobileLeft}>
           {/* Кнопка бургер-меню */}
           <button
-            className={`${styles.header__burger} ${isMobileMenuOpen ? styles.active : ""}`}
+            className={cx(
+              styles.header__burger,
+              isMobileMenuOpen && styles.active,
+            )}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Открыть меню"
           >
@@ -237,7 +240,10 @@ export default function Header() {
             <span></span>
           </button>
           <button
-            className={`${styles.header__icon} ${styles.header__mobileSearchButton}`}
+            className={cx(
+              styles.header__icon,
+              styles.header__mobileSearchButton,
+            )}
             onClick={() => setIsSearchOpen(true)}
             aria-label="Открыть поиск"
           >
@@ -288,9 +294,10 @@ export default function Header() {
             >
               <Link
                 href={`/categories/${category.slug}`}
-                className={`${styles.header__navLink} ${
-                  activeMenu === category.id ? styles.active : ""
-                }`}
+                className={cx(
+                  styles.header__navLink,
+                  activeMenu === category.id && styles.active,
+                )}
                 onClick={() => {
                   console.log("[Header] Клик по категории в хедере:", {
                     categoryId: category.id,
@@ -307,7 +314,10 @@ export default function Header() {
 
         {/* Мобильное меню */}
         <div
-          className={`${styles.mobileMenu} ${isMobileMenuOpen ? styles.mobileMenuOpen : ""}`}
+          className={cx(
+            styles.mobileMenu,
+            isMobileMenuOpen && styles.mobileMenuOpen,
+          )}
           ref={mobileMenuRef}
         >
           <div className={styles.mobileMenu__header}>
@@ -337,7 +347,10 @@ export default function Header() {
               {categories.map((category) => (
                 <button
                   key={category.id}
-                  className={`${styles.mobileMenu__sidebarItem} ${mobileExpandedCategory === category.id ? styles.active : ""}`}
+                  className={cx(
+                    styles.mobileMenu__sidebarItem,
+                    mobileExpandedCategory === category.id && styles.active,
+                  )}
                   onClick={() => setMobileExpandedCategory(category.id)}
                 >
                   {category.title}
@@ -393,7 +406,8 @@ export default function Header() {
                 <div
                   key={cat.id}
                   style={{
-                    display: mobileExpandedCategory === cat.id ? "block" : "none",
+                    display:
+                      mobileExpandedCategory === cat.id ? "block" : "none",
                   }}
                 >
                   {cat.subcategories?.length > 0 ? (
@@ -452,7 +466,10 @@ export default function Header() {
           {/* Десктопные иконки */}
           <div className={styles.header__iconsDesktop}>
             <button
-              className={`${styles.header__icon} ${styles["header__icon--search"]}`}
+              className={cx(
+                styles.header__icon,
+                styles["header__icon--search"],
+              )}
               onClick={() => setIsSearchOpen(true)}
             >
               <svg
@@ -515,7 +532,7 @@ export default function Header() {
               </div>
             )}
             <button
-              className={`${styles.header__icon} ${styles["header__icon--user"]}`}
+              className={cx(styles.header__icon, styles["header__icon--user"])}
               onClick={() => {
                 if (isAuthenticated) {
                   router.push("/account");
@@ -549,7 +566,10 @@ export default function Header() {
             </button>
             <Link
               href="/favorites"
-              className={`${styles.header__icon} ${styles["header__icon--favorite"]}`}
+              className={cx(
+                styles.header__icon,
+                styles["header__icon--favorite"],
+              )}
             >
               <svg
                 width="24"
@@ -576,7 +596,7 @@ export default function Header() {
             </Link>
             <Link
               href="/cart"
-              className={`${styles.header__icon} ${styles["header__icon--cart"]}`}
+              className={cx(styles.header__icon, styles["header__icon--cart"])}
             >
               <svg
                 width="24"
@@ -605,7 +625,7 @@ export default function Header() {
           </div>
           <div className={styles.header__mobileRight}>
             <button
-              className={`${styles.header__icon} ${styles["header__icon--user"]}`}
+              className={cx(styles.header__icon, styles["header__icon--user"])}
               onClick={() => {
                 if (isAuthenticated) {
                   router.push("/account");
@@ -639,7 +659,7 @@ export default function Header() {
             </button>
             <Link
               href="/cart"
-              className={`${styles.header__icon} ${styles["header__icon--cart"]}`}
+              className={cx(styles.header__icon, styles["header__icon--cart"])}
             >
               <svg
                 width="24"
@@ -670,7 +690,10 @@ export default function Header() {
 
       {/* Единый dropdown вне цикла */}
       <div
-        className={`${styles.dropdown} ${isDropdownOpen ? styles["dropdown--open"] : ""}`}
+        className={cx(
+          styles.dropdown,
+          isDropdownOpen && styles["dropdown--open"],
+        )}
         onMouseEnter={handleDropdownMouseEnter}
         onMouseLeave={handleDropdownMouseLeave}
         key={isDropdownOpen}
@@ -813,49 +836,56 @@ export default function Header() {
             onClick={() => setIsSearchOpen(false)}
             aria-label="Закрыть поиск"
           />
-          <div className={styles.mobileSearchOverlay__panel} ref={mobileSearchRef}>
-          <form
-            onSubmit={handleSearchSubmit}
-            className={styles.mobileSearch__inputWrapper}
+          <div
+            className={styles.mobileSearchOverlay__panel}
+            ref={mobileSearchRef}
           >
-            <svg
-              className={styles.mobileSearch__icon}
-              width="20"
-              height="20"
-              viewBox="0 0 20 20"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            <form
+              onSubmit={handleSearchSubmit}
+              className={styles.mobileSearch__inputWrapper}
             >
-              <path
-                d="M19.0002 19L14.6572 14.657M14.6572 14.657C15.4001 13.9141 15.9894 13.0322 16.3914 12.0615C16.7935 11.0909 17.0004 10.0506 17.0004 9C17.0004 7.9494 16.7935 6.90908 16.3914 5.93845C15.9894 4.96782 15.4001 4.08589 14.6572 3.343C13.9143 2.60011 13.0324 2.01082 12.0618 1.60877C11.0911 1.20673 10.0508 0.999794 9.00021 0.999794C7.9496 0.999794 6.90929 1.20673 5.93866 1.60877C4.96803 2.01082 4.08609 2.60011 3.34321 3.343C1.84288 4.84333 1 6.87821 1 9C1 11.1218 1.84288 13.1567 3.34321 14.657C4.84354 16.1573 6.87842 17.0002 9.00021 17.0002C11.122 17.0002 13.1569 16.1573 14.6572 14.657Z"
-                stroke="#323433"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Поиск..."
-              className={styles.mobileSearch__input}
-              autoFocus
-            />
-            {searchQuery ? (
-              <button
-                type="button"
-                className={styles.mobileSearch__close}
-                onClick={() => setSearchQuery("")}
+              <svg
+                className={styles.mobileSearch__icon}
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                ×
-              </button>
-            ) : (
-              <button type="button" className={styles.mobileSearch__close} onClick={() => setIsSearchOpen(false)}>
-                ×
-              </button>
-            )}
-          </form>
+                <path
+                  d="M19.0002 19L14.6572 14.657M14.6572 14.657C15.4001 13.9141 15.9894 13.0322 16.3914 12.0615C16.7935 11.0909 17.0004 10.0506 17.0004 9C17.0004 7.9494 16.7935 6.90908 16.3914 5.93845C15.9894 4.96782 15.4001 4.08589 14.6572 3.343C13.9143 2.60011 13.0324 2.01082 12.0618 1.60877C11.0911 1.20673 10.0508 0.999794 9.00021 0.999794C7.9496 0.999794 6.90929 1.20673 5.93866 1.60877C4.96803 2.01082 4.08609 2.60011 3.34321 3.343C1.84288 4.84333 1 6.87821 1 9C1 11.1218 1.84288 13.1567 3.34321 14.657C4.84354 16.1573 6.87842 17.0002 9.00021 17.0002C11.122 17.0002 13.1569 16.1573 14.6572 14.657Z"
+                  stroke="#323433"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Поиск..."
+                className={styles.mobileSearch__input}
+                autoFocus
+              />
+              {searchQuery ? (
+                <button
+                  type="button"
+                  className={styles.mobileSearch__close}
+                  onClick={() => setSearchQuery("")}
+                >
+                  ×
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.mobileSearch__close}
+                  onClick={() => setIsSearchOpen(false)}
+                >
+                  ×
+                </button>
+              )}
+            </form>
           </div>
         </div>
       )}

@@ -134,8 +134,6 @@ export default function Filters({
     });
   };
 
-  if (!isVisible) return null;
-
   const handleReset = () => {
     setTempFilters({});
 
@@ -234,6 +232,8 @@ export default function Filters({
       onClose();
     }
   };
+
+  if (!isVisible) return null;
 
   if (loading) {
     return <FiltersSkeleton onClose={onClose} />;

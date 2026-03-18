@@ -30,6 +30,7 @@ import { useNoCategoryInfo } from "@/hooks/useNoCategoryInfo";
 import styles from "./[...slug]/page.module.css";
 
 function CategoryPageContent() {
+  const cx = (...classes) => classes.filter(Boolean).join(" ");
   const params = useParams();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -833,7 +834,10 @@ function CategoryPageContent() {
       {showHero || isLoadingHero ? (
         <div className={styles.hero}>
           <div
-            className={`${styles.hero__content} ${isLoadingHero ? styles.skeleton : ""}`}
+            className={cx(
+              styles.hero__content,
+              isLoadingHero && styles.skeleton,
+            )}
           >
             {isLoadingHero ? (
               <>
@@ -937,7 +941,7 @@ function CategoryPageContent() {
         />
         <div className={styles.productsArea}>
           <div
-            className={`${styles.products} ${showFilters ? styles.filtersOpen : ""}`}
+            className={cx(styles.products, showFilters && styles.filtersOpen)}
           >
             {isProductsLoading && products.length === 0 ? (
               <ProductSkeleton count={8} />
@@ -974,9 +978,11 @@ function CategoryPageContent() {
               {paginationPages.map((page) => (
                 <button
                   key={page}
-                  className={`${styles.pagination__button} ${styles.pagination__button_page} ${
-                    page === currentPage ? styles.pagination__button_active : ""
-                  }`}
+                  className={cx(
+                    styles.pagination__button,
+                    styles.pagination__button_page,
+                    page === currentPage && styles.pagination__button_active,
+                  )}
                   onClick={() => setCurrentPage(page)}
                   type="button"
                 >
