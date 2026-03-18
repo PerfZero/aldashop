@@ -78,7 +78,6 @@ export default function Filters({
   const filteredFilters = useMemo(() => {
     return filters.filter((filter) => {
       if (filter.slug === "sort" || filter.slug === "in_stock") return false;
-      if (filter.type === "select" && !filter.options?.length) return false;
       return true;
     });
   }, [filters]);
@@ -473,40 +472,44 @@ export default function Filters({
                   filter.slug !== "in_stock" &&
                   filter.slug !== "designer" && (
                     <div className={styles.filter__options}>
-                      {filter.options.map((option, optionIndex) => (
-                        <label
-                          key={optionIndex}
-                          className={styles.checkboxLabel}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={
-                              tempFilters[filter.slug]?.includes(option.id) ||
-                              false
-                            }
-                            onChange={(e) => {
-                              const currentValues =
-                                tempFilters[filter.slug] || [];
-                              const newValues = e.target.checked
-                                ? [...currentValues, option.id]
-                                : currentValues.filter(
-                                    (val) => val !== option.id,
-                                  );
-                              const newTempFilters = {
-                                ...tempFilters,
-                                [filter.slug]:
-                                  newValues.length > 0 ? newValues : undefined,
-                              };
-                              setTempFilters(newTempFilters);
-                              if (onApply) onApply(buildFinalFilters(newTempFilters));
-                            }}
-                            className={styles.checkboxInput}
-                          />
-                          <span className={styles.checkboxText}>
-                            {option.title}
-                          </span>
-                        </label>
-                      ))}
+                      {filter.options.map((option, optionIndex) => {
+                        const isDisabled = option.active === false && !tempFilters[filter.slug]?.includes(option.id);
+                        return (
+                          <label
+                            key={optionIndex}
+                            className={`${styles.checkboxLabel}${isDisabled ? ` ${styles["checkboxLabel--disabled"]}` : ""}`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={
+                                tempFilters[filter.slug]?.includes(option.id) ||
+                                false
+                              }
+                              disabled={isDisabled}
+                              onChange={(e) => {
+                                const currentValues =
+                                  tempFilters[filter.slug] || [];
+                                const newValues = e.target.checked
+                                  ? [...currentValues, option.id]
+                                  : currentValues.filter(
+                                      (val) => val !== option.id,
+                                    );
+                                const newTempFilters = {
+                                  ...tempFilters,
+                                  [filter.slug]:
+                                    newValues.length > 0 ? newValues : undefined,
+                                };
+                                setTempFilters(newTempFilters);
+                                if (onApply) onApply(buildFinalFilters(newTempFilters));
+                              }}
+                              className={styles.checkboxInput}
+                            />
+                            <span className={styles.checkboxText}>
+                              {option.title}
+                            </span>
+                          </label>
+                        );
+                      })}
                     </div>
                   )}
 

@@ -581,6 +581,12 @@
     color: inherit;
 }
 
+.checkboxLabel--disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .filter__sizes {
     margin-top: 10px;
 }
