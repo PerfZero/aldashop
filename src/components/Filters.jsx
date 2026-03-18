@@ -21,6 +21,14 @@ export default function Filters({
   const isCategorySlugPage =
     pathname?.startsWith("/categories/") && pathname !== "/categories";
   const hasFlagType = searchParams.get("flag_type");
+  const clearCategoryContextQuery = (url) => {
+    const keysToKeep = new Set(["category_id", "subcategory_id", "flag_type"]);
+    for (const key of Array.from(url.searchParams.keys())) {
+      if (!keysToKeep.has(key)) {
+        url.searchParams.delete(key);
+      }
+    }
+  };
   const [inStockDelivery, setInStockDelivery] = useState(
     () => appliedFilters.in_stock === true,
   );
@@ -303,6 +311,7 @@ export default function Filters({
                                 e.stopPropagation();
                                 if (isCategoriesPage) {
                                   const url = new URL(window.location.href);
+                                  clearCategoryContextQuery(url);
                                   if (
                                     searchParams.get("category_id") ===
                                     String(category.id)
@@ -373,6 +382,7 @@ export default function Filters({
                                             const url = new URL(
                                               window.location.href,
                                             );
+                                            clearCategoryContextQuery(url);
                                             if (isSubActive) {
                                               url.searchParams.delete(
                                                 "category_id",

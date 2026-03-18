@@ -3,10 +3,36 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./DiscountBadge.module.css";
 
+const DEFAULT_BADGE_TITLE = "Скидка 50%!";
+const DEFAULT_DELAY_MS = 3500;
+
+const normalizeBadgePayload = (payload) => {
+  const source =
+    payload && typeof payload === "object" && "data" in payload
+      ? payload.data
+      : payload;
+
+  const item = Array.isArray(source) ? source[0] : source;
+
+  const title =
+    typeof item?.title_sale === "string" && item.title_sale.trim()
+      ? item.title_sale.trim()
+      : DEFAULT_BADGE_TITLE;
+
+  const delaySec = Number(item?.delay_sec);
+  const delayMs = Number.isFinite(delaySec) && delaySec >= 0
+    ? Math.round(delaySec * 1000)
+    : DEFAULT_DELAY_MS;
+
+  return { title, delayMs };
+};
+
 export default function DiscountBadge() {
   const [isMounted, setIsMounted] = useState(false);
   const [isEntered, setIsEntered] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [badgeTitle, setBadgeTitle] = useState(DEFAULT_BADGE_TITLE);
+  const [initialDelayMs, setInitialDelayMs] = useState(null);
   const closeRequestedRef = useRef(false);
   const enterTimeoutRef = useRef(null);
 
@@ -31,7 +57,50 @@ export default function DiscountBadge() {
   }, []);
 
   useEffect(() => {
-    enterTimeoutRef.current = window.setTimeout(showBadge, 3500);
+    let isActive = true;
+
+    const fetchBadgeConfig = async () => {
+      try {
+        const response = await fetch("/api/products/banner-sale-mailing", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          setInitialDelayMs(DEFAULT_DELAY_MS);
+          return;
+        }
+
+        const data = await response.json();
+        if (!isActive) {
+          return;
+        }
+
+        const normalized = normalizeBadgePayload(data);
+        setBadgeTitle(normalized.title);
+        setInitialDelayMs(normalized.delayMs);
+      } catch {
+        setInitialDelayMs(DEFAULT_DELAY_MS);
+      }
+    };
+
+    fetchBadgeConfig();
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (initialDelayMs === null) {
+      return;
+    }
+
+    if (enterTimeoutRef.current) {
+      window.clearTimeout(enterTimeoutRef.current);
+    }
+
+    enterTimeoutRef.current = window.setTimeout(showBadge, initialDelayMs);
 
     window.addEventListener("show-discount-badge", showBadge);
 
@@ -41,14 +110,14 @@ export default function DiscountBadge() {
       }
       window.removeEventListener("show-discount-badge", showBadge);
     };
-  }, [showBadge]);
+  }, [showBadge, initialDelayMs]);
 
   if (!isMounted) return null;
 
   return (
     <div
       className={`${styles.wrap} ${isClosing ? styles.wrapClosing : isEntered ? styles.wrapVisible : ""}`}
-      aria-label="Промо скидка 50%"
+      aria-label={`Промо ${badgeTitle}`}
       onAnimationEnd={(event) => {
         if (
           isClosing &&
@@ -76,9 +145,9 @@ export default function DiscountBadge() {
           hideBadge();
           window.dispatchEvent(new CustomEvent("open-bitrix-lead-popup"));
         }}
-        aria-label="Скидка 50%, показать форму подписки"
+        aria-label={`${badgeTitle}, показать форму подписки`}
       >
-        Скидка 50%!
+        {badgeTitle}
       </button>
     </div>
   );

@@ -55,6 +55,7 @@ function CategoryPageContent() {
 
   const [dynamicFilters, setDynamicFilters] = useState({});
   const [currentPage, setCurrentPage] = useState(1);
+  const prevScopeRef = useRef("");
   const scrollRestoredRef = useRef(false);
   const productsSectionRef = useRef(null);
   const previousPageRef = useRef(1);
@@ -235,10 +236,15 @@ function CategoryPageContent() {
     });
   }, [categoryId, subcategoryId, dynamicFilters, appliedFilters]);
 
+  const filtersRequestPayload = useMemo(
+    () => ({ ...dynamicFilters, ...appliedFilters }),
+    [dynamicFilters, appliedFilters],
+  );
+
   const { data: filters = [], isLoading: filtersLoading } = useFilters(
     categoryId,
     subcategoryId,
-    dynamicFilters,
+    filtersRequestPayload,
   );
 
   const mergedFilters = useMemo(() => {
@@ -255,19 +261,23 @@ function CategoryPageContent() {
 
     return filters;
   }, [appliedFilters, dynamicFilters, searchParams]);
-
   // Используем TanStack Query для загрузки товаров
 
-  const effectiveCategoryId =
-    categoryId ||
-    (searchParams.get("category_id")
-      ? parseInt(searchParams.get("category_id"))
-      : null);
-  const effectiveSubcategoryId =
-    subcategoryId ||
-    (searchParams.get("subcategory_id")
-      ? parseInt(searchParams.get("subcategory_id"))
-      : null);
+  const categoryIdFromQuery = searchParams.get("category_id");
+  const parsedCategoryIdFromQuery = categoryIdFromQuery
+    ? parseInt(categoryIdFromQuery, 10)
+    : null;
+  const effectiveCategoryId = Number.isFinite(parsedCategoryIdFromQuery)
+    ? parsedCategoryIdFromQuery
+    : categoryId;
+
+  const subcategoryIdFromQuery = searchParams.get("subcategory_id");
+  const parsedSubcategoryIdFromQuery = subcategoryIdFromQuery
+    ? parseInt(subcategoryIdFromQuery, 10)
+    : null;
+  const effectiveSubcategoryId = Number.isFinite(parsedSubcategoryIdFromQuery)
+    ? parsedSubcategoryIdFromQuery
+    : subcategoryId;
 
   const {
     data,
@@ -285,6 +295,21 @@ function CategoryPageContent() {
   const products = data?.products || [];
   const totalPages = data?.totalPages || 1;
   const loading = categoriesLoading || filtersLoading || isProductsLoading;
+
+  useEffect(() => {
+    const scopeKey = `${categoryParams.categoryId || ""}|${categoryParams.subcategoryId || ""}|${categoryParams.flagType || ""}`;
+    if (prevScopeRef.current && prevScopeRef.current !== scopeKey) {
+      setAppliedFilters({ in_stock: true });
+      setSortBy(1);
+      setSort(undefined);
+    }
+    prevScopeRef.current = scopeKey;
+  }, [
+    categoryParams.categoryId,
+    categoryParams.subcategoryId,
+    categoryParams.flagType,
+    setSort,
+  ]);
 
   const paginationPages = useMemo(() => {
     const maxVisible = 5;

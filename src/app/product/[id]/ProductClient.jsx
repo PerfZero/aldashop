@@ -261,6 +261,7 @@ export default function ProductClient({
       model_id: modelId,
       size_id: size.id,
       color_id: selectedColor?.id,
+      material_photo_id: selectedMaterial?.id,
     };
 
     try {
