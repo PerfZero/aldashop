@@ -1,47 +1,49 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery } from "@tanstack/react-query";
+import { buildCatalogRequestBody } from "@/lib/catalogRequestBody";
 
 const fetchFilters = async (categoryId, subcategoryId, dynamicFilters = {}) => {
-  const requestBody = {};
-  
-  if (categoryId) {
-    requestBody.category_id = categoryId;
-  }
-  
-  if (subcategoryId) {
-    requestBody.subcategory_id = subcategoryId;
-  }
-  
-  // Добавляем динамические фильтры (включая флаги)
-  Object.keys(dynamicFilters).forEach(key => {
-    if (!['category_id', 'subcategory_id'].includes(key)) {
-      requestBody[key] = dynamicFilters[key];
-    }
+  const sortBy =
+    typeof dynamicFilters?.sort === "number" ? dynamicFilters.sort : undefined;
+
+  const requestBody = buildCatalogRequestBody({
+    filters: dynamicFilters,
+    categoryId,
+    subcategoryId,
+    sortBy,
+    includePagination: false,
   });
-  
-  const response = await fetch('/api/products/subcategory-filters', {
-    method: 'POST',
+
+  const response = await fetch("/api/products/subcategory-filters", {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      ...(localStorage.getItem('accessToken') && {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
+      "Content-Type": "application/json",
+      ...(localStorage.getItem("accessToken") && {
+        Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
       }),
     },
-    credentials: 'include',
+    credentials: "include",
     body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-    throw new Error(errorData.error || 'Failed to fetch filters');
+    const errorData = await response
+      .json()
+      .catch(() => ({ error: "Unknown error" }));
+    throw new Error(errorData.error || "Failed to fetch filters");
   }
-  
+
   const data = await response.json();
   return Array.isArray(data) ? data : [];
 };
 
-export const useFilters = (categoryId, subcategoryId, dynamicFilters = {}, enabled = true) => {
+export const useFilters = (
+  categoryId,
+  subcategoryId,
+  dynamicFilters = {},
+  enabled = true,
+) => {
   return useQuery({
-    queryKey: ['filters', categoryId, subcategoryId, dynamicFilters],
+    queryKey: ["filters", categoryId, subcategoryId, dynamicFilters],
     queryFn: () => fetchFilters(categoryId, subcategoryId, dynamicFilters),
     enabled: enabled,
     staleTime: 15 * 60 * 1000,

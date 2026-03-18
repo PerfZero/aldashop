@@ -1620,6 +1620,7 @@
     }
 
     .thirdBlockProductCard {
+        display: none;
         left: clamp(
             12px,
             calc(var(--hotspot-left) - 140px),

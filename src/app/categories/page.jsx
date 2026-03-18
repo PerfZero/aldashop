@@ -46,6 +46,7 @@ function CategoryPageContent() {
   }, []);
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
+  const [previewFilters, setPreviewFilters] = useState(null);
   const [categoryId, setCategoryId] = useState(null);
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
@@ -237,8 +238,8 @@ function CategoryPageContent() {
   }, [categoryId, subcategoryId, dynamicFilters, appliedFilters]);
 
   const filtersRequestPayload = useMemo(
-    () => ({ ...dynamicFilters, ...appliedFilters }),
-    [dynamicFilters, appliedFilters],
+    () => previewFilters || { ...dynamicFilters, ...appliedFilters },
+    [previewFilters, dynamicFilters, appliedFilters],
   );
 
   const { data: filters = [], isLoading: filtersLoading } = useFilters(
@@ -399,6 +400,7 @@ function CategoryPageContent() {
   };
 
   const handleFiltersApply = (newFilters) => {
+    setPreviewFilters(null);
     setAppliedFilters(newFilters);
 
     if (typeof window !== "undefined") {
@@ -919,6 +921,7 @@ function CategoryPageContent() {
         <Filters
           isVisible={isClient ? showFilters : false}
           onClose={() => {
+            setPreviewFilters(null);
             setShowFilters(false);
             if (typeof window !== "undefined") {
               sessionStorage.setItem("showFilters", "false");
@@ -928,6 +931,7 @@ function CategoryPageContent() {
           loading={loading}
           error={error}
           onApply={handleFiltersApply}
+          onPreviewChange={setPreviewFilters}
           appliedFilters={appliedFilters}
           categories={categories}
         />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import FiltersSkeleton from "./FiltersSkeleton";
@@ -11,6 +11,7 @@ export default function Filters({
   loading = false,
   error = null,
   onApply,
+  onPreviewChange,
   appliedFilters = {},
   categories = [],
 }) {
@@ -150,10 +151,13 @@ export default function Filters({
   };
 
   const handleCancel = () => {
+    if (onPreviewChange) {
+      onPreviewChange(null);
+    }
     onClose();
   };
 
-  const handleApply = () => {
+  const buildFinalFilters = useCallback(() => {
     const finalFilters = { ...tempFilters };
 
     if (inStockDelivery) {
@@ -198,8 +202,32 @@ export default function Filters({
       }
     });
 
+    return finalFilters;
+  }, [tempFilters, inStockDelivery, filters]);
+
+  useEffect(() => {
+    if (!onPreviewChange) {
+      return;
+    }
+
+    onPreviewChange(buildFinalFilters());
+  }, [onPreviewChange, buildFinalFilters]);
+
+  useEffect(() => {
+    if (!isVisible && onPreviewChange) {
+      onPreviewChange(null);
+    }
+  }, [isVisible, onPreviewChange]);
+
+  const handleApply = () => {
+    const finalFilters = buildFinalFilters();
+
     if (onApply) {
       onApply(finalFilters);
+    }
+
+    if (onPreviewChange) {
+      onPreviewChange(null);
     }
 
     if (window.innerWidth <= 768) {
@@ -216,7 +244,7 @@ export default function Filters({
       <div className={styles.filters}>
         <div className={styles.filters__header}>
           <h2 className={styles.filters__title}>Фильтры</h2>
-          <button className={styles.filters__close} onClick={onClose}>
+          <button className={styles.filters__close} onClick={handleCancel}>
             ×
           </button>
         </div>
@@ -231,7 +259,7 @@ export default function Filters({
     <div className={`${styles.filters} ${isVisible ? styles.visible : ""}`}>
       <div className={styles.filters__header}>
         <h2 className={styles.filters__title}>Фильтры</h2>
-        <button className={styles.filters__close} onClick={onClose}>
+        <button className={styles.filters__close} onClick={handleCancel}>
           ×
         </button>
       </div>

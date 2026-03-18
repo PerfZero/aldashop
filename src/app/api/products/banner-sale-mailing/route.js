@@ -1,7 +1,7 @@
 export async function GET() {
   try {
     let response = await fetch(
-      "https://aldalinde.ru/api/products/get_banner_sale_mailing",
+      "https://aldalinde.ru/api/products/banner-sale-mailing",
       {
         method: "GET",
         headers: {
@@ -10,6 +10,32 @@ export async function GET() {
         cache: "no-store",
       },
     );
+
+    if (response.status === 404) {
+      response = await fetch(
+        "https://aldalinde.ru/api/products/banner-sale-mailing/",
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+          cache: "no-store",
+        },
+      );
+    }
+
+    if (response.status === 404) {
+      response = await fetch(
+        "https://aldalinde.ru/api/products/get_banner_sale_mailing",
+        {
+          method: "GET",
+          headers: {
+            accept: "application/json",
+          },
+          cache: "no-store",
+        },
+      );
+    }
 
     if (response.status === 404) {
       response = await fetch(

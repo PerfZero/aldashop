@@ -20,6 +20,59 @@ const DEFAULT_CONTENT = {
   image_url: "",
 };
 
+const resolvePopupImageUrl = (rawUrl) => {
+  if (typeof rawUrl !== "string") {
+    return "";
+  }
+
+  const trimmed = rawUrl.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("//")) {
+    return `https:${trimmed}`;
+  }
+
+  const normalizedPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `https://aldalinde.ru${normalizedPath}`;
+};
+
+const extractBannerPayload = (raw) => {
+  let current = raw;
+  let guard = 0;
+
+  while (current && typeof current === "object" && guard < 6) {
+    const candidate = Array.isArray(current) ? current[0] : current;
+    if (!candidate || typeof candidate !== "object") {
+      return null;
+    }
+
+    if (
+      "title_mailing" in candidate ||
+      "text_mailing" in candidate ||
+      "image_url" in candidate ||
+      "image" in candidate
+    ) {
+      return candidate;
+    }
+
+    if ("data" in candidate) {
+      current = candidate.data;
+      guard += 1;
+      continue;
+    }
+
+    return candidate;
+  }
+
+  return null;
+};
+
 export default function BitrixLeadPopup() {
   const { user } = useAuth();
 
@@ -43,13 +96,10 @@ export default function BitrixLeadPopup() {
   useEffect(() => {
     const loadContent = async () => {
       try {
-        const response = await fetch(
-          "https://aldalinde.ru/api/products/get_banner_sale_mailing",
-          {
-            method: "GET",
-            cache: "no-store",
-          },
-        );
+        const response = await fetch("/api/products/banner-sale-mailing", {
+          method: "GET",
+          cache: "no-store",
+        });
         if (!response.ok) {
           console.error(
             `Ошибка загрузки popup-баннера: HTTP ${response.status} ${response.statusText}`,
@@ -67,12 +117,19 @@ export default function BitrixLeadPopup() {
         }
 
         const data = await response.json();
-        const payloadRaw = data?.data ?? data;
-        const payload = Array.isArray(payloadRaw) ? payloadRaw[0] : payloadRaw;
+        const payload = extractBannerPayload(data);
         if (!payload || typeof payload !== "object") {
           console.error("Ошибка загрузки popup-баннера: пустой payload");
           return;
         }
+
+        const resolvedImageUrl = resolvePopupImageUrl(
+          payload.image_url ||
+            payload.image ||
+            payload.photo ||
+            payload.imagePath ||
+            payload.banner_image,
+        );
 
         setContent({
           title_mailing: payload.title_mailing || DEFAULT_CONTENT.title_mailing,
@@ -82,7 +139,7 @@ export default function BitrixLeadPopup() {
           text_mailing_button:
             payload.text_mailing_button || DEFAULT_CONTENT.text_mailing_button,
           text_mailing2: payload.text_mailing2 || DEFAULT_CONTENT.text_mailing2,
-          image_url: payload.image_url || DEFAULT_CONTENT.image_url,
+          image_url: resolvedImageUrl || DEFAULT_CONTENT.image_url,
         });
       } catch (error) {
         console.error(

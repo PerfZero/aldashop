@@ -43,6 +43,7 @@ function CategoryPageContent() {
   }, []);
   const [error, setError] = useState(null);
   const [appliedFilters, setAppliedFilters] = useState({ in_stock: true });
+  const [previewFilters, setPreviewFilters] = useState(null);
   const [categoryId, setCategoryId] = useState(null);
   const [subcategoryId, setSubcategoryId] = useState(null);
   const [currentCategory, setCurrentCategory] = useState(null);
@@ -78,10 +79,15 @@ function CategoryPageContent() {
     });
   }, [categoryId, subcategoryId, dynamicFilters]);
 
+  const filtersRequestPayload = useMemo(
+    () => previewFilters || { ...dynamicFilters, ...appliedFilters },
+    [previewFilters, dynamicFilters, appliedFilters],
+  );
+
   const { data: filters = [], isLoading: filtersLoading } = useFilters(
     categoryId,
     subcategoryId,
-    dynamicFilters,
+    filtersRequestPayload,
   );
 
   // Используем TanStack Query для загрузки товаров
@@ -377,6 +383,7 @@ function CategoryPageContent() {
   };
 
   const handleFiltersApply = (newFilters) => {
+    setPreviewFilters(null);
     setAppliedFilters(newFilters);
 
     if (typeof window !== "undefined") {
@@ -835,6 +842,7 @@ function CategoryPageContent() {
         <Filters
           isVisible={showFilters}
           onClose={() => {
+            setPreviewFilters(null);
             setShowFilters(false);
             if (typeof window !== "undefined") {
               sessionStorage.setItem("showFilters", "false");
@@ -844,6 +852,7 @@ function CategoryPageContent() {
           loading={loading}
           error={error}
           onApply={handleFiltersApply}
+          onPreviewChange={setPreviewFilters}
           appliedFilters={appliedFilters}
           categories={categories}
         />
