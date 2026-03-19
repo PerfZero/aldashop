@@ -630,7 +630,7 @@
 
 .fourthBlockViewport {
     overflow-x: auto;
-    overflow-y: hidden;
+    overflow-y: clip;
     scrollbar-width: none;
     -ms-overflow-style: none;
     padding-bottom: 22px;
@@ -677,6 +677,7 @@
     width: 100%;
     aspect-ratio: 1 / 0.82;
     margin-bottom: 30px;
+    background-color: #fbfaf6;
 }
 
 .fourthBlockImageWrap img {
