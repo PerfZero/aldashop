@@ -33,8 +33,7 @@
     width: 100%;
     aspect-ratio: 1 / 1;
     overflow: hidden;
-    mix-blend-mode: darken;
-    background: transparent;
+    background: #fbfaf6;
 }
 
 .card__image img {
@@ -53,6 +52,7 @@
     position: relative;
     width: 100%;
     height: 100%;
+    background: #fbfaf6;
 }
 
 .card__image_main,
@@ -90,6 +90,7 @@
 .card__swiper_slide {
     width: 100% !important;
     height: 100%;
+    background: #fbfaf6;
 }
 
 .card__swiper :global(.swiper-pagination-bullet) {

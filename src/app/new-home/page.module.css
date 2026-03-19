@@ -359,7 +359,7 @@
 .thirdBlockStage {
     position: relative;
     width: 100%;
-    overflow: hidden;
+    overflow: clip;
     mix-blend-mode: darken;
 }
 
@@ -1758,6 +1758,7 @@
         position: relative;
         width: 72px;
         height: 56px;
+        background-color: #fbfaf6;
     }
 
     .thirdBlockMobileProductImage {
