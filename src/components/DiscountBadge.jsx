@@ -119,11 +119,7 @@ export default function DiscountBadge() {
       className={`${styles.wrap} ${isClosing ? styles.wrapClosing : isEntered ? styles.wrapVisible : ""}`}
       aria-label={`Промо ${badgeTitle}`}
       onAnimationEnd={(event) => {
-        if (
-          isClosing &&
-          event.target === event.currentTarget &&
-          event.animationName === "discountBadgeSlideOutLeft"
-        ) {
+        if (isClosing && event.target === event.currentTarget) {
           setIsMounted(false);
           setIsClosing(false);
           closeRequestedRef.current = false;
@@ -136,7 +132,7 @@ export default function DiscountBadge() {
         onClick={hideBadge}
         aria-label="Скрыть бейдж скидки"
       >
-        <span> ×</span>
+        ×
       </button>
       <button
         type="button"
