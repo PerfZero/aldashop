@@ -589,27 +589,28 @@ export default function Filters({
 
                 {filter.type === "select" && filter.slug === "colors" && (
                   <div className={styles.filter__colors}>
-                    {filter.options?.map((color, colorIndex) => (
-                      <button
-                        key={colorIndex}
-                        className={`${styles.colorOption} ${
-                          tempFilters[filter.slug]?.includes(color.id)
-                            ? styles.colorOptionActive
-                            : ""
-                        }`}
-                        style={{ backgroundColor: `#${color.code_hex}` }}
-                        onClick={() => {
-                          const currentValues = tempFilters[filter.slug] || [];
-                          const newValues = currentValues.includes(color.id)
-                            ? currentValues.filter((val) => val !== color.id)
-                            : [...currentValues, color.id];
-                          const newTempFilters = { ...tempFilters, [filter.slug]: newValues };
-                          setTempFilters(newTempFilters);
-                          if (onApply) onApply(buildFinalFilters(newTempFilters));
-                        }}
-                        title={color.title}
-                      />
-                    ))}
+                    {filter.options?.map((color, colorIndex) => {
+                      const isSelected = tempFilters[filter.slug]?.includes(color.id);
+                      const isDisabled = color.active === false && !isSelected;
+                      return (
+                        <button
+                          key={colorIndex}
+                          className={`${styles.colorOption}${isSelected ? ` ${styles.colorOptionActive}` : ""}${isDisabled ? ` ${styles["colorOption--disabled"]}` : ""}`}
+                          style={{ backgroundColor: `#${color.code_hex}` }}
+                          disabled={isDisabled}
+                          onClick={() => {
+                            const currentValues = tempFilters[filter.slug] || [];
+                            const newValues = currentValues.includes(color.id)
+                              ? currentValues.filter((val) => val !== color.id)
+                              : [...currentValues, color.id];
+                            const newTempFilters = { ...tempFilters, [filter.slug]: newValues };
+                            setTempFilters(newTempFilters);
+                            if (onApply) onApply(buildFinalFilters(newTempFilters));
+                          }}
+                          title={color.title}
+                        />
+                      );
+                    })}
                   </div>
                 )}
               </>
