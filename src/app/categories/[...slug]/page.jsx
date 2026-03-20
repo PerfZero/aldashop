@@ -249,6 +249,12 @@ function CategoryPageContent() {
             "bestseller",
             "category_id",
             "subcategory_id",
+            "width_min",
+            "width_max",
+            "height_min",
+            "height_max",
+            "depth_min",
+            "depth_max",
           ].includes(key)
         ) {
           if (value && value.includes(",")) {

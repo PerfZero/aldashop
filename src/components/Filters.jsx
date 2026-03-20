@@ -146,44 +146,49 @@ export default function Filters({
     onClose();
   };
 
-  const buildFinalFilters = useCallback((tempFiltersOverride, inStockOverride) => {
-    const tf = tempFiltersOverride !== undefined ? tempFiltersOverride : tempFilters;
-    const isStock = inStockOverride !== undefined ? inStockOverride : inStockDelivery;
-    const finalFilters = { ...tf };
+  const buildFinalFilters = useCallback(
+    (tempFiltersOverride, inStockOverride) => {
+      const tf =
+        tempFiltersOverride !== undefined ? tempFiltersOverride : tempFilters;
+      const isStock =
+        inStockOverride !== undefined ? inStockOverride : inStockDelivery;
+      const finalFilters = { ...tf };
 
-    if (isStock) {
-      finalFilters.in_stock = true;
-    } else {
-      delete finalFilters.in_stock;
-    }
-
-    // Добавляем цену только если пользователь явно изменил слайдер
-    if (tf.price?.min !== undefined) {
-      finalFilters.price = {
-        min: tf.price.min,
-        max: tf.price.max ?? 100000,
-      };
-    }
-
-    Object.keys(finalFilters).forEach((key) => {
-      if (
-        finalFilters[key] === "" ||
-        finalFilters[key] === undefined ||
-        finalFilters[key] === null
-      ) {
-        delete finalFilters[key];
+      if (isStock) {
+        finalFilters.in_stock = true;
+      } else {
+        delete finalFilters.in_stock;
       }
-      if (
-        finalFilters[key] &&
-        typeof finalFilters[key] === "object" &&
-        Object.keys(finalFilters[key]).length === 0
-      ) {
-        delete finalFilters[key];
-      }
-    });
 
-    return finalFilters;
-  }, [tempFilters, inStockDelivery, filters]);
+      // Добавляем цену только если пользователь явно изменил слайдер
+      if (tf.price?.min !== undefined) {
+        finalFilters.price = {
+          min: tf.price.min,
+          max: tf.price.max ?? 100000,
+        };
+      }
+
+      Object.keys(finalFilters).forEach((key) => {
+        if (
+          finalFilters[key] === "" ||
+          finalFilters[key] === undefined ||
+          finalFilters[key] === null
+        ) {
+          delete finalFilters[key];
+        }
+        if (
+          finalFilters[key] &&
+          typeof finalFilters[key] === "object" &&
+          Object.keys(finalFilters[key]).length === 0
+        ) {
+          delete finalFilters[key];
+        }
+      });
+
+      return finalFilters;
+    },
+    [tempFilters, inStockDelivery, filters],
+  );
 
   const handleApply = () => {
     if (window.innerWidth <= 768) {
@@ -473,7 +478,9 @@ export default function Filters({
                   filter.slug !== "designer" && (
                     <div className={styles.filter__options}>
                       {filter.options.map((option, optionIndex) => {
-                        const isDisabled = option.active === false && !tempFilters[filter.slug]?.includes(option.id);
+                        const isDisabled =
+                          option.active === false &&
+                          !tempFilters[filter.slug]?.includes(option.id);
                         return (
                           <label
                             key={optionIndex}
@@ -497,10 +504,13 @@ export default function Filters({
                                 const newTempFilters = {
                                   ...tempFilters,
                                   [filter.slug]:
-                                    newValues.length > 0 ? newValues : undefined,
+                                    newValues.length > 0
+                                      ? newValues
+                                      : undefined,
                                 };
                                 setTempFilters(newTempFilters);
-                                if (onApply) onApply(buildFinalFilters(newTempFilters));
+                                if (onApply)
+                                  onApply(buildFinalFilters(newTempFilters));
                               }}
                               className={styles.checkboxInput}
                             />
@@ -520,9 +530,13 @@ export default function Filters({
                         type="checkbox"
                         checked={tempFilters[filter.slug] || false}
                         onChange={(e) => {
-                          const newTempFilters = { ...tempFilters, [filter.slug]: e.target.checked };
+                          const newTempFilters = {
+                            ...tempFilters,
+                            [filter.slug]: e.target.checked,
+                          };
                           setTempFilters(newTempFilters);
-                          if (onApply) onApply(buildFinalFilters(newTempFilters));
+                          if (onApply)
+                            onApply(buildFinalFilters(newTempFilters));
                         }}
                         className={styles.checkboxInput}
                       />
@@ -534,9 +548,24 @@ export default function Filters({
                 {filter.type === "range" && filter.slug === "sizes" && (
                   <div className={styles.filter__sizes}>
                     {[
-                      { key: "width", label: "Ширина (см)", min: filter.min_width || 0, max: filter.max_width || 100 },
-                      { key: "height", label: "Высота (см)", min: filter.min_height || 0, max: filter.max_height || 100 },
-                      { key: "depth", label: "Глубина (см)", min: filter.min_depth || 0, max: filter.max_depth || 100 },
+                      {
+                        key: "width",
+                        label: "Ширина (см)",
+                        min: filter.min_width || 0,
+                        max: filter.max_width || 100,
+                      },
+                      {
+                        key: "height",
+                        label: "Высота (см)",
+                        min: filter.min_height || 0,
+                        max: filter.max_height || 100,
+                      },
+                      {
+                        key: "depth",
+                        label: "Глубина (см)",
+                        min: filter.min_depth || 0,
+                        max: filter.max_depth || 100,
+                      },
                     ].map(({ key, label, min, max }) => (
                       <div key={key} className={styles.size__group}>
                         <label className={styles.size__label}>{label}</label>
@@ -557,7 +586,8 @@ export default function Filters({
                               },
                             };
                             setTempFilters(newTempFilters);
-                            if (onApply) onApply(buildFinalFilters(newTempFilters));
+                            if (onApply)
+                              onApply(buildFinalFilters(newTempFilters));
                           }}
                         />
                       </div>
@@ -590,7 +620,9 @@ export default function Filters({
                 {filter.type === "select" && filter.slug === "colors" && (
                   <div className={styles.filter__colors}>
                     {filter.options?.map((color, colorIndex) => {
-                      const isSelected = tempFilters[filter.slug]?.includes(color.id);
+                      const isSelected = tempFilters[filter.slug]?.includes(
+                        color.id,
+                      );
                       const isDisabled = color.active === false && !isSelected;
                       return (
                         <button
@@ -599,15 +631,29 @@ export default function Filters({
                           style={{ backgroundColor: `#${color.code_hex}` }}
                           disabled={isDisabled}
                           onClick={() => {
-                            const currentValues = tempFilters[filter.slug] || [];
+                            const currentValues =
+                              tempFilters[filter.slug] || [];
                             const newValues = currentValues.includes(color.id)
                               ? currentValues.filter((val) => val !== color.id)
                               : [...currentValues, color.id];
-                            const newTempFilters = { ...tempFilters, [filter.slug]: newValues };
+                            const newTempFilters = {
+                              ...tempFilters,
+                              [filter.slug]: newValues,
+                            };
                             setTempFilters(newTempFilters);
-                            if (onApply) onApply(buildFinalFilters(newTempFilters));
+                            if (onApply)
+                              onApply(buildFinalFilters(newTempFilters));
                           }}
-                          title={color.title}
+                          title={
+                            isDisabled
+                              ? `${color.title}: недоступен`
+                              : color.title
+                          }
+                          aria-label={
+                            isDisabled
+                              ? `${color.title}, недоступен`
+                              : color.title
+                          }
                         />
                       );
                     })}
