@@ -108,7 +108,7 @@ export default function Header() {
     setIsMobileMenuOpen(false);
   };
 
-  const rightMenuItems = ["Новинки", "Бестселлеры", "Распродажа"];
+  const rightMenuItems = ["Новинки", "Хиты коллекции", "Распродажа"];
 
   useEffect(() => {
     if (!pathname || !categories || categories.length === 0) return;
@@ -413,9 +413,10 @@ export default function Header() {
                   {cat.subcategories?.length > 0 ? (
                     <div className={styles.mobileMenu__dropdownLinks}>
                       {cat.subcategories.map((subcategory) => {
-                        const imageSrc = (subcategory.mobile_photo || subcategory.photo_cover)
-                          ? `https://aldalinde.ru${subcategory.mobile_photo || subcategory.photo_cover}`
-                          : "/images/sofa.png";
+                        const imageSrc =
+                          subcategory.mobile_photo || subcategory.photo_cover
+                            ? `https://aldalinde.ru${subcategory.mobile_photo || subcategory.photo_cover}`
+                            : "/images/sofa.png";
 
                         return (
                           <Link
@@ -748,7 +749,7 @@ export default function Header() {
                           ? `https://aldalinde.ru${category.photo_new_products}`
                           : "/Images/новинки.png";
                         break;
-                      case "Бестселлеры":
+                      case "Хиты коллекции":
                         imageSrc = category.photo_bestsellers
                           ? `https://aldalinde.ru${category.photo_bestsellers}`
                           : "/Images/бестселлеры.png";

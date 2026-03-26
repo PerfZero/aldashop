@@ -653,7 +653,6 @@
     margin-top: 8px;
 }
 
-
 .product__notice_card {
     display: flex;
     gap: 10px;
@@ -708,7 +707,7 @@
 
 .product__detail {
     align-items: center;
-    gap: 5px;
+    gap: 3px;
     display: flex;
     justify-content: center;
 }
@@ -719,11 +718,6 @@
     font-size: 18px;
     line-height: 150%;
     color: #4d1e2f;
-}
-
-.product__detail:not(:nth-child(1)) .product__detail_label,
-.product__detail_value {
-    display: contents;
 }
 
 .product__detail .product__detail_value {
@@ -809,6 +803,9 @@
     font-family: "Tenor Sans", sans-serif;
     font-weight: 400;
     font-size: 14px;
+    display: flex;
+    gap: 2px;
+
     text-align: center;
     color: #fff;
 }
@@ -1231,7 +1228,11 @@
 }
 
 .product__recommendations {
-    padding: 60px 20px 60px 0;
+    padding: 60px 20px 60px;
+}
+
+.product__recommendations img {
+    mix-blend-mode: normal !important;
 }
 
 .product__recommendations_title {

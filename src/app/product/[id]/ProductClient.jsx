@@ -76,7 +76,7 @@ function NoticeRotator({ notices, styles }) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     if (notices.length <= 1) return;
-    const t = setInterval(() => setIdx(i => (i + 1) % notices.length), 5500);
+    const t = setInterval(() => setIdx((i) => (i + 1) % notices.length), 5500);
     return () => clearInterval(t);
   }, [notices.length]);
   return (
@@ -91,7 +91,7 @@ function NoticeRotator({ notices, styles }) {
               onClick={() => setIdx(i)}
               role="button"
               tabIndex={0}
-              onKeyDown={e => e.key === "Enter" && setIdx(i)}
+              onKeyDown={(e) => e.key === "Enter" && setIdx(i)}
               aria-label={`Предложение ${i + 1}`}
             />
           ))}
@@ -703,7 +703,9 @@ export default function ProductClient({
           )}
 
           <div className={styles.product__header}>
-            {hasDiscount && <div className={styles.product__sale}>Специальные условия</div>}
+            {hasDiscount && (
+              <div className={styles.product__sale}>Специальные условия</div>
+            )}
             <h1 className={styles.product__title}>
               {product.title}
               {!hasDiscount && product.bestseller && (
@@ -877,12 +879,21 @@ export default function ProductClient({
                       <div
                         className={styles.product__materials_preview_caption}
                       >
-                        <span>Материал: {hoveredMaterial.title_material || "Не указан"}</span>
+                        <span>
+                          Материал:{" "}
+                          {hoveredMaterial.title_material || "Не указан"}
+                        </span>
                         {hoveredMaterial.title_color && (
                           <span>Цвет: {hoveredMaterial.title_color}</span>
                         )}
                         {product.material_description && (
-                          <span className={styles.product__materials_preview_description}>{product.material_description}</span>
+                          <span
+                            className={
+                              styles.product__materials_preview_description
+                            }
+                          >
+                            {product.material_description}
+                          </span>
                         )}
                       </div>
                     </>
@@ -987,6 +998,7 @@ export default function ProductClient({
                           product.price ||
                           0
                         ).toLocaleString("ru-RU")}
+                        <span>₽</span>
                       </span>
                     </>
                   )}
@@ -997,7 +1009,7 @@ export default function ProductClient({
           {product.production_time && (
             <div className={styles.product__detail}>
               <span className={styles.product__detail_label}>
-                Сроки доставки:
+                Сроки доставки :
               </span>
               <span className={styles.product__detail_value}>
                 {product.production_time}{" "}
@@ -1262,16 +1274,19 @@ export default function ProductClient({
         />
       </div>
 
-      {Array.isArray(product.recommendations) && product.recommendations.length > 0 && (
-        <div className={styles.product__recommendations}>
-          <h2 className={styles.product__recommendations_title}>Рекомендуем также</h2>
-          <div className={styles.product__recommendations_grid}>
-            {product.recommendations.map((rec) => (
-              <ProductCard key={rec.id} product={rec} />
-            ))}
+      {Array.isArray(product.recommendations) &&
+        product.recommendations.length > 0 && (
+          <div className={styles.product__recommendations}>
+            <h2 className={styles.product__recommendations_title}>
+              Рекомендуем также
+            </h2>
+            <div className={styles.product__recommendations_grid}>
+              {product.recommendations.map((rec) => (
+                <ProductCard key={rec.id} product={rec} />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </>
   );
 }
