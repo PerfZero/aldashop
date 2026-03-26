@@ -1,0 +1,70 @@
+.bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 0;
+}
+
+.chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid #c8a882;
+    border-radius: 0;
+    padding: 6px 12px;
+    font-size: 15px;
+    font-family: var(--font-playfair-display), serif;
+    color: #844025;
+    background: #fff;
+    white-space: nowrap;
+}
+
+.chipLabel {
+    font-weight: 700;
+    margin-right: 2px;
+}
+
+.chipValue {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-weight: 400;
+}
+
+.chipRemove {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 2px;
+    font-size: 16px;
+    line-height: 1;
+    color: #844025;
+    display: inline-flex;
+    align-items: center;
+}
+
+.chipRemove:hover {
+    opacity: 0.6;
+}
+
+.reset {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-family: var(--font-playfair-display), serif;
+    color: #844025;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 4px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 400;
+}
+
+.reset:hover {
+    opacity: 0.6;
+}

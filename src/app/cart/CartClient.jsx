@@ -393,7 +393,7 @@ export default function CartClient() {
               
               {item.isBestseller && (
                 <div className={styles.bestsellerBadge}>
-                  <span>Бестселлер</span>
+                  <span>Хит коллекции</span>
                 </div>
               )}
             </div>

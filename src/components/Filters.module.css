@@ -396,11 +396,12 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 20px;
+    width: 30px;
     height: 2px;
     transform: translate(-50%, -50%) rotate(-45deg);
-    background: rgba(60, 16, 30, 0.72);
-    border-radius: 999px;
+    background: #fff;
+    box-shadow: 0 0 0 0.5px rgba(0,0,0,0.35);
+    border-radius: 0;
     opacity: 0;
     transition: opacity 0.2s ease;
 }
@@ -416,7 +417,7 @@
 }
 
 .colorOption--disabled {
-    opacity: 0.55;
+    opacity: 0.45;
     cursor: not-allowed;
     pointer-events: none;
 }

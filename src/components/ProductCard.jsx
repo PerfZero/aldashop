@@ -212,9 +212,9 @@ export default function ProductCard({
 
   return (
     <article className={styles.card}>
-      {hasDiscount && <div className={styles.card__badge}>Sale</div>}
+      {hasDiscount && <div className={styles.card__badge}>Специальные условия</div>}
       {!hasDiscount && currentProduct.isBestseller && (
-        <div className={styles.card__badge}>Bestseller</div>
+        <div className={styles.card__badge}>Хит коллекции</div>
       )}
 
       <Link

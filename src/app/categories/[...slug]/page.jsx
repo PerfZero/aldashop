@@ -26,6 +26,7 @@ import SortSelect from "@/components/SortSelect";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useFilters } from "@/hooks/useFilters";
+import ActiveFiltersBar from "@/components/ActiveFiltersBar";
 import styles from "./page.module.css";
 
 function CategoryPageContent() {
@@ -739,6 +740,12 @@ function CategoryPageContent() {
           categories={categories}
         />
         <div className={styles.productsArea}>
+          <ActiveFiltersBar
+            appliedFilters={appliedFilters}
+            filters={filters}
+            onRemove={handleFiltersApply}
+            onReset={() => handleFiltersApply({ in_stock: true })}
+          />
           <div
             className={cx(styles.products, showFilters && styles.filtersOpen)}
           >

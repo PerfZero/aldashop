@@ -1156,7 +1156,7 @@ function HomeContent({
                     >
                       {product.bestseller ? (
                         <span className={styles.fourthBlockBadge}>
-                          Bestseller
+                          Хит коллекции
                         </span>
                       ) : null}
 

@@ -413,8 +413,8 @@ export default function Header() {
                   {cat.subcategories?.length > 0 ? (
                     <div className={styles.mobileMenu__dropdownLinks}>
                       {cat.subcategories.map((subcategory) => {
-                        const imageSrc = subcategory.photo_cover
-                          ? `https://aldalinde.ru${subcategory.photo_cover}`
+                        const imageSrc = (subcategory.mobile_photo || subcategory.photo_cover)
+                          ? `https://aldalinde.ru${subcategory.mobile_photo || subcategory.photo_cover}`
                           : "/images/sofa.png";
 
                         return (

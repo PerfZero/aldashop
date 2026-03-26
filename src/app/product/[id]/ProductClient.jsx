@@ -6,6 +6,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import styles from "./page.module.css";
 import MobileProductGallery from "./MobileProductGallery";
 import Reviews from "@/components/Reviews";
+import ProductCard from "@/components/ProductCard";
 import { useCart } from "../../components/CartContext";
 import { useFavourites } from "../../../contexts/FavouritesContext";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -702,11 +703,11 @@ export default function ProductClient({
           )}
 
           <div className={styles.product__header}>
-            {hasDiscount && <div className={styles.product__sale}>Sale</div>}
+            {hasDiscount && <div className={styles.product__sale}>Специальные условия</div>}
             <h1 className={styles.product__title}>
               {product.title}
               {!hasDiscount && product.bestseller && (
-                <div className={styles.product__bestseller}>Bestseller</div>
+                <div className={styles.product__bestseller}>Хит коллекции</div>
               )}
               <button
                 className={`${styles.product__favorite_button} ${isFavourite(product?.id) || product?.in_wishlist ? styles.product__favorite_button_active : ""}`}
@@ -876,10 +877,13 @@ export default function ProductClient({
                       <div
                         className={styles.product__materials_preview_caption}
                       >
-                        {hoveredMaterial.title_material || "Материал"}
-                        {hoveredMaterial.title_color
-                          ? `, ${hoveredMaterial.title_color}`
-                          : ""}
+                        <span>Материал: {hoveredMaterial.title_material || "Не указан"}</span>
+                        {hoveredMaterial.title_color && (
+                          <span>Цвет: {hoveredMaterial.title_color}</span>
+                        )}
+                        {product.material_description && (
+                          <span className={styles.product__materials_preview_description}>{product.material_description}</span>
+                        )}
                       </div>
                     </>
                   ) : null}
@@ -1257,6 +1261,17 @@ export default function ProductClient({
           productId={product.id}
         />
       </div>
+
+      {Array.isArray(product.recommendations) && product.recommendations.length > 0 && (
+        <div className={styles.product__recommendations}>
+          <h2 className={styles.product__recommendations_title}>Рекомендуем также</h2>
+          <div className={styles.product__recommendations_grid}>
+            {product.recommendations.map((rec) => (
+              <ProductCard key={rec.id} product={rec} />
+            ))}
+          </div>
+        </div>
+      )}
     </>
   );
 }
