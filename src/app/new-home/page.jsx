@@ -10,14 +10,6 @@ import ResetPasswordModal from "../../components/ResetPasswordModal";
 import { useCart } from "../components/CartContext";
 import { useFavourites } from "../../contexts/FavouritesContext";
 
-const FALLBACK_HERO_TITLE = "ALDA — мебель, которую выбирают сердцем";
-const SECOND_BLOCK_TITLE_FALLBACKS = [
-  "Максимум комфорта",
-  "Дополните образ",
-  "ALDA для дома",
-];
-const SECOND_BLOCK_BUTTON_FALLBACKS = ["Диваны", "Столы", "Стулья"];
-
 const resolveImageUrl = (url) => {
   if (!url || typeof url !== "string") {
     return "";
@@ -32,7 +24,7 @@ const resolveImageUrl = (url) => {
 
 const normalizeHref = (url) => {
   if (!url || typeof url !== "string") {
-    return "/categories";
+    return "";
   }
 
   try {
@@ -75,52 +67,22 @@ const buildSecondBlockCards = (data) => {
   const imageItems = Array.isArray(data.images_block_items)
     ? data.images_block_items
     : [];
-  const mainItems = Array.isArray(data.main_page_items)
-    ? data.main_page_items
-    : [];
-
   const sourceItems = moduleItems.length > 0 ? moduleItems : imageItems;
-  const fallbackItems =
-    sourceItems.length > 0
-      ? sourceItems
-      : mainItems.slice(1, 5).map((item) => ({
-          image: item.photo,
-          title: item.title,
-          link: item.link,
-        }));
 
-  return fallbackItems
+  return sourceItems
     .map((item, index) => {
-      const relatedMainItem = mainItems[index + 1] || mainItems[index] || {};
-      const image = resolveImageUrl(
-        item?.image || item?.photo || relatedMainItem.photo,
-      );
+      const image = resolveImageUrl(item?.image || item?.photo);
 
       if (!image) {
         return null;
       }
 
       return {
-        id: item?.id ?? relatedMainItem.id ?? index,
+        id: item?.id ?? index,
         image,
-        title:
-          item?.title ||
-          item?.name ||
-          relatedMainItem.title ||
-          SECOND_BLOCK_TITLE_FALLBACKS[index] ||
-          "ALDA",
-        buttonText:
-          item?.title_link ||
-          item?.button_text ||
-          SECOND_BLOCK_BUTTON_FALLBACKS[index] ||
-          "Смотреть",
-        link: normalizeHref(
-          item?.link ||
-            relatedMainItem.link ||
-            data.link_block2 ||
-            data.link_main ||
-            "/categories",
-        ),
+        title: item?.title || item?.name || "",
+        buttonText: item?.title_link || item?.button_text || "",
+        link: normalizeHref(item?.link),
       };
     })
     .filter(Boolean)
@@ -167,7 +129,7 @@ const pickMainPhoto = (photos = []) =>
 const pickHoverPhoto = (photos = []) =>
   photos.find((photo) => photo?.photo_interior) || photos[1] || null;
 
-const normalizeFourthBlockItem = (item, index) => {
+const normalizeFourthBlockItem = (item) => {
   const product = item?.product || item;
   if (!product?.id) {
     return null;
@@ -210,7 +172,7 @@ const normalizeFourthBlockItem = (item, index) => {
 
   return {
     id: product.id,
-    title: product.title || item?.title || `Товар ${index + 1}`,
+    title: product.title || item?.title || "",
     price: product.discounted_price ?? product.price ?? 0,
     photo: finalPrimaryPhoto,
     hoverPhoto: finalHoverPhoto,
@@ -221,7 +183,7 @@ const normalizeFourthBlockItem = (item, index) => {
 
 const buildFourthBlockRequestPayload = (link) => {
   if (!link || typeof link !== "string") {
-    return { flag_type: "bestseller_flag_category", page: 1, limit: 8 };
+    return null;
   }
 
   try {
@@ -229,7 +191,7 @@ const buildFourthBlockRequestPayload = (link) => {
     const params = parsed.searchParams;
 
     const payload = {
-      flag_type: params.get("flag_type") || "bestseller_flag_category",
+      flag_type: params.get("flag_type") || "",
       page: 1,
       limit: 8,
     };
@@ -243,9 +205,13 @@ const buildFourthBlockRequestPayload = (link) => {
       payload.subcategory_id = Number(subcategoryId) || subcategoryId;
     }
 
+    if (!payload.flag_type && !payload.category_id && !payload.subcategory_id) {
+      return null;
+    }
+
     return payload;
   } catch {
-    return { flag_type: "bestseller_flag_category", page: 1, limit: 8 };
+    return null;
   }
 };
 
@@ -315,50 +281,14 @@ const normalizeMainPageData = (data) => {
     return data;
   }
 
-  const imagesBlockItems = Array.isArray(data.images_block_items)
-    ? data.images_block_items
-    : [];
-  const heroImage =
-    resolveImageUrl(imagesBlockItems[0]?.image) || data.main_image || "";
-  const categoriesLink = data.link_main || "/categories";
-
-  const normalizedMainPageItems =
-    Array.isArray(data.main_page_items) && data.main_page_items.length > 0
-      ? data.main_page_items
-      : [
-          {
-            title: data.text_block2 || "Максимум комфорта в минимуме места",
-            link: data.link_block2 || categoriesLink,
-            photo: imagesBlockItems[0]?.image || "",
-          },
-          {
-            title: data.title_block3 || "Дополните образ с помощью ALDA",
-            link: data.link_block3 || categoriesLink,
-            photo:
-              imagesBlockItems[1]?.image || imagesBlockItems[0]?.image || "",
-          },
-          {
-            title: data.title_block4 || "Еще больше причин влюбиться",
-            link: data.link_block4 || categoriesLink,
-            photo: imagesBlockItems[0]?.image || "",
-          },
-          {
-            title: data.about_us_title || "О нас",
-            link: data.link_main || categoriesLink,
-            photo:
-              imagesBlockItems[1]?.image || imagesBlockItems[0]?.image || "",
-          },
-        ];
-
   return {
     ...data,
-    title: data.title || data.title_main || FALLBACK_HERO_TITLE,
-    main_image: heroImage,
+    title: data.title || data.title_main || "",
+    main_image: resolveImageUrl(data.main_image),
     main_video: resolveImageUrl(data.main_video),
     video_thumbnail: resolveImageUrl(data.video_thumbnail),
-    link_main: data.link_main || categoriesLink,
-    title_link_main: data.title_link_main || "Выбрать мебель",
-    main_page_items: normalizedMainPageItems,
+    link_main: normalizeHref(data.link_main),
+    title_link_main: data.title_link_main || "",
   };
 };
 
@@ -443,6 +373,11 @@ function HomeContent({
       const requestBody = buildFourthBlockRequestPayload(
         mainPageData?.link_block4,
       );
+
+      if (!requestBody) {
+        setFourthBlockProducts([]);
+        return;
+      }
 
       try {
         const response = await fetch("/api/products/models-list/", {
@@ -730,35 +665,36 @@ function HomeContent({
             ></div>
           )}
           <div className={styles.promo_container}>
-            <h1 className={styles.promo__title}>
-              {mainPageData?.title || FALLBACK_HERO_TITLE}
-            </h1>
-            <Link
-              href={mainPageData?.link_main || "/categories"}
-              className={styles.promo__button}
-            >
-              {mainPageData?.title_link_main || "Выбрать мебель"}{" "}
-            </Link>
+            {mainPageData?.title ? (
+              <h1 className={styles.promo__title}>{mainPageData.title}</h1>
+            ) : null}
+            {mainPageData?.link_main && mainPageData?.title_link_main ? (
+              <Link
+                href={mainPageData.link_main}
+                className={styles.promo__button}
+              >
+                {mainPageData.title_link_main}
+              </Link>
+            ) : null}
           </div>
         </section>
 
         <section className={styles.secondBlock}>
           <div className={styles.secondBlockContainer}>
             <div className={styles.secondBlockTextSide}>
-              <p className={styles.secondBlockText}>
-                {mainPageData?.text_block2 ||
-                  "Дом - это сердце каждой встречи. Создавайте пространство для смеха, трапез и воспоминаний, используя мебель, которая делает встречи непринужденными."}
-              </p>
-              <Link
-                href={normalizeHref(
-                  mainPageData?.link_block2 ||
-                    mainPageData?.link_main ||
-                    "/categories",
-                )}
-                className={styles.secondBlockButton}
-              >
-                {mainPageData?.title_link_block2 || "Выбрать мебель"}
-              </Link>
+              {mainPageData?.text_block2 ? (
+                <p className={styles.secondBlockText}>
+                  {mainPageData.text_block2}
+                </p>
+              ) : null}
+              {mainPageData?.link_block2 && mainPageData?.title_link_block2 ? (
+                <Link
+                  href={normalizeHref(mainPageData.link_block2)}
+                  className={styles.secondBlockButton}
+                >
+                  {mainPageData.title_link_block2}
+                </Link>
+              ) : null}
             </div>
 
             <div className={styles.secondBlockMediaSide}>
@@ -769,33 +705,62 @@ function HomeContent({
                     className={styles.secondBlockSliderViewport}
                   >
                     <div className={styles.secondBlockSliderTrack}>
-                      {secondBlockCards.map((card, index) => (
-                        <Link
-                          key={card.id}
-                          href={card.link}
-                          className={`${styles.secondBlockCard} ${
-                            index === 0 ? styles.secondBlockCardPrimary : ""
-                          }`}
-                        >
-                          <Image
-                            src={card.image}
-                            alt={card.title}
-                            fill
-                            unoptimized={true}
-                            sizes="(max-width: 768px) 80vw, 44vw"
-                            className={styles.secondBlockCardImage}
-                          />
-                          <div className={styles.secondBlockCardOverlay} />
-                          <div className={styles.secondBlockCardContent}>
-                            <h3 className={styles.secondBlockCardTitle}>
-                              {card.title}
-                            </h3>
-                            <span className={styles.secondBlockCardButton}>
-                              {card.buttonText}
-                            </span>
-                          </div>
-                        </Link>
-                      ))}
+                      {secondBlockCards.map((card, index) => {
+                        const cardContent = (
+                          <>
+                            <Image
+                              src={card.image}
+                              alt={card.title || ""}
+                              fill
+                              unoptimized={true}
+                              sizes="(max-width: 768px) 80vw, 44vw"
+                              className={styles.secondBlockCardImage}
+                            />
+                            <div className={styles.secondBlockCardOverlay} />
+                            {card.title || card.buttonText ? (
+                              <div className={styles.secondBlockCardContent}>
+                                {card.title ? (
+                                  <h3 className={styles.secondBlockCardTitle}>
+                                    {card.title}
+                                  </h3>
+                                ) : null}
+                                {card.buttonText ? (
+                                  <span
+                                    className={styles.secondBlockCardButton}
+                                  >
+                                    {card.buttonText}
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </>
+                        );
+
+                        if (!card.link) {
+                          return (
+                            <div
+                              key={card.id}
+                              className={`${styles.secondBlockCard} ${
+                                index === 0 ? styles.secondBlockCardPrimary : ""
+                              }`}
+                            >
+                              {cardContent}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <Link
+                            key={card.id}
+                            href={card.link}
+                            className={`${styles.secondBlockCard} ${
+                              index === 0 ? styles.secondBlockCardPrimary : ""
+                            }`}
+                          >
+                            {cardContent}
+                          </Link>
+                        );
+                      })}
                     </div>
                   </div>
                   <div className={styles.secondBlockProgress}>
@@ -822,22 +787,21 @@ function HomeContent({
           <div className={styles.thirdBlockHeader}>
             <div className={styles.thirdBlockHeaderInner}>
               <h2 className={styles.thirdBlockTitle}>
-                {mainPageData?.title_block3 || "Дополните образ с помощью ALDA"}
+                {mainPageData?.title_block3}
               </h2>
-              <p className={styles.thirdBlockText}>
-                {mainPageData?.text_block3 ||
-                  "Изделия, созданные людьми, которые тоже живут в домах, продуманы до мелочей. Вот почему вы их так любите."}
-              </p>
-              <Link
-                href={normalizeHref(
-                  mainPageData?.link_block3 ||
-                    mainPageData?.link_main ||
-                    "/categories",
-                )}
-                className={styles.thirdBlockButton}
-              >
-                {mainPageData?.title_link_block3 || "Выбрать мебель"}
-              </Link>
+              {mainPageData?.text_block3 ? (
+                <p className={styles.thirdBlockText}>
+                  {mainPageData.text_block3}
+                </p>
+              ) : null}
+              {mainPageData?.link_block3 && mainPageData?.title_link_block3 ? (
+                <Link
+                  href={normalizeHref(mainPageData.link_block3)}
+                  className={styles.thirdBlockButton}
+                >
+                  {mainPageData.title_link_block3}
+                </Link>
+              ) : null}
             </div>
           </div>
 
@@ -870,7 +834,7 @@ function HomeContent({
                 >
                   <Image
                     src={activeScene.image}
-                    alt={mainPageData?.title_block3 || "Интерьер ALDA"}
+                    alt={mainPageData?.title_block3 || ""}
                     fill
                     unoptimized={true}
                     sizes="100vw"
@@ -1127,18 +1091,16 @@ function HomeContent({
         <section className={styles.fourthBlock}>
           <div className={styles.fourthBlockHeader}>
             <h2 className={styles.fourthBlockTitle}>
-              {mainPageData?.title_block4 || "Еще больше причин влюбиться"}
+              {mainPageData?.title_block4}
             </h2>
-            <Link
-              href={normalizeHref(
-                mainPageData?.link_block4 ||
-                  mainPageData?.link_main ||
-                  "/categories",
-              )}
-              className={styles.fourthBlockButton}
-            >
-              {mainPageData?.title_link_block4 || "Выбрать бестселлеры"}
-            </Link>
+            {mainPageData?.link_block4 && mainPageData?.title_link_block4 ? (
+              <Link
+                href={normalizeHref(mainPageData.link_block4)}
+                className={styles.fourthBlockButton}
+              >
+                {mainPageData.title_link_block4}
+              </Link>
+            ) : null}
           </div>
 
           {fourthBlockProducts.length > 0 ? (
@@ -1257,44 +1219,49 @@ function HomeContent({
         <section className={styles.about}>
           <div className={styles.about__container}>
             <h2 className={styles.about__title}>
-              {mainPageData?.about_us_title || "О нас"}
+              {mainPageData?.about_us_title}
             </h2>
 
             {/* Первый ряд */}
             <div className={styles.about__row}>
               <div className={styles.about__content}>
-                <p className={styles.about__text}>
-                  {mainPageData?.about_us_description1 ||
-                    "Мы — профессионалы, вдохновленные созданием идеальной мебели для вашего дома. Сочетая стиль, функциональность и качество, мы стремимся сделать каждый интерьер уникальным и комфортным."}
-                </p>
+                {mainPageData?.about_us_description1 ? (
+                  <p className={styles.about__text}>
+                    {mainPageData.about_us_description1}
+                  </p>
+                ) : null}
                 <div className={styles.about__features}>
-                  <h3>
-                    {mainPageData?.about_us_param_title || "Мы предлагаем:"}
-                  </h3>
+                  {mainPageData?.about_us_param_title ? (
+                    <h3>{mainPageData.about_us_param_title}</h3>
+                  ) : null}
                   <div className={styles.about__feature}>
                     <span className={styles.about__feature_number}>1</span>
                     <div className={styles.about__feature_content}>
-                      <h3 className={styles.about__feature_title}>
-                        {mainPageData?.about_us_param_title_p1 ||
-                          "Мягкую мебель"}
-                      </h3>
-                      <p className={styles.about__feature_text}>
-                        {mainPageData?.about_us_param_text_p1 ||
-                          "Кресла, пуфы, диваны, стулья с мягкой обшивкой"}
-                      </p>
+                      {mainPageData?.about_us_param_title_p1 ? (
+                        <h3 className={styles.about__feature_title}>
+                          {mainPageData.about_us_param_title_p1}
+                        </h3>
+                      ) : null}
+                      {mainPageData?.about_us_param_text_p1 ? (
+                        <p className={styles.about__feature_text}>
+                          {mainPageData.about_us_param_text_p1}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                   <div className={styles.about__feature}>
                     <span className={styles.about__feature_number}>2</span>
                     <div className={styles.about__feature_content}>
-                      <h3 className={styles.about__feature_title}>
-                        {mainPageData?.about_us_param_title_p2 ||
-                          "Функциональность и стиль"}
-                      </h3>
-                      <p className={styles.about__feature_text}>
-                        {mainPageData?.about_us_param_text_p2 ||
-                          "Стильные и практичные решения для вашего дома."}
-                      </p>
+                      {mainPageData?.about_us_param_title_p2 ? (
+                        <h3 className={styles.about__feature_title}>
+                          {mainPageData.about_us_param_title_p2}
+                        </h3>
+                      ) : null}
+                      {mainPageData?.about_us_param_text_p2 ? (
+                        <p className={styles.about__feature_text}>
+                          {mainPageData.about_us_param_text_p2}
+                        </p>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -1334,39 +1301,6 @@ function HomeContent({
                   className={`${styles.skeleton} ${styles.skeleton_about}`}
                 ></div>
               ) : null}
-              {/* <div className={styles.about__content}>
-                <p className={styles.about__text}>
-                  {mainPageData?.about_us_description2 ||
-                    "Мы сотрудничаем с проверенными фабриками, которые гарантируют высокое качество материалов и мастерство исполнения. Благодаря этому сотрудничеству, мы можем предложить нашим клиентам широкий ассортимент продукции, соответствующую мировым стандартам."}
-                </p>
-                <div className={styles.about__stats}>
-                  <div className={styles.about__stat}>
-                    <span className={styles.about__stat_number}>
-                      {mainPageData?.numbers_block_val1 || "10+"}
-                    </span>
-                    <span className={styles.about__stat_text}>
-                      {mainPageData?.numbers_block_title1 || "лет работы"}
-                    </span>
-                  </div>
-                  <div className={styles.about__stat}>
-                    <span className={styles.about__stat_number}>
-                      {mainPageData?.numbers_block_val2 || "45 000+"}
-                    </span>
-                    <span className={styles.about__stat_text}>
-                      {mainPageData?.numbers_block_title2 ||
-                        "довольных покупателей"}
-                    </span>
-                  </div>
-                  <div className={styles.about__stat}>
-                    <span className={styles.about__stat_number}>
-                      {mainPageData?.numbers_block_val3 || "300+"}
-                    </span>
-                    <span className={styles.about__stat_text}>
-                      {mainPageData?.numbers_block_title3 || "товаров"}
-                    </span>
-                  </div>
-                </div>
-              </div>*/}
             </div>
           </div>
         </section>
@@ -1376,7 +1310,7 @@ function HomeContent({
         <section id="payment" className={styles.payment}>
           <div className={styles.payment__container}>
             <h2 className={styles.payment__title}>
-              {mainPageData?.payment_title || "Как оплатить заказ?"}
+              {mainPageData?.payment_title}
             </h2>
             <div className={styles.payment__row}>
               <div className={styles.payment__option}>
@@ -1389,13 +1323,16 @@ function HomeContent({
                   />
                 </div>
                 <div className={styles.payment__option_content}>
-                  <h3 className={styles.payment__option_title}>
-                    {mainPageData?.payment_block_title1 || "Банковская карта"}
-                  </h3>
-                  <p className={styles.payment__option_text}>
-                    {mainPageData?.payment_block_text1 ||
-                      "Оплата товаров, которые уже в наличии, либо будут изготавливаться от 60 дней через сайт с подписанием договора клиентом."}
-                  </p>
+                  {mainPageData?.payment_block_title1 ? (
+                    <h3 className={styles.payment__option_title}>
+                      {mainPageData.payment_block_title1}
+                    </h3>
+                  ) : null}
+                  {mainPageData?.payment_block_text1 ? (
+                    <p className={styles.payment__option_text}>
+                      {mainPageData.payment_block_text1}
+                    </p>
+                  ) : null}
                 </div>
               </div>
               <div className={styles.payment__option}>
@@ -1408,20 +1345,24 @@ function HomeContent({
                   />
                 </div>
                 <div className={styles.payment__option_content}>
-                  <h3 className={styles.payment__option_title}>
-                    {mainPageData?.payment_block_title2 || "Безналичный расчет"}
-                  </h3>
-                  <p className={styles.payment__option_text}>
-                    {mainPageData?.payment_block_text2 ||
-                      "(юрлица или физлица) Оставьте контактные данные (телефон, email, ФИО) — менеджер свяжется для подтверждения заказа."}
-                  </p>
+                  {mainPageData?.payment_block_title2 ? (
+                    <h3 className={styles.payment__option_title}>
+                      {mainPageData.payment_block_title2}
+                    </h3>
+                  ) : null}
+                  {mainPageData?.payment_block_text2 ? (
+                    <p className={styles.payment__option_text}>
+                      {mainPageData.payment_block_text2}
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </div>
-            <p className={styles.payment__support}>
-              {mainPageData?.payment_description ||
-                "Если у вас возникли вопросы или проблемы с оплатой, пожалуйста, свяжитесь с нашей службой поддержки по телефону +7 (999) 999-99-99 или напишите нам на почту support@alda.ru. Мы всегда готовы вам помочь!"}
-            </p>
+            {mainPageData?.payment_description ? (
+              <p className={styles.payment__support}>
+                {mainPageData.payment_description}
+              </p>
+            ) : null}
           </div>
         </section>
       </div>
