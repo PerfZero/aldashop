@@ -15,7 +15,7 @@ import {
   StringParam,
   withDefault,
 } from "use-query-params";
-import Image from "next/image";
+import Link from "next/link";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -26,8 +26,109 @@ import SortSelect from "@/components/SortSelect";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
 import { useFilters } from "@/hooks/useFilters";
-import ActiveFiltersBar from "@/components/ActiveFiltersBar";
 import styles from "./page.module.css";
+
+const SIZE_LABELS = { width: "Ширина", height: "Высота", depth: "Глубина" };
+
+function buildSelectedFilterChips(appliedFilters, filters) {
+  const chips = [];
+
+  for (const [key, value] of Object.entries(appliedFilters)) {
+    if (key === "in_stock" || value === undefined || value === null) continue;
+
+    if (key === "price" && typeof value === "object") {
+      const parts = [];
+      if (value.min != null) {
+        parts.push(`от ${value.min.toLocaleString("ru-RU")} ₽`);
+      }
+      if (value.max != null) {
+        parts.push(`до ${value.max.toLocaleString("ru-RU")} ₽`);
+      }
+      if (parts.length) {
+        chips.push({
+          key: "price",
+          valueId: "price",
+          label: "Цена",
+          text: parts.join(" "),
+        });
+      }
+      continue;
+    }
+
+    if (key === "sizes" && typeof value === "object") {
+      for (const [dim, range] of Object.entries(value)) {
+        const parts = [];
+        if (range?.min != null) parts.push(`от ${range.min}`);
+        if (range?.max != null) parts.push(`до ${range.max}`);
+        if (parts.length) {
+          chips.push({
+            key: `sizes.${dim}`,
+            valueId: dim,
+            label: SIZE_LABELS[dim] || dim,
+            text: parts.join(" "),
+          });
+        }
+      }
+      continue;
+    }
+
+    if (key === "bestseller" && value === true) {
+      chips.push({
+        key: "bestseller",
+        valueId: "bestseller",
+        label: "Хит коллекции",
+        text: null,
+      });
+      continue;
+    }
+
+    if (Array.isArray(value) && value.length > 0) {
+      const filterGroup = filters.find((filterItem) => filterItem.slug === key);
+      const label = filterGroup?.title || key;
+
+      value.forEach((id) => {
+        chips.push({
+          key,
+          valueId: id,
+          label,
+          text:
+            filterGroup?.options?.find((option) => option.id === id)?.title ||
+            String(id),
+        });
+      });
+    }
+  }
+
+  return chips;
+}
+
+function removeSelectedFilter(appliedFilters, groupKey, valueId) {
+  const updated = { ...appliedFilters };
+
+  if (groupKey === "price") {
+    delete updated.price;
+  } else if (groupKey === "bestseller") {
+    delete updated.bestseller;
+  } else if (groupKey.startsWith("sizes.")) {
+    const dim = groupKey.replace("sizes.", "");
+    const sizes = { ...updated.sizes };
+    delete sizes[dim];
+    if (Object.keys(sizes).length === 0) {
+      delete updated.sizes;
+    } else {
+      updated.sizes = sizes;
+    }
+  } else {
+    const nextValues = (updated[groupKey] || []).filter((id) => id !== valueId);
+    if (nextValues.length === 0) {
+      delete updated[groupKey];
+    } else {
+      updated[groupKey] = nextValues;
+    }
+  }
+
+  return updated;
+}
 
 function CategoryPageContent() {
   const cx = (...classes) => classes.filter(Boolean).join(" ");
@@ -404,12 +505,16 @@ function CategoryPageContent() {
     Object.entries(newFilters).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
       if (key === "price") {
-        if (value?.min != null) url.searchParams.set("price_min", String(value.min));
-        if (value?.max != null) url.searchParams.set("price_max", String(value.max));
+        if (value?.min != null)
+          url.searchParams.set("price_min", String(value.min));
+        if (value?.max != null)
+          url.searchParams.set("price_max", String(value.max));
       } else if (key === "sizes") {
         ["width", "height", "depth"].forEach((dim) => {
-          if (value?.[dim]?.min != null) url.searchParams.set(`${dim}_min`, String(value[dim].min));
-          if (value?.[dim]?.max != null) url.searchParams.set(`${dim}_max`, String(value[dim].max));
+          if (value?.[dim]?.min != null)
+            url.searchParams.set(`${dim}_min`, String(value[dim].min));
+          if (value?.[dim]?.max != null)
+            url.searchParams.set(`${dim}_max`, String(value[dim].max));
         });
       } else if (Array.isArray(value) && value.length > 0) {
         url.searchParams.set(key, value.join(","));
@@ -622,6 +727,12 @@ function CategoryPageContent() {
           ? currentCategory.photo_cover
           : `https://aldalinde.ru${currentCategory.photo_cover}`
         : null;
+  const activeCategoryTitle =
+    currentSubcategory?.title || currentCategory?.title;
+  const categoryResetHref = currentSubcategory
+    ? `/categories/${currentCategory?.slug}/all`
+    : "/categories";
+  const selectedFilterChips = buildSelectedFilterChips(appliedFilters, filters);
   const showHero = heroTitle || heroDescription || heroPhoto;
   const isLoadingHero =
     categoriesLoading && !currentCategory && !currentSubcategory;
@@ -689,38 +800,122 @@ function CategoryPageContent() {
       ) : null}
 
       <div className={styles.controls}>
-        <button
-          className={styles.filters__button}
-          onClick={() => {
-            const next = !showFilters;
-            setShowFilters(next);
-            if (typeof window !== "undefined") {
-              sessionStorage.setItem("showFilters", next.toString());
-            }
-          }}
-        >
-          <span suppressHydrationWarning>
-            {showFilters ? "Скрыть фильтры" : "Показать фильтры"}
-          </span>
-        </button>
+        <div className={styles.controls__group}>
+          <button
+            className={styles.filters__button}
+            onClick={() => {
+              const next = !showFilters;
+              setShowFilters(next);
+              if (typeof window !== "undefined") {
+                sessionStorage.setItem("showFilters", next.toString());
+              }
+            }}
+            type="button"
+          >
+            <img
+              className={styles.filters__buttonIcon}
+              src="/filter.svg"
+              alt=""
+              aria-hidden="true"
+            />
+            <span suppressHydrationWarning>
+              {showFilters ? "Спрятать фильтры" : "Показать фильтры"}
+            </span>
+          </button>
 
-        <SortSelect
-          value={sortBy}
-          onChange={handleSortChange}
-          options={
-            filters
-              .find((f) => f.slug === "sort")
-              ?.options?.map((option) => ({
-                value: option.id,
-                label: option.title,
-              })) || [
-              { value: 1, label: "Популярные" },
-              { value: 2, label: "Высокий рейтинг" },
-              { value: 3, label: "По возрастанию цены" },
-              { value: 4, label: "По убыванию цены" },
-            ]
-          }
-        />
+          {activeCategoryTitle && (
+            <div className={styles.controls__chip}>
+              <span className={styles.controls__chipLabel}>Категория:</span>
+              <span className={styles.controls__chipText}>
+                {activeCategoryTitle}
+              </span>
+              <Link
+                className={styles.controls__chipAction}
+                href={categoryResetHref}
+                aria-label="Сбросить категорию"
+              >
+                <img
+                  className={styles.controls__chipIcon}
+                  src="/catalog-chip-close.svg"
+                  alt=""
+                  aria-hidden="true"
+                />
+              </Link>
+            </div>
+          )}
+
+          {selectedFilterChips.map((chip) => (
+            <button
+              key={`${chip.key}-${chip.valueId}`}
+              className={styles.controls__chip}
+              onClick={() =>
+                handleFiltersApply(
+                  removeSelectedFilter(appliedFilters, chip.key, chip.valueId),
+                )
+              }
+              type="button"
+              aria-label={`Удалить фильтр ${chip.label}`}
+            >
+              <span className={styles.controls__chipLabel}>{chip.label}:</span>
+              {chip.text && (
+                <span className={styles.controls__chipText}>{chip.text}</span>
+              )}
+              <img
+                className={styles.controls__chipIcon}
+                src="/catalog-chip-close.svg"
+                alt=""
+                aria-hidden="true"
+              />
+            </button>
+          ))}
+
+          <Link className={styles.controls__reset} href={categoryResetHref}>
+            <span className={styles.controls__resetIcon} aria-hidden="true">
+              <svg
+                width="17"
+                height="17"
+                viewBox="0 0 17 17"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M15.422 4.48928C14.4493 2.81049 12.8996 1.54242 11.0615 0.921173C9.22343 0.29993 7.22221 0.367858 5.43047 1.11231C3.63874 1.85676 2.17862 3.22699 1.32197 4.96787C0.465329 6.70876 0.27055 8.70163 0.773905 10.5754C1.27726 12.4492 2.44444 14.0763 4.05812 15.1535C5.6718 16.2308 7.622 16.685 9.54559 16.4314C11.4692 16.1778 13.2351 15.2338 14.5144 13.7751C15.7938 12.3164 16.4994 10.4425 16.5 8.50228"
+                  stroke="#D25C1B"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M11.5 4.50232H15.5V0.502319"
+                  stroke="#D25C1B"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span>Сбросить всё</span>
+          </Link>
+        </div>
+
+        <div className={styles.controls__sort}>
+          <SortSelect
+            value={sortBy}
+            onChange={handleSortChange}
+            variant="catalog"
+            options={
+              filters
+                .find((f) => f.slug === "sort")
+                ?.options?.map((option) => ({
+                  value: option.id,
+                  label: option.title,
+                })) || [
+                { value: 1, label: "Популярные" },
+                { value: 2, label: "Высокий рейтинг" },
+                { value: 3, label: "По возрастанию цены" },
+                { value: 4, label: "По убыванию цены" },
+              ]
+            }
+          />
+        </div>
       </div>
 
       <div className={styles.content} ref={productsSectionRef}>
@@ -733,19 +928,15 @@ function CategoryPageContent() {
             }
           }}
           filters={filters}
-          loading={categoriesLoading || (filtersLoading && filters.length === 0)}
+          loading={
+            categoriesLoading || (filtersLoading && filters.length === 0)
+          }
           error={error}
           onApply={handleFiltersApply}
           appliedFilters={appliedFilters}
           categories={categories}
         />
         <div className={styles.productsArea}>
-          <ActiveFiltersBar
-            appliedFilters={appliedFilters}
-            filters={filters}
-            onRemove={handleFiltersApply}
-            onReset={() => handleFiltersApply({ in_stock: true })}
-          />
           <div
             className={cx(styles.products, showFilters && styles.filtersOpen)}
           >

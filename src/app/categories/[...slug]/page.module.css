@@ -66,24 +66,126 @@
     padding: 0 20px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.controls__group {
+    display: flex;
+    align-items: center;
+    gap: 20px 10px;
+    flex-wrap: wrap;
+}
+
+.controls__sort {
+    display: flex;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+.controls__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 29px;
+    padding: 4px 10px;
+    border: 1px solid #844025;
+    background: transparent;
+    border-radius: 0;
+    cursor: default;
+}
+
+button.controls__chip {
+    cursor: pointer;
+}
+
+.controls__chipLabel {
+    font-family: var(--font-playfair-display), serif;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 150%;
+    color: #844025;
+}
+
+.controls__chipText {
+    font-family: var(--font-playfair-display), serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    color: #844025;
+}
+
+.controls__chipAction {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #844025;
+    width: 21px;
+    height: 21px;
+    transition: opacity 0.2s ease;
+}
+
+.controls__chipIcon {
+    display: block;
+    width: 21px;
+    height: 21px;
+}
+
+.controls__chipAction:hover {
+    opacity: 0.7;
+}
+
+.controls__reset {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-decoration: none;
+    font-family: var(--font-playfair-display), serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 150%;
+    color: #d25c1b;
+    cursor: pointer;
+}
+
+.controls__resetIcon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+}
+
+.controls__resetIcon img {
+    display: block;
+    width: 17px;
+    height: 17px;
 }
 
 .filters__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    border: 0;
+    background: transparent;
     font-family: var(--font-playfair-display), serif;
     font-weight: 500;
-    font-size: 16px;
+    font-size: 14px;
     line-height: 150%;
-    text-align: center;
-    color: #323433;
+    color: #3c101e;
+    cursor: pointer;
 }
 
-.filters__button::before {
-    content: "";
-    background-image: url("/filter.svg");
-    background-size: 25px 25px;
-    background-repeat: no-repeat;
-    background-position: left center;
-    padding-left: 30px;
+.filters__buttonIcon {
+    display: block;
+    width: 25px;
+    height: 25px;
+    flex-shrink: 0;
 }
 
 .sorting {
@@ -251,13 +353,39 @@
 
     .filters__button {
         font-size: 14px;
-        display: block;
-        width: 100%;
+        width: auto;
     }
 
-    .filters__button::before {
-        background-size: 20px 20px;
-        padding-left: 25px;
+    .filters__buttonIcon {
+        width: 20px;
+        height: 20px;
+    }
+
+    .controls {
+        margin: 20px auto;
+        padding: 0 16px;
+        align-items: flex-start;
+    }
+
+    .controls__group {
+        gap: 12px;
+    }
+
+    .controls__sort {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .controls__chip {
+        gap: 10px;
+        min-height: 34px;
+        padding: 6px 12px 6px 14px;
+    }
+
+    .controls__chipLabel,
+    .controls__chipText,
+    .controls__reset {
+        font-size: 12px;
     }
 
     .hero__content {
