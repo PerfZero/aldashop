@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import LegalModal from "./LegalModal";
 import { useCategories } from "../hooks/useCategories";
+import { getFooterInfoApiUrl } from "../lib/publicApi";
 
 const Footer = () => {
   const [footerInfo, setFooterInfo] = useState(null);
@@ -23,7 +24,7 @@ const Footer = () => {
   useEffect(() => {
     const fetchFooterInfo = async () => {
       try {
-        const response = await fetch("/api/footer-info");
+        const response = await fetch(getFooterInfoApiUrl());
         if (response.ok) {
           const data = await response.json();
           setFooterInfo(data);

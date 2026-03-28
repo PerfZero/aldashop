@@ -5,6 +5,7 @@ import "yet-another-react-lightbox/styles.css";
 import styles from "./Reviews.module.css";
 import SortSelect from "./SortSelect";
 import { useAuth } from "../contexts/AuthContext";
+import { getReviewsApiUrl } from "../lib/publicApi";
 
 const mockReviews = [
   {
@@ -82,14 +83,13 @@ export default function Reviews({
 
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        product_id: String(productId),
-        sort_by: sortBy,
-        limit: "10",
-        page: "1",
-      });
       const response = await fetch(
-        `/api/products/reviews?${params.toString()}`,
+        getReviewsApiUrl({
+          productId,
+          sortBy,
+          limit: 10,
+          page: 1,
+        }),
       );
 
       if (!response.ok) {

@@ -8,6 +8,7 @@ import AuthModal from "./AuthModal";
 import { useCart } from "../app/components/CartContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useFavourites } from "../contexts/FavouritesContext";
+import { getCategoriesApiUrl } from "../lib/publicApi";
 
 export default function Header() {
   const cx = (...classes) => classes.filter(Boolean).join(" ");
@@ -39,7 +40,7 @@ export default function Header() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/categories", {
+        const response = await fetch(getCategoriesApiUrl(), {
           method: "GET",
           headers: {
             accept: "application/json",

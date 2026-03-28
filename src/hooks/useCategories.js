@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
+import { getCategoriesApiUrl } from "../lib/publicApi";
 
 const fetchCategories = async () => {
-  const response = await fetch("/api/categories");
+  const response = await fetch(getCategoriesApiUrl());
 
   if (!response.ok) {
     throw new Error("Failed to fetch categories");

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import styles from "./PromoBanner.module.css";
+import { getPromoBannerApiUrl } from "../lib/publicApi";
 
 function normalizeBanners(payload) {
   const source =
@@ -34,7 +35,7 @@ export default function PromoBanner() {
   useEffect(() => {
     const fetchBanner = async () => {
       try {
-        const response = await fetch("/api/products/banner", {
+        const response = await fetch(getPromoBannerApiUrl(), {
           method: "GET",
           cache: "no-store",
         });
