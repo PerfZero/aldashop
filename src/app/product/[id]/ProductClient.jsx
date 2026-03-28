@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useLayoutEffect, useRef, useMemo } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import styles from "./page.module.css";
 import MobileProductGallery from "./MobileProductGallery";
 import Reviews from "@/components/Reviews";
-import ProductCard from "@/components/ProductCard";
 import { useCart } from "../../components/CartContext";
 import { useFavourites } from "../../../contexts/FavouritesContext";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -49,6 +49,92 @@ const getMaterialLabel = (material) => {
   if (!material) return "Не указан";
   const name = material.title_material || material.title || "Материал";
   return material.title_color ? `${name}, ${material.title_color}` : name;
+};
+
+const formatPrice = (price) => {
+  if (typeof price !== "number" || Number.isNaN(price)) {
+    return "";
+  }
+
+  return `${new Intl.NumberFormat("ru-RU").format(price)} ₽`;
+};
+
+const resolvePhotoValue = (photo) => {
+  if (!photo) {
+    return "";
+  }
+
+  if (typeof photo === "string") {
+    return toAbsoluteMedia(photo) || "";
+  }
+
+  if (typeof photo === "object") {
+    return (
+      toAbsoluteMedia(photo.photo || photo.image || photo.url || photo.src) ||
+      ""
+    );
+  }
+
+  return "";
+};
+
+const pickMainPhoto = (photos = []) =>
+  photos.find((photo) => photo?.main_photo) || photos[0] || null;
+
+const pickHoverPhoto = (photos = []) =>
+  photos.find((photo) => photo?.photo_interior) || photos[1] || null;
+
+const normalizeRecommendationItem = (item) => {
+  const recommendation = item?.product || item;
+  if (!recommendation?.id) {
+    return null;
+  }
+
+  const photos = Array.isArray(recommendation.photos)
+    ? recommendation.photos
+    : Array.isArray(item?.photos)
+      ? item.photos
+      : [];
+
+  const primaryPhotoFromCollection = resolvePhotoValue(pickMainPhoto(photos));
+  const hoverPhotoFromCollection = resolvePhotoValue(pickHoverPhoto(photos));
+  const primaryPhoto = resolvePhotoValue(
+    recommendation.photo?.photo ||
+      recommendation.photo ||
+      recommendation.material_photo?.photo_material ||
+      item?.image ||
+      item?.photo ||
+      item?.photo1 ||
+      item?.image1,
+  );
+  const hoverPhoto = resolvePhotoValue(
+    hoverPhotoFromCollection ||
+      recommendation.photo_interior ||
+      recommendation.photo_2 ||
+      recommendation.photo2 ||
+      item?.photo_interior ||
+      item?.photo_2 ||
+      item?.photo2 ||
+      item?.image2 ||
+      item?.second_image ||
+      item?.second_photo,
+  );
+  const finalPrimaryPhoto = primaryPhoto || primaryPhotoFromCollection;
+  const finalHoverPhoto =
+    hoverPhoto && hoverPhoto !== finalPrimaryPhoto ? hoverPhoto : "";
+
+  return {
+    id: recommendation.id,
+    title: recommendation.title || item?.title || "Товар",
+    price: Number(recommendation.discounted_price ?? recommendation.price ?? 0),
+    photo: finalPrimaryPhoto,
+    hoverPhoto: finalHoverPhoto,
+    bestseller: Boolean(
+      recommendation.bestseller ?? item?.bestseller ?? item?.is_bestseller,
+    ),
+    inStock:
+      recommendation.in_stock !== undefined ? recommendation.in_stock : true,
+  };
 };
 
 const normalizeDetailPayload = (data) => {
@@ -168,8 +254,15 @@ export default function ProductClient({
   const [showActualSizes, setShowActualSizes] = useState(true);
   const [isChangingOptions, setIsChangingOptions] = useState(false);
   const [canScrollThumbsDown, setCanScrollThumbsDown] = useState(false);
+  const [recommendationScrollProgress, setRecommendationScrollProgress] =
+    useState({
+      thumbWidth: 32,
+      offset: 0,
+      isScrollable: false,
+    });
   const galleryRef = useRef(null);
   const thumbsRailRef = useRef(null);
+  const recommendationsSliderRef = useRef(null);
   const imageRefs = useRef([]);
   const thumbRefs = useRef([]);
   const lightboxSwiperRef = useRef(null);
@@ -178,6 +271,13 @@ export default function ProductClient({
   const promotionsMessages = useMemo(
     () => normalizePromotionsMessages(product?.promotions_messages),
     [product?.promotions_messages],
+  );
+  const recommendationProducts = useMemo(
+    () =>
+      (Array.isArray(product?.recommendations) ? product.recommendations : [])
+        .map((item) => normalizeRecommendationItem(item))
+        .filter(Boolean),
+    [product?.recommendations],
   );
 
   useLayoutEffect(() => {
@@ -228,6 +328,49 @@ export default function ProductClient({
       }
     }
   }, [initialProduct]);
+
+  useEffect(() => {
+    const slider = recommendationsSliderRef.current;
+    if (!slider) {
+      return undefined;
+    }
+
+    const updateScrollProgress = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = slider;
+      const maxScroll = Math.max(scrollWidth - clientWidth, 0);
+      const isScrollable = maxScroll > 0;
+
+      if (!isScrollable) {
+        setRecommendationScrollProgress({
+          thumbWidth: 32,
+          offset: 0,
+          isScrollable: false,
+        });
+        return;
+      }
+
+      const visibleRatio = clientWidth / scrollWidth;
+      const thumbWidth = Math.max(visibleRatio * 100, 16);
+      const movableTrack = 100 - thumbWidth;
+      const offset =
+        maxScroll > 0 ? (scrollLeft / maxScroll) * movableTrack : 0;
+
+      setRecommendationScrollProgress({
+        thumbWidth,
+        offset,
+        isScrollable: true,
+      });
+    };
+
+    updateScrollProgress();
+    slider.addEventListener("scroll", updateScrollProgress, { passive: true });
+    window.addEventListener("resize", updateScrollProgress);
+
+    return () => {
+      slider.removeEventListener("scroll", updateScrollProgress);
+      window.removeEventListener("resize", updateScrollProgress);
+    };
+  }, [recommendationProducts.length]);
 
   useEffect(() => {
     setActiveDesktopImage(0);
@@ -539,6 +682,41 @@ export default function ProductClient({
       }));
     } catch (error) {
       console.error("Ошибка при изменении избранного:", error);
+    }
+  };
+
+  const handleRecommendationAddToCart = async (event, recommendation) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    try {
+      await addToCart({
+        id: recommendation.id,
+        name: recommendation.title,
+        price: recommendation.price,
+        image: recommendation.photo || "/sofa.png",
+        quantity: 1,
+      });
+    } catch (error) {
+      console.error("Ошибка при добавлении рекомендации в корзину:", error);
+    }
+  };
+
+  const handleRecommendationToggleFavourite = async (event, recommendation) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    try {
+      await toggleFavourite({
+        id: recommendation.id,
+        name: recommendation.title,
+        price: recommendation.price,
+        image: recommendation.photo || "/sofa.png",
+        inStock: recommendation.inStock,
+        isBestseller: recommendation.bestseller,
+      });
+    } catch (error) {
+      console.error("Ошибка при изменении избранного у рекомендации:", error);
     }
   };
 
@@ -1385,6 +1563,123 @@ export default function ProductClient({
         </div>
       )}
 
+      {recommendationProducts.length > 0 && (
+        <section className={styles.product__recommendations}>
+          <div className={styles.product__recommendations_header}>
+            <h2 className={styles.product__recommendations_title}>
+              Рекомендуем также
+            </h2>
+          </div>
+
+          <div
+            ref={recommendationsSliderRef}
+            className={styles.product__recommendations_viewport}
+          >
+            <div className={styles.product__recommendations_track}>
+              {recommendationProducts.map((recommendation) => (
+                <Link
+                  key={recommendation.id}
+                  href={`/product/${recommendation.id}`}
+                  className={styles.product__recommendations_card}
+                >
+                  {recommendation.bestseller ? (
+                    <span className={styles.product__recommendations_badge}>
+                      Хит коллекции
+                    </span>
+                  ) : null}
+
+                  <div
+                    className={`${styles.product__recommendations_image_wrap} ${
+                      recommendation.hoverPhoto
+                        ? styles.product__recommendations_image_wrap_hoverable
+                        : ""
+                    }`}
+                  >
+                    {recommendation.photo ? (
+                      <>
+                        <Image
+                          src={recommendation.photo}
+                          alt={recommendation.title}
+                          fill
+                          unoptimized
+                          sizes="(max-width: 768px) 74vw, 342px"
+                          className={styles.product__recommendations_image}
+                        />
+                        {recommendation.hoverPhoto ? (
+                          <Image
+                            src={recommendation.hoverPhoto}
+                            alt={`${recommendation.title} - вид 2`}
+                            fill
+                            unoptimized
+                            sizes="(max-width: 768px) 74vw, 342px"
+                            className={`${styles.product__recommendations_image} ${styles.product__recommendations_image_hover}`}
+                          />
+                        ) : null}
+                      </>
+                    ) : null}
+                  </div>
+
+                  <div className={styles.product__recommendations_card_content}>
+                    <h3 className={styles.product__recommendations_card_title}>
+                      {recommendation.title}
+                    </h3>
+                    <p className={styles.product__recommendations_card_price}>
+                      {formatPrice(recommendation.price)}
+                    </p>
+                    <div className={styles.product__recommendations_actions}>
+                      <button
+                        type="button"
+                        className={styles.product__recommendations_action}
+                        onClick={(event) =>
+                          handleRecommendationAddToCart(event, recommendation)
+                        }
+                        aria-label="Добавить в корзину"
+                      >
+                        <span
+                          className={`${styles.product__recommendations_action_icon} ${styles.product__recommendations_action_icon_cart}`}
+                          aria-hidden="true"
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        className={`${styles.product__recommendations_action} ${
+                          isFavourite(recommendation.id)
+                            ? styles.product__recommendations_action_active
+                            : ""
+                        }`}
+                        onClick={(event) =>
+                          handleRecommendationToggleFavourite(
+                            event,
+                            recommendation,
+                          )
+                        }
+                        aria-label="Добавить в избранное"
+                      >
+                        <span
+                          className={`${styles.product__recommendations_action_icon} ${styles.product__recommendations_action_icon_fav}`}
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.product__recommendations_progress}>
+            <span
+              className={styles.product__recommendations_progress_active}
+              style={{
+                width: `${recommendationScrollProgress.thumbWidth}%`,
+                transform: `translateX(${recommendationScrollProgress.offset}%)`,
+                opacity: recommendationScrollProgress.isScrollable ? 1 : 0,
+              }}
+            />
+          </div>
+        </section>
+      )}
+
       <div id="reviews">
         <Reviews
           hasReviews={true}
@@ -1393,20 +1688,6 @@ export default function ProductClient({
           productId={product.id}
         />
       </div>
-
-      {Array.isArray(product.recommendations) &&
-        product.recommendations.length > 0 && (
-          <div className={styles.product__recommendations}>
-            <h2 className={styles.product__recommendations_title}>
-              Рекомендуем также
-            </h2>
-            <div className={styles.product__recommendations_grid}>
-              {product.recommendations.map((rec) => (
-                <ProductCard key={rec.id} product={rec} />
-              ))}
-            </div>
-          </div>
-        )}
     </>
   );
 }
