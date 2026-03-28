@@ -64,12 +64,8 @@ const buildSecondBlockCards = (data) => {
   const moduleItems = Array.isArray(data.modul_block2_items)
     ? data.modul_block2_items
     : [];
-  const imageItems = Array.isArray(data.images_block_items)
-    ? data.images_block_items
-    : [];
-  const sourceItems = moduleItems.length > 0 ? moduleItems : imageItems;
 
-  return sourceItems
+  return moduleItems
     .map((item, index) => {
       const image = resolveImageUrl(item?.image || item?.photo);
 

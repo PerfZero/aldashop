@@ -29,7 +29,9 @@ const normalizePromotionsMessages = (messages) => {
         return null;
       }
 
-      const timeLeaveSec = Number(message.time_leave_sec);
+      const timeLeaveValue =
+        message.time_leave_sec ?? message.timeLeaveSec ?? null;
+      const timeLeaveSec = Number(timeLeaveValue);
 
       return {
         id: message.id ?? index,
@@ -152,7 +154,6 @@ export default function ProductClient({
   );
   const [loading, setLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [isGalleryHovered, setIsGalleryHovered] = useState(false);
   const [activeDesktopImage, setActiveDesktopImage] = useState(0);
   const [selectedColor, setSelectedColor] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
@@ -166,7 +167,9 @@ export default function ProductClient({
   const [showProductInfo, setShowProductInfo] = useState(true);
   const [showActualSizes, setShowActualSizes] = useState(true);
   const [isChangingOptions, setIsChangingOptions] = useState(false);
+  const [canScrollThumbsDown, setCanScrollThumbsDown] = useState(false);
   const galleryRef = useRef(null);
+  const thumbsRailRef = useRef(null);
   const imageRefs = useRef([]);
   const thumbRefs = useRef([]);
   const lightboxSwiperRef = useRef(null);
@@ -318,8 +321,8 @@ export default function ProductClient({
   useEffect(() => {
     if (isMobile) return;
     const activeThumb = thumbRefs.current[activeDesktopImage];
+    const rail = thumbsRailRef.current;
     if (!activeThumb) return;
-    const rail = activeThumb.parentElement;
     if (!rail) return;
 
     const thumbTop = activeThumb.offsetTop;
@@ -577,6 +580,34 @@ export default function ProductClient({
   ];
   const hasGalleryMedia = galleryMedia.length > 0;
   const hasDisplayPhotos = displayPhotos.length > 0;
+
+  useEffect(() => {
+    if (isMobile) {
+      setCanScrollThumbsDown(false);
+      return undefined;
+    }
+
+    const rail = thumbsRailRef.current;
+    if (!rail) return undefined;
+
+    const updateThumbsOverflowState = () => {
+      const hasMoreBelow =
+        rail.scrollTop + rail.clientHeight < rail.scrollHeight - 4;
+      setCanScrollThumbsDown(hasMoreBelow);
+    };
+
+    updateThumbsOverflowState();
+    rail.addEventListener("scroll", updateThumbsOverflowState, {
+      passive: true,
+    });
+    window.addEventListener("resize", updateThumbsOverflowState);
+
+    return () => {
+      rail.removeEventListener("scroll", updateThumbsOverflowState);
+      window.removeEventListener("resize", updateThumbsOverflowState);
+    };
+  }, [galleryMedia.length, isMobile, product?.id]);
+
   const openLightbox = (index) => {
     setLightboxIndex(index);
     setIsLightboxOpen(true);
@@ -602,6 +633,16 @@ export default function ProductClient({
     scrollToDesktopImage(activeDesktopImage + 1);
   };
 
+  const scrollThumbsRailDown = () => {
+    const rail = thumbsRailRef.current;
+    if (!rail) return;
+
+    rail.scrollBy({
+      top: Math.max(rail.clientHeight - 96, 180),
+      behavior: "smooth",
+    });
+  };
+
   const hasDiscount =
     product.discounted_price && product.discounted_price !== null;
   const originalPrice = product.price?.toLocaleString("ru-RU");
@@ -611,12 +652,7 @@ export default function ProductClient({
     <>
       <div className={styles.product}>
         <div className={styles.product__gallery_shell}>
-          <div
-            ref={galleryRef}
-            className={styles.product__gallery}
-            onMouseEnter={() => setIsGalleryHovered(true)}
-            onMouseLeave={() => setIsGalleryHovered(false)}
-          >
+          <div ref={galleryRef} className={styles.product__gallery}>
             {hasGalleryMedia && isMobile && (
               <MobileProductGallery
                 mediaItems={galleryMedia}
@@ -628,44 +664,72 @@ export default function ProductClient({
 
             {hasGalleryMedia && !isMobile && (
               <div className={styles.product__gallery_desktop}>
-                <div
-                  className={`${styles.product__thumbs_rail} ${isGalleryHovered ? styles.product__thumbs_rail_visible : ""}`}
-                >
-                  {galleryMedia.map((item, index) => (
+                <div className={styles.product__thumbs_column}>
+                  <div
+                    ref={thumbsRailRef}
+                    className={styles.product__thumbs_rail}
+                  >
+                    {galleryMedia.map((item, index) => (
+                      <button
+                        key={`thumb-${item.id || index}`}
+                        ref={(node) => {
+                          thumbRefs.current[index] = node;
+                        }}
+                        className={`${styles.product__thumb_rail_item} ${activeDesktopImage === index ? styles.product__thumb_rail_item_active : ""}`}
+                        onClick={() => scrollToDesktopImage(index)}
+                        aria-label={
+                          item.type === "video"
+                            ? "Видео товара"
+                            : `Фото ${item.lightboxIndex + 1}`
+                        }
+                        type="button"
+                      >
+                        {item.thumbnail || item.src ? (
+                          <Image
+                            src={item.thumbnail || item.src}
+                            alt={
+                              item.type === "video"
+                                ? `${product.title} превью видео`
+                                : `${product.title} превью ${item.lightboxIndex + 1}`
+                            }
+                            width={72}
+                            height={72}
+                            unoptimized
+                          />
+                        ) : null}
+                        {item.type === "video" ? (
+                          <span className={styles.product__thumb_video_badge}>
+                            Video
+                          </span>
+                        ) : null}
+                      </button>
+                    ))}
+                  </div>
+                  {canScrollThumbsDown ? (
                     <button
-                      key={`thumb-${item.id || index}`}
-                      ref={(node) => {
-                        thumbRefs.current[index] = node;
-                      }}
-                      className={`${styles.product__thumb_rail_item} ${activeDesktopImage === index ? styles.product__thumb_rail_item_active : ""}`}
-                      onClick={() => scrollToDesktopImage(index)}
-                      aria-label={
-                        item.type === "video"
-                          ? "Видео товара"
-                          : `Фото ${item.lightboxIndex + 1}`
-                      }
                       type="button"
+                      className={styles.product__thumbs_more}
+                      onClick={scrollThumbsRailDown}
+                      aria-label="Показать еще фотографии"
                     >
-                      {item.thumbnail || item.src ? (
-                        <Image
-                          src={item.thumbnail || item.src}
-                          alt={
-                            item.type === "video"
-                              ? `${product.title} превью видео`
-                              : `${product.title} превью ${item.lightboxIndex + 1}`
-                          }
-                          width={72}
-                          height={72}
-                          unoptimized
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 20 20"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M4 7L10 13L16 7"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         />
-                      ) : null}
-                      {item.type === "video" ? (
-                        <span className={styles.product__thumb_video_badge}>
-                          Video
-                        </span>
-                      ) : null}
+                      </svg>
                     </button>
-                  ))}
+                  ) : null}
                 </div>
 
                 <div className={styles.product__gallery_stack}>

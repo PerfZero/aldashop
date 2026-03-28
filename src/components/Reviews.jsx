@@ -82,8 +82,14 @@ export default function Reviews({
 
     try {
       setLoading(true);
+      const params = new URLSearchParams({
+        product_id: String(productId),
+        sort_by: sortBy,
+        limit: "10",
+        page: "1",
+      });
       const response = await fetch(
-        `https://aldalinde.ru/api/products/reviews/${productId}/?sort_by=${sortBy}&limit=10&page=1`,
+        `/api/products/reviews?${params.toString()}`,
       );
 
       if (!response.ok) {

@@ -34,13 +34,10 @@ export default function PromoBanner() {
   useEffect(() => {
     const fetchBanner = async () => {
       try {
-        const response = await fetch(
-          "https://aldalinde.ru/api/products/get_banner",
-          {
-            method: "GET",
-            cache: "no-store",
-          },
-        );
+        const response = await fetch("/api/products/banner", {
+          method: "GET",
+          cache: "no-store",
+        });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status} ${response.statusText}`);
         }
