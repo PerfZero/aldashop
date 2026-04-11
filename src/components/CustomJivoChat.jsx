@@ -290,7 +290,7 @@ export default function CustomJivoChat() {
   const showWelcome = visibleMessages.length === 0;
 
   return (
-    <div className={styles.wrap}>
+    <div className={`${styles.wrap} ${isOpen ? styles.wrapOpen : ""}`}>
       {isOpen && (
         <section
           className={styles.panel}
