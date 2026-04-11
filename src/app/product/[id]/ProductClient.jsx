@@ -15,6 +15,9 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+const CATALOG_RETURN_CONTEXT_KEY = "catalogReturnContext";
+const CATALOG_BACK_PENDING_KEY = "catalogBackPending";
+
 const toAbsoluteMedia = (url) => {
   if (!url) return null;
   return url.startsWith("http") ? url : `https://aldalinde.ru${url}`;
@@ -45,10 +48,51 @@ const normalizePromotionsMessages = (messages) => {
     .filter(Boolean);
 };
 
+function normalizeMaterialToken(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
 const getMaterialLabel = (material) => {
   if (!material) return "Не указан";
   const name = material.title_material || material.title || "Материал";
-  return material.title_color ? `${name}, ${material.title_color}` : name;
+  const color = material.title_color;
+  if (color && normalizeMaterialToken(color) !== normalizeMaterialToken(name)) {
+    return `${name}, ${color}`;
+  }
+  return name;
+};
+
+const resolveMaterialMeta = (material) => {
+  const name = material?.title_material || material?.title || "Материал";
+  const color = material?.title_color || "";
+  const normalizedName = normalizeMaterialToken(name);
+  const normalizedColor = normalizeMaterialToken(color);
+  const safeColor = normalizedColor && normalizedColor !== normalizedName ? color : "";
+
+  return {
+    name,
+    color: safeColor,
+    fullLabel: safeColor ? `${name}, ${safeColor}` : name,
+  };
+};
+
+const shouldShowMaterialDescription = (description, materialMeta) => {
+  if (!description) return false;
+  const normalizedDescription = normalizeMaterialToken(description);
+  if (!normalizedDescription) return false;
+
+  const nameToken = normalizeMaterialToken(materialMeta?.name);
+  const colorToken = normalizeMaterialToken(materialMeta?.color);
+
+  if (normalizedDescription === nameToken) return false;
+  if (colorToken && normalizedDescription === `${nameToken}, ${colorToken}`) {
+    return false;
+  }
+
+  return true;
 };
 
 const formatPrice = (price) => {
@@ -57,6 +101,65 @@ const formatPrice = (price) => {
   }
 
   return `${new Intl.NumberFormat("ru-RU").format(price)} ₽`;
+};
+
+const parsePriceNumber = (value) => {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const cleanedValue = value
+      .replace(/\s+/g, "")
+      .replace(",", ".")
+      .replace(/[^\d.-]/g, "");
+    const parsed = Number(cleanedValue);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+
+  return null;
+};
+
+const resolvePriceState = (priceValue, discountedPriceValue) => {
+  const price = parsePriceNumber(priceValue);
+  const discountedPrice = parsePriceNumber(discountedPriceValue);
+  const hasPrice = price !== null && price > 0;
+  const hasDiscountedPrice = discountedPrice !== null && discountedPrice > 0;
+
+  if (hasPrice && hasDiscountedPrice && discountedPrice !== price) {
+    const currentPrice = Math.min(price, discountedPrice);
+    const oldPrice = Math.max(price, discountedPrice);
+
+    return {
+      currentPrice,
+      oldPrice,
+      hasDiscount: true,
+    };
+  }
+
+  if (hasPrice) {
+    return {
+      currentPrice: price,
+      oldPrice: null,
+      hasDiscount: false,
+    };
+  }
+
+  if (hasDiscountedPrice) {
+    return {
+      currentPrice: discountedPrice,
+      oldPrice: null,
+      hasDiscount: false,
+    };
+  }
+
+  return {
+    currentPrice: 0,
+    oldPrice: null,
+    hasDiscount: false,
+  };
 };
 
 const resolvePhotoValue = (photo) => {
@@ -81,8 +184,7 @@ const resolvePhotoValue = (photo) => {
 const pickMainPhoto = (photos = []) =>
   photos.find((photo) => photo?.main_photo) || photos[0] || null;
 
-const pickHoverPhoto = (photos = []) =>
-  photos.find((photo) => photo?.photo_interior) || photos[1] || null;
+const pickHoverPhoto = (photos = []) => photos[1] || null;
 
 const normalizeRecommendationItem = (item) => {
   const recommendation = item?.product || item;
@@ -101,32 +203,34 @@ const normalizeRecommendationItem = (item) => {
   const primaryPhoto = resolvePhotoValue(
     recommendation.photo?.photo ||
       recommendation.photo ||
-      recommendation.material_photo?.photo_material ||
       item?.image ||
       item?.photo ||
       item?.photo1 ||
-      item?.image1,
+      item?.image1 ||
+      recommendation.material_photo?.photo_material,
   );
   const hoverPhoto = resolvePhotoValue(
     hoverPhotoFromCollection ||
-      recommendation.photo_interior ||
       recommendation.photo_2 ||
       recommendation.photo2 ||
-      item?.photo_interior ||
       item?.photo_2 ||
       item?.photo2 ||
       item?.image2 ||
       item?.second_image ||
       item?.second_photo,
   );
-  const finalPrimaryPhoto = primaryPhoto || primaryPhotoFromCollection;
+  const finalPrimaryPhoto = primaryPhotoFromCollection || primaryPhoto;
   const finalHoverPhoto =
     hoverPhoto && hoverPhoto !== finalPrimaryPhoto ? hoverPhoto : "";
+  const priceState = resolvePriceState(
+    recommendation.price,
+    recommendation.discounted_price,
+  );
 
   return {
     id: recommendation.id,
     title: recommendation.title || item?.title || "Товар",
-    price: Number(recommendation.discounted_price ?? recommendation.price ?? 0),
+    price: priceState.currentPrice,
     photo: finalPrimaryPhoto,
     hoverPhoto: finalHoverPhoto,
     bestseller: Boolean(
@@ -253,7 +357,6 @@ export default function ProductClient({
   const [showProductInfo, setShowProductInfo] = useState(true);
   const [showActualSizes, setShowActualSizes] = useState(true);
   const [isChangingOptions, setIsChangingOptions] = useState(false);
-  const [canScrollThumbsDown, setCanScrollThumbsDown] = useState(false);
   const [recommendationScrollProgress, setRecommendationScrollProgress] =
     useState({
       thumbWidth: 32,
@@ -287,6 +390,17 @@ export default function ProductClient({
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  useEffect(() => {
+    const markBackToCatalog = () => {
+      const rawContext = sessionStorage.getItem(CATALOG_RETURN_CONTEXT_KEY);
+      if (!rawContext) return;
+      sessionStorage.setItem(CATALOG_BACK_PENDING_KEY, "1");
+    };
+
+    window.addEventListener("popstate", markBackToCatalog);
+    return () => window.removeEventListener("popstate", markBackToCatalog);
   }, []);
 
   useEffect(() => {
@@ -623,14 +737,17 @@ export default function ProductClient({
   const handleAddToCart = async () => {
     if (!product) return;
 
-    const price = product.discounted_price || product.price;
+    const { currentPrice } = resolvePriceState(
+      product.price,
+      product.discounted_price,
+    );
     const mainPhoto =
       product.photos?.find((photo) => photo.main_photo) || product.photos?.[0];
 
     const productToAdd = {
       id: product.id,
       name: product.title,
-      price: price,
+      price: currentPrice,
       image: mainPhoto?.photo || "/sofa.png",
       color: selectedColor?.title || "Стандартный",
       material: getMaterialLabel(selectedMaterial),
@@ -660,12 +777,15 @@ export default function ProductClient({
 
     const mainPhoto =
       product.photos?.find((photo) => photo.main_photo) || product.photos?.[0];
-    const price = product.discounted_price || product.price;
+    const { currentPrice } = resolvePriceState(
+      product.price,
+      product.discounted_price,
+    );
 
     const productToToggle = {
       id: product.id,
       name: product.title,
-      price: price,
+      price: currentPrice,
       image: mainPhoto?.photo || "/sofa.png",
       color: selectedColor?.title || "Стандартный",
       material: getMaterialLabel(selectedMaterial),
@@ -759,33 +879,6 @@ export default function ProductClient({
   const hasGalleryMedia = galleryMedia.length > 0;
   const hasDisplayPhotos = displayPhotos.length > 0;
 
-  useEffect(() => {
-    if (isMobile) {
-      setCanScrollThumbsDown(false);
-      return undefined;
-    }
-
-    const rail = thumbsRailRef.current;
-    if (!rail) return undefined;
-
-    const updateThumbsOverflowState = () => {
-      const hasMoreBelow =
-        rail.scrollTop + rail.clientHeight < rail.scrollHeight - 4;
-      setCanScrollThumbsDown(hasMoreBelow);
-    };
-
-    updateThumbsOverflowState();
-    rail.addEventListener("scroll", updateThumbsOverflowState, {
-      passive: true,
-    });
-    window.addEventListener("resize", updateThumbsOverflowState);
-
-    return () => {
-      rail.removeEventListener("scroll", updateThumbsOverflowState);
-      window.removeEventListener("resize", updateThumbsOverflowState);
-    };
-  }, [galleryMedia.length, isMobile, product?.id]);
-
   const openLightbox = (index) => {
     setLightboxIndex(index);
     setIsLightboxOpen(true);
@@ -811,20 +904,22 @@ export default function ProductClient({
     scrollToDesktopImage(activeDesktopImage + 1);
   };
 
-  const scrollThumbsRailDown = () => {
-    const rail = thumbsRailRef.current;
-    if (!rail) return;
-
-    rail.scrollBy({
-      top: Math.max(rail.clientHeight - 96, 180),
-      behavior: "smooth",
-    });
-  };
-
-  const hasDiscount =
-    product.discounted_price && product.discounted_price !== null;
-  const originalPrice = product.price?.toLocaleString("ru-RU");
-  const discountedPrice = product.discounted_price?.toLocaleString("ru-RU");
+  const productPriceState = resolvePriceState(
+    product.price,
+    product.discounted_price,
+  );
+  const hasDiscount = productPriceState.hasDiscount;
+  const originalPrice =
+    productPriceState.oldPrice?.toLocaleString("ru-RU") ||
+    productPriceState.currentPrice.toLocaleString("ru-RU");
+  const discountedPrice =
+    productPriceState.currentPrice.toLocaleString("ru-RU");
+  const selectedMaterialMeta = resolveMaterialMeta(selectedMaterial);
+  const hoveredMaterialMeta = resolveMaterialMeta(hoveredMaterial);
+  const showHoveredMaterialDescription = shouldShowMaterialDescription(
+    product.material_description,
+    hoveredMaterialMeta,
+  );
 
   return (
     <>
@@ -883,31 +978,6 @@ export default function ProductClient({
                       </button>
                     ))}
                   </div>
-                  {canScrollThumbsDown ? (
-                    <button
-                      type="button"
-                      className={styles.product__thumbs_more}
-                      onClick={scrollThumbsRailDown}
-                      aria-label="Показать еще фотографии"
-                    >
-                      <svg
-                        width="18"
-                        height="18"
-                        viewBox="0 0 20 20"
-                        fill="none"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M4 7L10 13L16 7"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  ) : null}
                 </div>
 
                 <div className={styles.product__gallery_stack}>
@@ -1148,11 +1218,7 @@ export default function ProductClient({
                 <h3 className={styles.product__section_title}>
                   Материалы:{" "}
                   <span className={styles.product__material_name}>
-                    {selectedMaterial?.title_material ||
-                      selectedMaterial?.title}
-                    {selectedMaterial?.title_color
-                      ? `, ${selectedMaterial.title_color}`
-                      : ""}
+                    {selectedMaterialMeta.fullLabel}
                   </span>
                 </h3>
                 <div
@@ -1165,7 +1231,7 @@ export default function ProductClient({
                       <div className={styles.product__materials_preview_image}>
                         <Image
                           src={toAbsoluteMedia(hoveredMaterial.photo_material)}
-                          alt={`${hoveredMaterial.title_material || "Материал"}${hoveredMaterial.title_color ? `, ${hoveredMaterial.title_color}` : ""}`}
+                          alt={hoveredMaterialMeta.fullLabel}
                           fill
                           unoptimized
                           className={styles.product__materials_preview_photo}
@@ -1176,13 +1242,12 @@ export default function ProductClient({
                         className={styles.product__materials_preview_caption}
                       >
                         <span>
-                          Материал:{" "}
-                          {hoveredMaterial.title_material || "Не указан"}
+                          Материал: {hoveredMaterialMeta.name || "Не указан"}
                         </span>
-                        {hoveredMaterial.title_color && (
-                          <span>Цвет: {hoveredMaterial.title_color}</span>
+                        {hoveredMaterialMeta.color && (
+                          <span>Цвет: {hoveredMaterialMeta.color}</span>
                         )}
-                        {product.material_description && (
+                        {showHoveredMaterialDescription && (
                           <span
                             className={
                               styles.product__materials_preview_description
@@ -1196,29 +1261,33 @@ export default function ProductClient({
                   ) : null}
                 </div>
                 <div className={styles.product__materials_list}>
-                  {product.available_materials.map((material) => (
-                    <button
-                      key={material.id}
-                      className={`${styles.product__material} ${selectedMaterial?.id === material.id ? styles.product__material_active : ""}`}
-                      onClick={() => handleMaterialChange(material)}
-                      onMouseEnter={() => setHoveredMaterial(material)}
-                      onFocus={() => setHoveredMaterial(material)}
-                      onBlur={() => setHoveredMaterial(null)}
-                      disabled={loading || isChangingOptions}
-                      title={`${material.title_material || "Материал"}${material.title_color ? `, ${material.title_color}` : ""}`}
-                    >
-                      {toAbsoluteMedia(material.photo_material) ? (
-                        <Image
-                          src={toAbsoluteMedia(material.photo_material)}
-                          alt={material.title_material || "Материал"}
-                          fill
-                          unoptimized
-                          className={styles.product__material_photo}
-                          sizes="94px"
-                        />
-                      ) : null}
-                    </button>
-                  ))}
+                  {product.available_materials.map((material) => {
+                    const materialMeta = resolveMaterialMeta(material);
+
+                    return (
+                      <button
+                        key={material.id}
+                        className={`${styles.product__material} ${selectedMaterial?.id === material.id ? styles.product__material_active : ""}`}
+                        onClick={() => handleMaterialChange(material)}
+                        onMouseEnter={() => setHoveredMaterial(material)}
+                        onFocus={() => setHoveredMaterial(material)}
+                        onBlur={() => setHoveredMaterial(null)}
+                        disabled={loading || isChangingOptions}
+                        title={materialMeta.fullLabel}
+                      >
+                        {toAbsoluteMedia(material.photo_material) ? (
+                          <Image
+                            src={toAbsoluteMedia(material.photo_material)}
+                            alt={materialMeta.fullLabel}
+                            fill
+                            unoptimized
+                            className={styles.product__material_photo}
+                            sizes="94px"
+                          />
+                        ) : null}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1291,11 +1360,7 @@ export default function ProductClient({
                         В корзину -
                       </span>
                       <span className={styles.product__cart_button_price}>
-                        {(
-                          product.discounted_price ||
-                          product.price ||
-                          0
-                        ).toLocaleString("ru-RU")}
+                        {productPriceState.currentPrice.toLocaleString("ru-RU")}
                         <span>₽</span>
                       </span>
                     </>
@@ -1305,12 +1370,12 @@ export default function ProductClient({
             </button>
           </div>
           {product.production_time && (
-            <div className={styles.product__detail}>
-              <span className={styles.product__detail_label}>
-                Сроки доставки:
+            <div className={styles.product__lead_time}>
+              <span className={styles.product__lead_time_title}>
+                Срок выполнения заказа — от 5 рабочих недель
               </span>
-              <span className={styles.product__detail_value}>
-                {product.production_time}{" "}
+              <span className={styles.product__lead_time_note}>
+                включая изготовление и доставку
               </span>
             </div>
           )}

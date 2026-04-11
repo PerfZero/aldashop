@@ -29,9 +29,57 @@ import { useFilters } from "@/hooks/useFilters";
 import styles from "./page.module.css";
 
 const SIZE_LABELS = { width: "Ширина", height: "Высота", depth: "Глубина" };
+const CATALOG_RETURN_CONTEXT_KEY = "catalogReturnContext";
+const CATALOG_BACK_PENDING_KEY = "catalogBackPending";
+const MAX_CATALOG_RETURN_CONTEXT_AGE = 2 * 60 * 1000;
 
-function buildSelectedFilterChips(appliedFilters, filters) {
-  const chips = [];
+function clearCatalogReturnContext() {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(CATALOG_RETURN_CONTEXT_KEY);
+  sessionStorage.removeItem(CATALOG_BACK_PENDING_KEY);
+  sessionStorage.removeItem("catalogScrollPosition");
+}
+
+function readCatalogReturnContext() {
+  if (typeof window === "undefined") return null;
+  const isBackPending =
+    sessionStorage.getItem(CATALOG_BACK_PENDING_KEY) === "1";
+  if (!isBackPending) return null;
+
+  const rawContext = sessionStorage.getItem(CATALOG_RETURN_CONTEXT_KEY);
+  if (!rawContext) {
+    clearCatalogReturnContext();
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawContext);
+    const timestamp = Number(parsed?.timestamp);
+    if (
+      Number.isFinite(timestamp) &&
+      Date.now() - timestamp > MAX_CATALOG_RETURN_CONTEXT_AGE
+    ) {
+      clearCatalogReturnContext();
+      return null;
+    }
+
+    if (!parsed?.url) {
+      clearCatalogReturnContext();
+      return null;
+    }
+
+    return {
+      url: parsed.url,
+      scrollY: Number(parsed.scrollY) || 0,
+    };
+  } catch {
+    clearCatalogReturnContext();
+    return null;
+  }
+}
+
+function buildSelectedFilterGroups(appliedFilters, filters) {
+  const groups = [];
 
   for (const [key, value] of Object.entries(appliedFilters)) {
     if (key === "in_stock" || value === undefined || value === null) continue;
@@ -45,11 +93,10 @@ function buildSelectedFilterChips(appliedFilters, filters) {
         parts.push(`до ${value.max.toLocaleString("ru-RU")} ₽`);
       }
       if (parts.length) {
-        chips.push({
+        groups.push({
           key: "price",
-          valueId: "price",
           label: "Цена",
-          text: parts.join(" "),
+          values: [{ id: "price", text: parts.join(" ") }],
         });
       }
       continue;
@@ -61,11 +108,10 @@ function buildSelectedFilterChips(appliedFilters, filters) {
         if (range?.min != null) parts.push(`от ${range.min}`);
         if (range?.max != null) parts.push(`до ${range.max}`);
         if (parts.length) {
-          chips.push({
+          groups.push({
             key: `sizes.${dim}`,
-            valueId: dim,
             label: SIZE_LABELS[dim] || dim,
-            text: parts.join(" "),
+            values: [{ id: dim, text: parts.join(" ") }],
           });
         }
       }
@@ -73,11 +119,10 @@ function buildSelectedFilterChips(appliedFilters, filters) {
     }
 
     if (key === "bestseller" && value === true) {
-      chips.push({
+      groups.push({
         key: "bestseller",
-        valueId: "bestseller",
         label: "Хит коллекции",
-        text: null,
+        values: [{ id: "bestseller", text: "Да" }],
       });
       continue;
     }
@@ -85,21 +130,17 @@ function buildSelectedFilterChips(appliedFilters, filters) {
     if (Array.isArray(value) && value.length > 0) {
       const filterGroup = filters.find((filterItem) => filterItem.slug === key);
       const label = filterGroup?.title || key;
-
-      value.forEach((id) => {
-        chips.push({
-          key,
-          valueId: id,
-          label,
-          text:
-            filterGroup?.options?.find((option) => option.id === id)?.title ||
-            String(id),
-        });
-      });
+      const values = value.map((id) => ({
+        id,
+        text:
+          filterGroup?.options?.find((option) => option.id === id)?.title ||
+          String(id),
+      }));
+      groups.push({ key, label, values });
     }
   }
 
-  return chips;
+  return groups;
 }
 
 function removeSelectedFilter(appliedFilters, groupKey, valueId) {
@@ -119,7 +160,9 @@ function removeSelectedFilter(appliedFilters, groupKey, valueId) {
       updated.sizes = sizes;
     }
   } else {
-    const nextValues = (updated[groupKey] || []).filter((id) => id !== valueId);
+    const nextValues = (updated[groupKey] || []).filter(
+      (id) => String(id) !== String(valueId),
+    );
     if (nextValues.length === 0) {
       delete updated[groupKey];
     } else {
@@ -139,6 +182,7 @@ function CategoryPageContent() {
   const [sortBy, setSortBy] = useState(3);
   const [showFilters, setShowFilters] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [hasUserAppliedFilters, setHasUserAppliedFilters] = useState(false);
 
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
@@ -206,6 +250,8 @@ function CategoryPageContent() {
   );
 
   const products = data?.products || [];
+  const totalCount = data?.totalCount || 0;
+  const resultsCount = totalCount > 0 ? totalCount : products.length;
   const totalPages = data?.totalPages || 1;
 
   const loading = categoriesLoading || filtersLoading || isProductsLoading;
@@ -227,31 +273,38 @@ function CategoryPageContent() {
   }, [currentPage, totalPages]);
 
   useEffect(() => {
-    const savedPosition = sessionStorage.getItem("catalogScrollPosition");
-    if (
-      savedPosition &&
-      !isProductsLoading &&
-      products.length > 0 &&
-      !scrollRestoredRef.current
-    ) {
-      const scrollPosition = parseInt(savedPosition, 10);
-      scrollRestoredRef.current = true;
+    const context = readCatalogReturnContext();
+    if (!context) return;
 
-      const restoreScroll = () => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo({
-              top: scrollPosition,
-              behavior: "instant",
-            });
-            sessionStorage.removeItem("catalogScrollPosition");
-          });
-        });
-      };
-
-      setTimeout(restoreScroll, 200);
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== context.url) {
+      window.location.replace(context.url);
     }
-  }, [isProductsLoading, products.length]);
+  }, []);
+
+  useEffect(() => {
+    const context = readCatalogReturnContext();
+    if (!context || isProductsLoading || scrollRestoredRef.current) return;
+
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== context.url) return;
+
+    scrollRestoredRef.current = true;
+
+    const restoreScroll = () => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({
+            top: context.scrollY,
+            behavior: "instant",
+          });
+          clearCatalogReturnContext();
+        });
+      });
+    };
+
+    setTimeout(restoreScroll, 200);
+  }, [isProductsLoading]);
 
   useEffect(() => {
     if (sort !== undefined && sort !== null) {
@@ -490,6 +543,7 @@ function CategoryPageContent() {
   };
 
   const handleFiltersApply = (newFilters) => {
+    setHasUserAppliedFilters(true);
     setAppliedFilters(newFilters);
     // Сбрасываем dynamicFilters, чтобы он не перекрывал appliedFilters в stablePayload
     setDynamicFilters({});
@@ -529,6 +583,7 @@ function CategoryPageContent() {
 
   useEffect(() => {
     scrollRestoredRef.current = false;
+    setHasUserAppliedFilters(false);
   }, [slugDep]);
 
   useEffect(() => {
@@ -727,12 +782,14 @@ function CategoryPageContent() {
           ? currentCategory.photo_cover
           : `https://aldalinde.ru${currentCategory.photo_cover}`
         : null;
-  const activeCategoryTitle =
-    currentSubcategory?.title || currentCategory?.title;
   const categoryResetHref = currentSubcategory
     ? `/categories/${currentCategory?.slug}/all`
     : "/categories";
-  const selectedFilterChips = buildSelectedFilterChips(appliedFilters, filters);
+  const selectedFilterGroups = buildSelectedFilterGroups(appliedFilters, filters);
+  const appliedFiltersCount = selectedFilterGroups.reduce(
+    (acc, group) => acc + (group.values?.length || 0),
+    0,
+  );
   const showHero = heroTitle || heroDescription || heroPhoto;
   const isLoadingHero =
     categoriesLoading && !currentCategory && !currentSubcategory;
@@ -821,79 +878,75 @@ function CategoryPageContent() {
             <span suppressHydrationWarning>
               {showFilters ? "Спрятать фильтры" : "Показать фильтры"}
             </span>
+            {appliedFiltersCount > 0 && (
+              <span className={styles.filters__count} aria-label={`Применено фильтров: ${appliedFiltersCount}`}>
+                <span className={styles.filters__countBg} aria-hidden="true" />
+                <span className={styles.filters__countValue}>{appliedFiltersCount}</span>
+              </span>
+            )}
           </button>
 
-          {activeCategoryTitle && (
-            <div className={styles.controls__chip}>
-              <span className={styles.controls__chipLabel}>Категория:</span>
-              <span className={styles.controls__chipText}>
-                {activeCategoryTitle}
-              </span>
-              <Link
-                className={styles.controls__chipAction}
-                href={categoryResetHref}
-                aria-label="Сбросить категорию"
-              >
-                <img
-                  className={styles.controls__chipIcon}
-                  src="/catalog-chip-close.svg"
-                  alt=""
-                  aria-hidden="true"
-                />
+          {hasUserAppliedFilters && selectedFilterGroups.length > 0 && (
+            <>
+              {selectedFilterGroups.map((group) => (
+                <div key={group.key} className={styles.controls__chip}>
+                  <span className={styles.controls__chipLabel}>{group.label}:</span>
+                  <div className={styles.controls__chipValues}>
+                    {group.values.map((value) => (
+                      <span
+                        key={`${group.key}-${value.id}`}
+                        className={styles.controls__chipValueItem}
+                      >
+                        <span className={styles.controls__chipText}>{value.text}</span>
+                        <button
+                          type="button"
+                          className={styles.controls__chipRemove}
+                          onClick={() =>
+                            handleFiltersApply(
+                              removeSelectedFilter(
+                                appliedFilters,
+                                group.key,
+                                value.id,
+                              ),
+                            )
+                          }
+                          aria-label={`Удалить фильтр ${group.label}`}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              <Link className={styles.controls__reset} href={categoryResetHref}>
+                <span className={styles.controls__resetIcon} aria-hidden="true">
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 17 17"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M15.422 4.48928C14.4493 2.81049 12.8996 1.54242 11.0615 0.921173C9.22343 0.29993 7.22221 0.367858 5.43047 1.11231C3.63874 1.85676 2.17862 3.22699 1.32197 4.96787C0.465329 6.70876 0.27055 8.70163 0.773905 10.5754C1.27726 12.4492 2.44444 14.0763 4.05812 15.1535C5.6718 16.2308 7.622 16.685 9.54559 16.4314C11.4692 16.1778 13.2351 15.2338 14.5144 13.7751C15.7938 12.3164 16.4994 10.4425 16.5 8.50228"
+                      stroke="#D25C1B"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M11.5 4.50232H15.5V0.502319"
+                      stroke="#D25C1B"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span>Сбросить всё</span>
               </Link>
-            </div>
+            </>
           )}
-
-          {selectedFilterChips.map((chip) => (
-            <button
-              key={`${chip.key}-${chip.valueId}`}
-              className={styles.controls__chip}
-              onClick={() =>
-                handleFiltersApply(
-                  removeSelectedFilter(appliedFilters, chip.key, chip.valueId),
-                )
-              }
-              type="button"
-              aria-label={`Удалить фильтр ${chip.label}`}
-            >
-              <span className={styles.controls__chipLabel}>{chip.label}:</span>
-              {chip.text && (
-                <span className={styles.controls__chipText}>{chip.text}</span>
-              )}
-              <img
-                className={styles.controls__chipIcon}
-                src="/catalog-chip-close.svg"
-                alt=""
-                aria-hidden="true"
-              />
-            </button>
-          ))}
-
-          <Link className={styles.controls__reset} href={categoryResetHref}>
-            <span className={styles.controls__resetIcon} aria-hidden="true">
-              <svg
-                width="17"
-                height="17"
-                viewBox="0 0 17 17"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M15.422 4.48928C14.4493 2.81049 12.8996 1.54242 11.0615 0.921173C9.22343 0.29993 7.22221 0.367858 5.43047 1.11231C3.63874 1.85676 2.17862 3.22699 1.32197 4.96787C0.465329 6.70876 0.27055 8.70163 0.773905 10.5754C1.27726 12.4492 2.44444 14.0763 4.05812 15.1535C5.6718 16.2308 7.622 16.685 9.54559 16.4314C11.4692 16.1778 13.2351 15.2338 14.5144 13.7751C15.7938 12.3164 16.4994 10.4425 16.5 8.50228"
-                  stroke="#D25C1B"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M11.5 4.50232H15.5V0.502319"
-                  stroke="#D25C1B"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span>Сбросить всё</span>
-          </Link>
         </div>
 
         <div className={styles.controls__sort}>
@@ -935,6 +988,7 @@ function CategoryPageContent() {
           onApply={handleFiltersApply}
           appliedFilters={appliedFilters}
           categories={categories}
+          resultsCount={resultsCount}
         />
         <div className={styles.productsArea}>
           <div

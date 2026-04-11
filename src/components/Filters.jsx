@@ -5,6 +5,12 @@ import RangeSlider from "./RangeSlider";
 import FiltersSkeleton from "./FiltersSkeleton";
 import styles from "./Filters.module.css";
 
+const SIZE_LABELS = {
+  width: "Ширина",
+  height: "Высота",
+  depth: "Глубина",
+};
+
 export default function Filters({
   isVisible,
   onClose,
@@ -14,6 +20,7 @@ export default function Filters({
   onApply,
   appliedFilters = {},
   categories = [],
+  resultsCount = 0,
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -82,6 +89,94 @@ export default function Filters({
     });
   }, [filters]);
 
+  const selectedGroups = useMemo(() => {
+    const groups = [];
+
+    if (isCategoriesPage) {
+      const categoryId = searchParams.get("category_id");
+      const subcategoryId = searchParams.get("subcategory_id");
+      if (categoryId) {
+        const category = categories.find((item) => String(item.id) === categoryId);
+        const subcategory = category?.subcategories?.find(
+          (item) => String(item.id) === subcategoryId,
+        );
+        const categoryValue = subcategory?.title || category?.title;
+        if (categoryValue) {
+          groups.push({
+            key: "__category__",
+            label: "Категория",
+            values: [{ id: subcategory?.id || category?.id, text: categoryValue }],
+          });
+        }
+      }
+    }
+
+    Object.entries(tempFilters).forEach(([key, value]) => {
+      if (key === "in_stock" || value === undefined || value === null) return;
+      const filterGroup = filters.find((item) => item.slug === key);
+      const groupLabel = filterGroup?.title || key;
+
+      if (Array.isArray(value) && value.length > 0) {
+        groups.push({
+          key,
+          label: groupLabel,
+          values: value.map((id) => ({
+            id,
+            text: filterGroup?.options?.find((option) => option.id === id)?.title || String(id),
+          })),
+        });
+        return;
+      }
+
+      if (key === "price" && typeof value === "object") {
+        const parts = [];
+        if (value.min != null) parts.push(`от ${value.min.toLocaleString("ru-RU")} ₽`);
+        if (value.max != null) parts.push(`до ${value.max.toLocaleString("ru-RU")} ₽`);
+        if (parts.length) {
+          groups.push({
+            key,
+            label: groupLabel,
+            values: [{ id: "price", text: parts.join(" ") }],
+          });
+        }
+        return;
+      }
+
+      if (key === "sizes" && typeof value === "object") {
+        Object.entries(value).forEach(([dimension, range]) => {
+          const min = range?.min;
+          const max = range?.max;
+          if (min == null && max == null) return;
+          const parts = [];
+          if (min != null) parts.push(`от ${min} см`);
+          if (max != null) parts.push(`до ${max} см`);
+          groups.push({
+            key: `sizes.${dimension}`,
+            label: SIZE_LABELS[dimension] || dimension,
+            values: [{ id: dimension, text: parts.join(" ") }],
+          });
+        });
+        return;
+      }
+
+      if (typeof value === "boolean" && value) {
+        groups.push({
+          key,
+          label: groupLabel,
+          values: [{ id: key, text: "Да" }],
+        });
+      }
+    });
+
+    return groups;
+  }, [
+    categories,
+    filters,
+    isCategoriesPage,
+    searchParams,
+    tempFilters,
+  ]);
+
   const filterKeys = useMemo(() => {
     return filteredFilters
       .map((f) => f.slug)
@@ -137,8 +232,9 @@ export default function Filters({
 
   const handleReset = () => {
     setTempFilters({});
+    setInStockDelivery(false);
     if (onApply) {
-      onApply(inStockDelivery ? { in_stock: true } : {});
+      onApply({});
     }
   };
 
@@ -190,7 +286,49 @@ export default function Filters({
     [tempFilters, inStockDelivery, filters],
   );
 
+  const removeSelectedValue = useCallback(
+    (groupKey, valueId) => {
+      if (groupKey === "__category__") {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("category_id");
+        url.searchParams.delete("subcategory_id");
+        router.push(url.pathname + url.search, { scroll: false });
+        return;
+      }
+
+      const nextTempFilters = { ...tempFilters };
+
+      if (groupKey.startsWith("sizes.")) {
+        const sizeKey = groupKey.replace("sizes.", "");
+        const nextSizes = { ...(nextTempFilters.sizes || {}) };
+        delete nextSizes[sizeKey];
+        if (Object.keys(nextSizes).length === 0) {
+          delete nextTempFilters.sizes;
+        } else {
+          nextTempFilters.sizes = nextSizes;
+        }
+      } else if (Array.isArray(nextTempFilters[groupKey])) {
+        const nextValues = nextTempFilters[groupKey].filter(
+          (id) => String(id) !== String(valueId),
+        );
+        if (nextValues.length === 0) {
+          delete nextTempFilters[groupKey];
+        } else {
+          nextTempFilters[groupKey] = nextValues;
+        }
+      } else {
+        delete nextTempFilters[groupKey];
+      }
+
+      setTempFilters(nextTempFilters);
+    },
+    [router, tempFilters],
+  );
+
   const handleApply = () => {
+    if (onApply) {
+      onApply(buildFinalFilters());
+    }
     if (window.innerWidth <= 768) {
       onClose();
     }
@@ -228,6 +366,31 @@ export default function Filters({
       </div>
 
       <div className={styles.filters__content}>
+        {selectedGroups.length > 0 && (
+          <div className={styles.selectedGroups}>
+            {selectedGroups.map((group) => (
+              <div key={group.key} className={styles.selectedGroup}>
+                <span className={styles.selectedGroupLabel}>{group.label}:</span>
+                <div className={styles.selectedGroupValues}>
+                  {group.values.map((val) => (
+                    <span key={`${group.key}-${val.id}`} className={styles.selectedChip}>
+                      <span className={styles.selectedChipText}>{val.text}</span>
+                      <button
+                        type="button"
+                        className={styles.selectedChipRemove}
+                        onClick={() => removeSelectedValue(group.key, val.id)}
+                        aria-label={`Удалить ${val.text}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className={styles.filter}>
           <label className={styles.toggleLabel}>
             <input
@@ -236,7 +399,6 @@ export default function Filters({
               onChange={() => {
                 const newValue = !inStockDelivery;
                 setInStockDelivery(newValue);
-                if (onApply) onApply(buildFinalFilters(tempFilters, newValue));
               }}
               className={styles.toggleInput}
             />
@@ -509,8 +671,6 @@ export default function Filters({
                                       : undefined,
                                 };
                                 setTempFilters(newTempFilters);
-                                if (onApply)
-                                  onApply(buildFinalFilters(newTempFilters));
                               }}
                               className={styles.checkboxInput}
                             />
@@ -535,8 +695,6 @@ export default function Filters({
                             [filter.slug]: e.target.checked,
                           };
                           setTempFilters(newTempFilters);
-                          if (onApply)
-                            onApply(buildFinalFilters(newTempFilters));
                         }}
                         className={styles.checkboxInput}
                       />
@@ -586,8 +744,6 @@ export default function Filters({
                               },
                             };
                             setTempFilters(newTempFilters);
-                            if (onApply)
-                              onApply(buildFinalFilters(newTempFilters));
                           }}
                         />
                       </div>
@@ -611,7 +767,6 @@ export default function Filters({
                           [filter.slug]: { min: minVal, max: maxVal },
                         };
                         setTempFilters(newTempFilters);
-                        if (onApply) onApply(buildFinalFilters(newTempFilters));
                       }}
                     />
                   </div>
@@ -641,8 +796,6 @@ export default function Filters({
                               [filter.slug]: newValues,
                             };
                             setTempFilters(newTempFilters);
-                            if (onApply)
-                              onApply(buildFinalFilters(newTempFilters));
                           }}
                           title={
                             isDisabled
@@ -670,12 +823,13 @@ export default function Filters({
       </div>
 
       <div className={styles.filters__footer}>
+        <div className={styles.filters__results}>Найдено товаров: {resultsCount}</div>
         <button
           type="button"
           className={`${styles.filters__button} ${styles.filters__button_cancel}`}
           onClick={handleReset}
         >
-          Сброс
+          Сбросить
         </button>
         <button
           type="button"

@@ -167,27 +167,6 @@
     display: none;
 }
 
-.product__thumbs_more {
-    width: 40px;
-    height: 40px;
-    border-radius: 999px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(255, 255, 255, 0.94);
-    border: 1px solid rgba(60, 16, 30, 0.14);
-    color: #3c101e;
-    box-shadow: 0 10px 22px rgba(24, 11, 13, 0.14);
-    transition:
-        transform 0.2s ease,
-        background-color 0.2s ease;
-}
-
-.product__thumbs_more:hover {
-    background: #fff;
-    transform: translateY(2px);
-}
-
 .product__thumb_rail_item {
     width: 84px;
     height: 84px;
@@ -788,6 +767,30 @@
     color: #323433;
 }
 
+.product__lead_time {
+    margin-top: 8px;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.product__lead_time_title {
+    font-family: var(--font-playfair-display), serif;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #3c101e;
+}
+
+.product__lead_time_note {
+    font-family: var(--font-playfair-display), serif;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #9b9b9b;
+}
+
 .product__section_title .product__size_name {
     font-family: "Tenor Sans", sans-serif;
     font-weight: 400;
@@ -1331,10 +1334,6 @@
     margin-bottom: 30px;
 }
 
-/*.product__recommendations_image_wrap img {
-    mix-blend-mode: darken;
-}*/
-
 .product__recommendations_image {
     object-fit: contain;
     transition: opacity 0.35s ease;
@@ -1388,9 +1387,12 @@
     justify-content: center;
     width: 40px;
     height: 40px;
+    padding: 0;
     border: 1px solid #3c101e;
     border-radius: 50%;
+    background: transparent;
     color: #3c101e;
+    cursor: pointer;
     position: relative;
     transition: all 0.2s ease;
 }

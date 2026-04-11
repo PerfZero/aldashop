@@ -149,7 +149,7 @@
     }
 
     .sortSelect__dropdown {
-        left: auto;
+        right: auto;
     }
 
     .sortSelect__option {

@@ -464,6 +464,24 @@
     display: none;
 }
 
+.selectedGroups {
+    display: none;
+}
+
+.filters__results {
+    display: none;
+}
+
+.selectedGroup {
+    border: 1px solid rgba(132, 64, 37, 0.45);
+}
+
+.selectedGroupLabel,
+.selectedChipText,
+.selectedChipRemove {
+    font-family: var(--font-playfair-display), serif;
+}
+
 .filters__button {
     flex: 1;
     padding: 12px;
@@ -487,7 +505,7 @@
 }
 
 .filters__button_apply {
-    display: none;
+    display: block;
     background: #844025;
     border: none;
     color: #fff;
@@ -554,10 +572,74 @@
         -webkit-overflow-scrolling: touch;
     }
 
+    .selectedGroups {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 20px 12px;
+    }
+
+    .selectedGroup {
+        display: inline-flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 4px 8px;
+        padding: 6px 8px;
+        max-width: 100%;
+    }
+
+    .selectedGroupLabel {
+        font-weight: 500;
+        font-size: 13px;
+        line-height: 1.2;
+        color: #844025;
+        white-space: nowrap;
+    }
+
+    .selectedGroupValues {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2px 8px;
+    }
+
+    .selectedChip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding-right: 6px;
+        border-right: 1px solid rgba(132, 64, 37, 0.25);
+    }
+
+    .selectedChip:last-child {
+        padding-right: 0;
+        border-right: none;
+    }
+
+    .selectedChipText {
+        font-size: 13px;
+        line-height: 1.2;
+        color: #3c101e;
+        white-space: nowrap;
+    }
+
+    .selectedChipRemove {
+        background: none;
+        border: none;
+        padding: 0;
+        font-size: 18px;
+        line-height: 1;
+        color: #844025;
+        cursor: pointer;
+    }
+
     .filters__footer {
         padding: 16px;
         padding-bottom: calc(16px + env(safe-area-inset-bottom) + 24px);
         display: flex;
+        flex-wrap: wrap;
         gap: 12px;
         position: fixed;
         left: 0;
@@ -566,6 +648,15 @@
         background: #fff;
         z-index: 22139121;
         box-shadow: 0 -8px 16px rgba(0, 0, 0, 0.06);
+    }
+
+    .filters__results {
+        display: block;
+        width: 100%;
+        font-family: var(--font-playfair-display), serif;
+        font-size: 18px;
+        line-height: 1.2;
+        color: #3c101e;
     }
 
     .filters__button {
@@ -585,6 +676,7 @@
     }
 
     .filters__button_apply {
+        display: block;
         background: #844025;
         border: none;
         color: #fff;

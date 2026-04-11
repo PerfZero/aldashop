@@ -14,6 +14,99 @@ import { useNoCategoryInfo } from "@/hooks/useNoCategoryInfo";
 import styles from "./[...slug]/page.module.css";
 
 const cx = (...classes) => classes.filter(Boolean).join(" ");
+const CATALOG_RETURN_CONTEXT_KEY = "catalogReturnContext";
+const CATALOG_BACK_PENDING_KEY = "catalogBackPending";
+const MAX_CATALOG_RETURN_CONTEXT_AGE = 2 * 60 * 1000;
+
+function clearCatalogReturnContext() {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(CATALOG_RETURN_CONTEXT_KEY);
+  sessionStorage.removeItem(CATALOG_BACK_PENDING_KEY);
+  sessionStorage.removeItem("catalogScrollPosition");
+}
+
+function readCatalogReturnContext() {
+  if (typeof window === "undefined") return null;
+  const isBackPending =
+    sessionStorage.getItem(CATALOG_BACK_PENDING_KEY) === "1";
+  if (!isBackPending) return null;
+
+  const rawContext = sessionStorage.getItem(CATALOG_RETURN_CONTEXT_KEY);
+  if (!rawContext) {
+    clearCatalogReturnContext();
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(rawContext);
+    const timestamp = Number(parsed?.timestamp);
+    if (
+      Number.isFinite(timestamp) &&
+      Date.now() - timestamp > MAX_CATALOG_RETURN_CONTEXT_AGE
+    ) {
+      clearCatalogReturnContext();
+      return null;
+    }
+
+    if (!parsed?.url) {
+      clearCatalogReturnContext();
+      return null;
+    }
+
+    return {
+      url: parsed.url,
+      scrollY: Number(parsed.scrollY) || 0,
+    };
+  } catch {
+    clearCatalogReturnContext();
+    return null;
+  }
+}
+
+function countAppliedFilterItems(appliedFilters) {
+  if (!appliedFilters || typeof appliedFilters !== "object") return 0;
+
+  let count = 0;
+
+  Object.entries(appliedFilters).forEach(([key, value]) => {
+    if (key === "in_stock" || value === undefined || value === null) return;
+
+    if (Array.isArray(value)) {
+      count += value.length;
+      return;
+    }
+
+    if (key === "sizes" && typeof value === "object") {
+      Object.values(value).forEach((range) => {
+        if (range?.min != null || range?.max != null) {
+          count += 1;
+        }
+      });
+      return;
+    }
+
+    if (key === "price" && typeof value === "object") {
+      if (value?.min != null || value?.max != null) {
+        count += 1;
+      }
+      return;
+    }
+
+    if (typeof value === "boolean") {
+      if (value) count += 1;
+      return;
+    }
+
+    if (typeof value === "object") {
+      if (Object.keys(value).length > 0) count += 1;
+      return;
+    }
+
+    count += 1;
+  });
+
+  return count;
+}
 
 function parseFiltersFromSearchParams(searchParams) {
   const filters = {};
@@ -154,7 +247,13 @@ function CategoryPageContent() {
   );
 
   const products = data?.products || [];
+  const totalCount = data?.totalCount || 0;
+  const resultsCount = totalCount > 0 ? totalCount : products.length;
   const totalPages = data?.totalPages || 1;
+  const appliedFiltersCount = useMemo(
+    () => countAppliedFilterItems(appliedFilters),
+    [appliedFilters],
+  );
 
   // --- Скролл ---
   const scrollRestoredRef = useRef(false);
@@ -164,20 +263,32 @@ function CategoryPageContent() {
   useEffect(() => { scrollRestoredRef.current = false; }, [scopeKey]);
 
   useEffect(() => {
-    const savedPosition = sessionStorage.getItem("catalogScrollPosition");
-    if (savedPosition && !isProductsLoading && products.length > 0 && !scrollRestoredRef.current) {
-      scrollRestoredRef.current = true;
-      const pos = parseInt(savedPosition, 10);
-      setTimeout(() => {
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-            window.scrollTo({ top: pos, behavior: "instant" });
-            sessionStorage.removeItem("catalogScrollPosition");
-          });
-        });
-      }, 200);
+    const context = readCatalogReturnContext();
+    if (!context) return;
+
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== context.url) {
+      window.location.replace(context.url);
     }
-  }, [isProductsLoading, products.length]);
+  }, []);
+
+  useEffect(() => {
+    const context = readCatalogReturnContext();
+    if (!context || isProductsLoading || scrollRestoredRef.current) return;
+
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== context.url) return;
+
+    scrollRestoredRef.current = true;
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: context.scrollY, behavior: "instant" });
+          clearCatalogReturnContext();
+        });
+      });
+    }, 200);
+  }, [isProductsLoading]);
 
   useEffect(() => {
     if (previousPageRef.current !== currentPage) {
@@ -294,6 +405,12 @@ function CategoryPageContent() {
           }}
         >
           <span suppressHydrationWarning>{showFilters ? "Скрыть фильтры" : "Показать фильтры"}</span>
+          {appliedFiltersCount > 0 && (
+            <span className={styles.filters__count} aria-label={`Применено фильтров: ${appliedFiltersCount}`}>
+              <span className={styles.filters__countBg} aria-hidden="true" />
+              <span className={styles.filters__countValue}>{appliedFiltersCount}</span>
+            </span>
+          )}
         </button>
         <SortSelect
           value={sortBy}
@@ -322,6 +439,7 @@ function CategoryPageContent() {
           onApply={handleFiltersApply}
           appliedFilters={appliedFilters}
           categories={categories}
+          resultsCount={resultsCount}
         />
         <div className={styles.productsArea}>
           <div className={cx(styles.products, showFilters && styles.filtersOpen)}>

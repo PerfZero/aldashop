@@ -3,6 +3,8 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 
+const CATALOG_RETURN_CONTEXT_KEY = "catalogReturnContext";
+
 export default function ScrollRestoration() {
   const pathname = usePathname();
 
@@ -15,7 +17,17 @@ export default function ScrollRestoration() {
       const handleClick = (e) => {
         const link = e.target.closest('a[href*="/product/"]');
         if (link) {
-          sessionStorage.setItem('catalogScrollPosition', window.scrollY.toString());
+          const context = {
+            url: `${window.location.pathname}${window.location.search}`,
+            scrollY: window.scrollY,
+            timestamp: Date.now(),
+          };
+          sessionStorage.setItem(
+            CATALOG_RETURN_CONTEXT_KEY,
+            JSON.stringify(context),
+          );
+          // Legacy fallback key for older restoration logic.
+          sessionStorage.setItem("catalogScrollPosition", window.scrollY.toString());
         }
       };
 
@@ -29,4 +41,3 @@ export default function ScrollRestoration() {
 
   return null;
 }
-

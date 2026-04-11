@@ -87,13 +87,13 @@
 .controls__chip {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     min-height: 29px;
     padding: 4px 10px;
     border: 1px solid #844025;
     background: transparent;
     border-radius: 0;
-    cursor: default;
+    flex-wrap: wrap;
 }
 
 button.controls__chip {
@@ -114,6 +114,37 @@ button.controls__chip {
     font-size: 14px;
     line-height: 150%;
     color: #844025;
+}
+
+.controls__chipValues {
+    display: flex;
+    align-items: center;
+    gap: 0 8px;
+    flex-wrap: wrap;
+}
+
+.controls__chipValueItem {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding-right: 8px;
+    border-right: 1px solid rgba(132, 64, 37, 0.3);
+}
+
+.controls__chipValueItem:last-child {
+    padding-right: 0;
+    border-right: none;
+}
+
+.controls__chipRemove {
+    border: none;
+    background: none;
+    color: #844025;
+    font-family: var(--font-playfair-display), serif;
+    font-size: 18px;
+    line-height: 1;
+    padding: 0;
+    cursor: pointer;
 }
 
 .controls__chipAction {
@@ -179,6 +210,35 @@ button.controls__chip {
     line-height: 150%;
     color: #3c101e;
     cursor: pointer;
+}
+
+.filters__count {
+    display: none;
+    position: relative;
+    min-width: 16px;
+    top: -4px;
+
+    height: 16px;
+    padding: 0 4px;
+    align-items: center;
+    justify-content: center;
+}
+
+.filters__countBg {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: #844025;
+}
+
+.filters__countValue {
+    position: relative;
+    z-index: 1;
+    color: #fff;
+    font-family: var(--font-playfair-display), serif;
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 1;
 }
 
 .filters__buttonIcon {
@@ -356,6 +416,16 @@ button.controls__chip {
         width: auto;
     }
 
+    .filters__count {
+        display: inline-flex;
+        min-width: 15px;
+        height: 15px;
+    }
+
+    .filters__countValue {
+        font-size: 9px;
+    }
+
     .filters__buttonIcon {
         width: 20px;
         height: 20px;
@@ -377,15 +447,11 @@ button.controls__chip {
     }
 
     .controls__chip {
-        gap: 10px;
-        min-height: 34px;
-        padding: 6px 12px 6px 14px;
+        display: none;
     }
 
-    .controls__chipLabel,
-    .controls__chipText,
     .controls__reset {
-        font-size: 12px;
+        display: none;
     }
 
     .hero__content {
